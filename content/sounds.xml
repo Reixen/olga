@@ -1,0 +1,5 @@
+<sounds root="sfx/">
+    <sound name ="Olga Yawn">
+        <sample weight="1" path="olga_yawn.wav" />
+    </sound>
+</sounds>

@@ -1,0 +1,13 @@
+<entities anm2root="gfx/" version="5">
+
+    <entity name="Olga" baseHP = "-1"
+		id="3" anm2path="familiar_olga.anm2"
+		friction="0" numGridCollisionPoints="6" 
+		shadowSize="15" tags="cansacrifice">
+	</entity>
+
+	<entity anm2path="effect_petting.anm2" id="1000" 
+		variant="3056" name="Petting Hand">
+	</entity>
+
+</entities>
