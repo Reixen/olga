@@ -8,10 +8,13 @@ local ONE_TILE = 40
 
 local sfx = SFXManager()
 OLGA.SOUND_YAWN = Isaac.GetSoundIdByName("Olga Yawn")
+
 OLGA.YAWN_CHANCE = 1 / 400
 OLGA.WALK_SPEED = 2
-OLGA.HAPPY_DISTANCE = 2 * ONE_TILE
-OLGA.PETTING_DISTANCE = 1.1 * ONE_TILE
+OLGA.HAPPY_DISTANCE = ONE_TILE * 2.2
+OLGA.PETTING_DISTANCE = ONE_TILE * 1.2
+
+OLGA.MOVE_SIZE = ONE_TILE * 0.6
 
 OLGA.ANIMATIONS = {
     IDLE = "Idle",
@@ -35,6 +38,16 @@ OLGA.STATES = {
     PETTING_TO_HAPPY = 7
 }
 
+OLGA.PETTING_HAND_COLOR = {
+    PINK = -1,
+    WHITE = 0,
+    BLACK = 1,
+    BLUE = 2,
+    RED = 3,
+    GREEN = 4,
+    GREY = 5,
+    SHADOW = 6
+}
 
 function OLGA:HandleOlgaInBedroom()
     local room = game:GetRoom()
@@ -60,11 +73,35 @@ Mod:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, OLGA.GoodbyeOlga)
 
 ---@param olga EntityFamiliar
 function OLGA:CheckMoveVelocity(olga, movementVector)
+    local room = game:GetRoom()
+    local player = olga.Player
 
+    local vec = movementVector or olga.Position - player.Position
+    if player.Position:Distance(olga.Position) < OLGA.MOVE_SIZE then
+        if olga.Velocity:Length() < 1e-3 then
+            -- prevent getting stuck in corners
+            vec = player.Position - olga.Position
+
+            if vec:Length() < 1e-3 then
+                vec = RandomVector() -- make sure she doesn't stand still when entering rooms
+                vec = vec:Rotated(olga:GetDropRNG():RandomInt(45) - (45 / 2))
+            end
+        else
+            vec = olga.Position
+        end
+    end
+    
+    local velocityToAdd = (vec:Normalized() * OLGA.WALK_SPEED)
+    local projectedPosition = olga.Position + velocityToAdd * 5 -- for extra "padding" so that you can go behind it and it doesnt get stuck on walls
+    local projectedTile = room:GetGridIndex(projectedPosition)
+
+    return (not room:GetGridEntity(projectedTile) or room:GetGridEntity(projectedTile).CollisionClass == GridCollisionClass.COLLISION_NONE), velocityToAdd
 end
 
 ---@param olga EntityFamiliar
 function OLGA:InitOlga(olga)
+
+    
     -- Separate hand code
     --local hand = Isaac.Spawn(EntityType.ENTITY_EFFECT, PETTING_HAND_VARIANT, 0, olga.Position, Vector.Zero, olga)
     --hand.FollowParent(olga)
@@ -83,10 +120,14 @@ function OLGA:HandleLogic(olga)
     local rng = olga:GetDropRNG()
     local sprite = olga:GetSprite()
     local state = olga.State
+    local room = Game():GetRoom()
+    local playerDistance = player.Position:Distance(olga.Position)
+    local skinColor = player:GetBodyColor()
 
     if state == OLGA.STATES.IDLE then
-        if player.Position:Distance(olga.Position) < OLGA.HAPPY_DISTANCE
-        and sprite:IsEventTriggered("TransitionHook") then
+        if playerDistance < OLGA.HAPPY_DISTANCE
+        and sprite:IsEventTriggered("TransitionHook")
+        and room:IsClear() then
             OLGA:SetState(olga, "IDLE_TO_HAPPY")
         else
             if rng:RandomFloat() < OLGA.YAWN_CHANCE then
@@ -97,9 +138,19 @@ function OLGA:HandleLogic(olga)
 
     if state == OLGA.STATES.HAPPY then
         if sprite:IsEventTriggered("TransitionHook") then
-            if player.Position:Distance(olga.Position) < OLGA.PETTING_DISTANCE then
+            if playerDistance < OLGA.PETTING_DISTANCE then
+                
+                for string, value in pairs(OLGA.PETTING_HAND_COLOR) do
+                    if skinColor == value then
+                        string:lower()
+                        sprite:ReplaceSpritesheet(2, "gfx/petting_hands/petting_hand_" .. string .. ".png")
+                        sprite:LoadGraphics()
+                        break
+                    end
+                end
+
                 OLGA:SetState(olga, "HAPPY_TO_PETTING")
-            elseif player.Position:Distance(olga.Position) > OLGA.HAPPY_DISTANCE then
+            elseif playerDistance > OLGA.HAPPY_DISTANCE then
                 OLGA:SetState(olga, "HAPPY_TO_IDLE")
             end
         end
@@ -107,7 +158,7 @@ function OLGA:HandleLogic(olga)
     
     if state == OLGA.STATES.PETTING then
         if sprite:IsEventTriggered("TransitionHook") then
-            if player.Position:Distance(olga.Position) > OLGA.PETTING_DISTANCE then
+            if playerDistance > OLGA.PETTING_DISTANCE then
                 OLGA:SetState(olga, "PETTING_TO_HAPPY")
             end
         end
@@ -115,7 +166,7 @@ function OLGA:HandleLogic(olga)
 
     if state == OLGA.STATES.HAPPY_TO_PETTING then
         if sprite:IsFinished(OLGA.ANIMATIONS.HAPPY_TO_PETTING) then
-            if player.Position:Distance(olga.Position) > OLGA.PETTING_DISTANCE then
+            if playerDistance > OLGA.PETTING_DISTANCE then
                 OLGA:SetState(olga, "PETTING_TO_HAPPY")
             else
                 OLGA:SetState(olga, "PETTING")
@@ -125,7 +176,7 @@ function OLGA:HandleLogic(olga)
 
     if state == OLGA.STATES.PETTING_TO_HAPPY then
         if sprite:IsFinished(OLGA.ANIMATIONS.PETTING_TO_HAPPY) then
-            if player.Position:Distance(olga.Position) > OLGA.PETTING_DISTANCE then
+            if playerDistance > OLGA.PETTING_DISTANCE then
                 OLGA:SetState(olga, "HAPPY")
             else
                 OLGA:SetState(olga, "HAPPY_TO_PETTING")

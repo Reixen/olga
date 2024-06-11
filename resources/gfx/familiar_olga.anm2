@@ -1,9 +1,9 @@
 <AnimatedActor>
-	<Info CreatedBy="Unknown" CreatedOn="6/11/2024 1:09:39 AM" Version="44" Fps="30"/>
+	<Info CreatedBy="Unknown" CreatedOn="6/11/2024 3:11:47 PM" Version="46" Fps="30"/>
 	<Content>
 		<Spritesheets>
 			<Spritesheet Path="familiar\familiar_olga.png" Id="0"/>
-			<Spritesheet Path="petting hands\petting_hand_pink.png" Id="1"/>
+			<Spritesheet Path="petting_hands\petting_hand_pink.png" Id="1"/>
 		</Spritesheets>
 		<Layers>
 			<Layer Name="body" Id="0" SpritesheetId="0"/>
