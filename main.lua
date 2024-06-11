@@ -10,15 +10,18 @@ local sfx = SFXManager()
 OLGA.SOUND_YAWN = Isaac.GetSoundIdByName("Olga Yawn")
 OLGA.YAWN_CHANCE = 1 / 400
 OLGA.WALK_SPEED = 2
-OLGA.HAPPY_DISTANCE = 3 * ONE_TILE
-OLGA.PETTING_DISTANCE = 1.5 * ONE_TILE
+OLGA.HAPPY_DISTANCE = 2 * ONE_TILE
+OLGA.PETTING_DISTANCE = 1.1 * ONE_TILE
 
 OLGA.ANIMATIONS = {
     IDLE = "Idle",
     HAPPY = "Happy",
     HAPPY_TO_IDLE = "HappyToIdle",
     IDLE_TO_HAPPY = "IdleToHappy",
-    YAWN = "Yawn"
+    YAWN = "Yawn",
+    PETTING = "Petting",
+    HAPPY_TO_PETTING = "HappyToPetting",
+    PETTING_TO_HAPPY = "PettingToHappy"
 }
 
 OLGA.STATES = {
@@ -26,7 +29,10 @@ OLGA.STATES = {
     HAPPY = 1,
     HAPPY_TO_IDLE = 2,
     IDLE_TO_HAPPY = 3,
-    YAWN = 4
+    YAWN = 4,
+    PETTING = 5,
+    HAPPY_TO_PETTING = 6,
+    PETTING_TO_HAPPY = 7
 }
 
 
@@ -59,9 +65,11 @@ end
 
 ---@param olga EntityFamiliar
 function OLGA:InitOlga(olga)
-    local hand = Isaac.Spawn(EntityType.ENTITY_EFFECT, PETTING_HAND_VARIANT, 0, olga.Position, Vector.Zero, olga)
-    hand.FollowParent(olga)
-    hand.Visible = false
+    -- Separate hand code
+    --local hand = Isaac.Spawn(EntityType.ENTITY_EFFECT, PETTING_HAND_VARIANT, 0, olga.Position, Vector.Zero, olga)
+    --hand.FollowParent(olga)
+    --hand.Visible = false
+
 end
 
 Mod:AddCallback(ModCallbacks.MC_FAMILIAR_INIT, OLGA.InitOlga, OLGA.FAMILIAR)
@@ -88,13 +96,40 @@ function OLGA:HandleLogic(olga)
     end
 
     if state == OLGA.STATES.HAPPY then
-        if player.Position:Distance(olga.Position) < OLGA.PETTING_DISTANCE
-        and sprite:IsEventTriggered("TransitionHook") then
+        if sprite:IsEventTriggered("TransitionHook") then
+            if player.Position:Distance(olga.Position) < OLGA.PETTING_DISTANCE then
+                OLGA:SetState(olga, "HAPPY_TO_PETTING")
+            elseif player.Position:Distance(olga.Position) > OLGA.HAPPY_DISTANCE then
+                OLGA:SetState(olga, "HAPPY_TO_IDLE")
+            end
+        end
+    end
+    
+    if state == OLGA.STATES.PETTING then
+        if sprite:IsEventTriggered("TransitionHook") then
+            if player.Position:Distance(olga.Position) > OLGA.PETTING_DISTANCE then
+                OLGA:SetState(olga, "PETTING_TO_HAPPY")
+            end
+        end
+    end
 
-        elseif player.Position:Distance(olga.Position) > OLGA.HAPPY_DISTANCE
-        and sprite:IsEventTriggered("TransitionHook") then
-            OLGA:SetState(olga, "HAPPY_TO_IDLE")
+    if state == OLGA.STATES.HAPPY_TO_PETTING then
+        if sprite:IsFinished(OLGA.ANIMATIONS.HAPPY_TO_PETTING) then
+            if player.Position:Distance(olga.Position) > OLGA.PETTING_DISTANCE then
+                OLGA:SetState(olga, "PETTING_TO_HAPPY")
+            else
+                OLGA:SetState(olga, "PETTING")
+            end
+        end
+    end
 
+    if state == OLGA.STATES.PETTING_TO_HAPPY then
+        if sprite:IsFinished(OLGA.ANIMATIONS.PETTING_TO_HAPPY) then
+            if player.Position:Distance(olga.Position) > OLGA.PETTING_DISTANCE then
+                OLGA:SetState(olga, "HAPPY")
+            else
+                OLGA:SetState(olga, "HAPPY_TO_PETTING")
+            end
         end
     end
 
@@ -128,16 +163,16 @@ function OLGA:SetState(olga, bepis)
 end
 
 
-function OLGA:PettingHandUpdate(hand)
-    player = Isaac.GetPlayer(0)
-    hand.Visible = false
+--function OLGA:PettingHandUpdate(hand)
+    --player = Isaac.GetPlayer(0)
+    --hand.Visible = false
 
-    for _, doggy in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, OLGA.FAMILIAR)) do
-        if player.Position:Distance(doggy.Position) < OLGA.PETTING_DISTANCE then
-            hand.Visible = true
-        end
-    end
-end
+    --for _, doggy in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, OLGA.FAMILIAR)) do
+        --if player.Position:Distance(doggy.Position) < OLGA.PETTING_DISTANCE then
+            --hand.Visible = true
+        --end
+    --end
+--end
 
 
-Mod:AddCallback(ModCallbacks.MC_POST_EFFECT_UPDATE, OLGA.PettingHandUpdate, PETTING_HAND_VARIANT)
+--Mod:AddCallback(ModCallbacks.MC_POST_EFFECT_UPDATE, OLGA.PettingHandUpdate, PETTING_HAND_VARIANT)
