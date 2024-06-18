@@ -9,7 +9,7 @@ local ONE_TILE = 40
 local sfx = SFXManager()
 OLGA.SOUND_YAWN = Isaac.GetSoundIdByName("Olga Yawn")
 
-OLGA.YAWN_CHANCE = 1 / 400
+OLGA.YAWN_CHANCE = 1 / 60
 OLGA.WALK_SPEED = 2
 OLGA.HAPPY_DISTANCE = ONE_TILE * 2.2
 OLGA.PETTING_DISTANCE = ONE_TILE * 1.2
@@ -47,6 +47,14 @@ OLGA.PETTING_HAND_COLOR = {
     GREEN = 4,
     GREY = 5,
     SHADOW = 6
+}
+
+OLGA.PETTING_HAND_COMPATIBILITY = {
+    "MAGDALENE",
+    "EDEN",
+    "BLUEBABY",
+    "SAMSON",
+    "KEEPER"
 }
 
 function OLGA:HandleOlgaInBedroom()
@@ -120,38 +128,32 @@ function OLGA:HandleLogic(olga)
     local rng = olga:GetDropRNG()
     local sprite = olga:GetSprite()
     local state = olga.State
-    local room = Game():GetRoom()
+    local game = Game()
+    local room = game:GetRoom()
+    local frame = game:GetFrameCount()
     local playerDistance = player.Position:Distance(olga.Position)
-    local skinColor = player:GetBodyColor()
 
     if state == OLGA.STATES.IDLE then
         if playerDistance < OLGA.HAPPY_DISTANCE
         and sprite:IsEventTriggered("TransitionHook")
         and room:IsClear() then
             OLGA:SetState(olga, "IDLE_TO_HAPPY")
-        else
-            if rng:RandomFloat() < OLGA.YAWN_CHANCE then
-                OLGA:SetState(olga, "YAWN")
-            end
+        
+        elseif frame % 30 == 0 and rng:RandomFloat() < OLGA.YAWN_CHANCE then
+            OLGA:SetState(olga, "YAWN")
         end
     end
 
     if state == OLGA.STATES.HAPPY then
         if sprite:IsEventTriggered("TransitionHook") then
             if playerDistance < OLGA.PETTING_DISTANCE then
-                
-                for string, value in pairs(OLGA.PETTING_HAND_COLOR) do
-                    if skinColor == value then
-                        string:lower()
-                        sprite:ReplaceSpritesheet(2, "gfx/petting_hands/petting_hand_" .. string .. ".png")
-                        sprite:LoadGraphics()
-                        break
-                    end
-                end
 
+                OLGA:PettingHandColorInit(olga)
                 OLGA:SetState(olga, "HAPPY_TO_PETTING")
+
             elseif playerDistance > OLGA.HAPPY_DISTANCE then
                 OLGA:SetState(olga, "HAPPY_TO_IDLE")
+
             end
         end
     end
@@ -160,6 +162,7 @@ function OLGA:HandleLogic(olga)
         if sprite:IsEventTriggered("TransitionHook") then
             if playerDistance > OLGA.PETTING_DISTANCE then
                 OLGA:SetState(olga, "PETTING_TO_HAPPY")
+
             end
         end
     end
@@ -168,8 +171,10 @@ function OLGA:HandleLogic(olga)
         if sprite:IsFinished(OLGA.ANIMATIONS.HAPPY_TO_PETTING) then
             if playerDistance > OLGA.PETTING_DISTANCE then
                 OLGA:SetState(olga, "PETTING_TO_HAPPY")
+
             else
                 OLGA:SetState(olga, "PETTING")
+
             end
         end
     end
@@ -178,8 +183,11 @@ function OLGA:HandleLogic(olga)
         if sprite:IsFinished(OLGA.ANIMATIONS.PETTING_TO_HAPPY) then
             if playerDistance > OLGA.PETTING_DISTANCE then
                 OLGA:SetState(olga, "HAPPY")
+
             else
+                OLGA:PettingHandColorInit(olga)
                 OLGA:SetState(olga, "HAPPY_TO_PETTING")
+
             end
         end
     end
@@ -195,14 +203,17 @@ function OLGA:HandleLogic(olga)
             OLGA:SetState(olga, "IDLE")
         end
     end
+
     if state == OLGA.STATES.YAWN then
         if sprite:IsFinished(OLGA.ANIMATIONS.YAWN) then
             OLGA:SetState(olga, "IDLE")
         end
     end
+    
     if sprite:IsEventTriggered("Yawn") then
         sfx:Play(OLGA.SOUND_YAWN, 2)
     end
+
     -- insert here additional state checks, for example if state == OLGA.STATES.WOOF then/if state == OLGA.STATES.SHITTING_AND_CRYING then
 end
 
@@ -211,6 +222,50 @@ Mod:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, OLGA.HandleLogic, OLGA.FAMILIAR
 function OLGA:SetState(olga, bepis)
     olga.State = OLGA.STATES[bepis]
     olga:GetSprite():Play(OLGA.ANIMATIONS[bepis], true)
+end
+
+function OLGA:ChangeFamilyMember()
+end
+Mod:AddCallback(ModCallbacks.MC_USE_ITEM, OLGA.ChangeFamilyMember, CollectibleType.COLLECTIBLE_CLICKER)
+
+function OLGA:OnPickup()
+end
+
+function OLGA:PettingHandColorInit(olga)
+    local player = olga.Player
+    local sprite = olga:GetSprite()
+    local skinColor = player:GetBodyColor()
+    local playerType = player:GetPlayerType()
+
+    for string, value in pairs(OLGA.PETTING_HAND_COLOR) do
+
+        if skinColor == value then
+            string:lower()
+            sprite:ReplaceSpritesheet(2, "gfx/petting_hands/petting_hand_" .. string .. ".png")
+            break
+
+        end
+    end
+
+    if Epiphany then
+        for _, moddedString in pairs(OLGA.PETTING_HAND_COMPATIBILITY) do
+            local fileName = moddedString:lower()
+
+            if playerType == Epiphany.PlayerType.JUDAS then
+                sprite:ReplaceSpritesheet(2, "gfx/petting_hands/petting_hand_shadow.png")
+                break
+                
+            elseif playerType == Epiphany.PlayerType[moddedString] then
+
+                sprite:ReplaceSpritesheet(2, "gfx/petting_hands/petting_hand_tr_" .. fileName .. ".png")
+                break
+
+            end
+        end
+    end
+
+    sprite:LoadGraphics()
+    
 end
 
 
