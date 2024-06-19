@@ -108,13 +108,6 @@ end
 
 ---@param olga EntityFamiliar
 function OLGA:InitOlga(olga)
-
-    
-    -- Separate hand code
-    --local hand = Isaac.Spawn(EntityType.ENTITY_EFFECT, PETTING_HAND_VARIANT, 0, olga.Position, Vector.Zero, olga)
-    --hand.FollowParent(olga)
-    --hand.Visible = false
-
 end
 
 Mod:AddCallback(ModCallbacks.MC_FAMILIAR_INIT, OLGA.InitOlga, OLGA.FAMILIAR)
@@ -147,8 +140,6 @@ function OLGA:HandleLogic(olga)
     if state == OLGA.STATES.HAPPY then
         if sprite:IsEventTriggered("TransitionHook") then
             if playerDistance < OLGA.PETTING_DISTANCE then
-
-                OLGA:PettingHandColorInit(olga)
                 OLGA:SetState(olga, "HAPPY_TO_PETTING")
 
             elseif playerDistance > OLGA.HAPPY_DISTANCE then
@@ -185,7 +176,6 @@ function OLGA:HandleLogic(olga)
                 OLGA:SetState(olga, "HAPPY")
 
             else
-                OLGA:PettingHandColorInit(olga)
                 OLGA:SetState(olga, "HAPPY_TO_PETTING")
 
             end
@@ -225,60 +215,53 @@ function OLGA:SetState(olga, bepis)
 end
 
 function OLGA:ChangeFamilyMember()
+    OLGA:UpdateHandColor()
 end
 Mod:AddCallback(ModCallbacks.MC_USE_ITEM, OLGA.ChangeFamilyMember, CollectibleType.COLLECTIBLE_CLICKER)
 
-function OLGA:OnPickup()
+function OLGA:OnCollectible()
+    OLGA:UpdateHandColor()
 end
+Mod:AddCallback(ModCallbacks.MC_PRE_ADD_COLLECTIBLE, OLGA.OnCollectible)
 
-function OLGA:PettingHandColorInit(olga)
-    local player = olga.Player
-    local sprite = olga:GetSprite()
-    local skinColor = player:GetBodyColor()
-    local playerType = player:GetPlayerType()
 
-    for string, value in pairs(OLGA.PETTING_HAND_COLOR) do
+function OLGA:UpdateHandColor()
 
-        if skinColor == value then
-            string:lower()
-            sprite:ReplaceSpritesheet(2, "gfx/petting_hands/petting_hand_" .. string .. ".png")
-            break
+    for _, doggy in pairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, OLGA.FAMILIAR)) do
+        local olga = doggy:ToFamiliar()
+        local player = olga.Player
+        local sprite = olga:GetSprite()
+        local skinColor = player:GetBodyColor()
+        local playerType = player:GetPlayerType()
 
-        end
-    end
+        for string, value in pairs(OLGA.PETTING_HAND_COLOR) do
 
-    if Epiphany then
-        for _, moddedString in pairs(OLGA.PETTING_HAND_COMPATIBILITY) do
-            local fileName = moddedString:lower()
-
-            if playerType == Epiphany.PlayerType.JUDAS then
-                sprite:ReplaceSpritesheet(2, "gfx/petting_hands/petting_hand_shadow.png")
-                break
-                
-            elseif playerType == Epiphany.PlayerType[moddedString] then
-
-                sprite:ReplaceSpritesheet(2, "gfx/petting_hands/petting_hand_tr_" .. fileName .. ".png")
+            if skinColor == value then
+                string:lower()
+                sprite:ReplaceSpritesheet(2, "gfx/petting_hands/petting_hand_" .. string .. ".png")
                 break
 
             end
         end
-    end
 
-    sprite:LoadGraphics()
-    
+        if Epiphany then
+            for _, moddedString in pairs(OLGA.PETTING_HAND_COMPATIBILITY) do
+                local fileName = moddedString:lower()
+
+                if playerType == Epiphany.PlayerType.JUDAS then
+                    sprite:ReplaceSpritesheet(2, "gfx/petting_hands/petting_hand_shadow.png")
+                    break
+                    
+                elseif playerType == Epiphany.PlayerType[moddedString] then
+
+                    sprite:ReplaceSpritesheet(2, "gfx/petting_hands/petting_hand_tr_" .. fileName .. ".png")
+                    break
+
+                end
+            end
+        end
+
+        sprite:LoadGraphics()
+    end
 end
 
-
---function OLGA:PettingHandUpdate(hand)
-    --player = Isaac.GetPlayer(0)
-    --hand.Visible = false
-
-    --for _, doggy in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, OLGA.FAMILIAR)) do
-        --if player.Position:Distance(doggy.Position) < OLGA.PETTING_DISTANCE then
-            --hand.Visible = true
-        --end
-    --end
---end
-
-
---Mod:AddCallback(ModCallbacks.MC_POST_EFFECT_UPDATE, OLGA.PettingHandUpdate, PETTING_HAND_VARIANT)
