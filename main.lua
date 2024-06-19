@@ -10,6 +10,7 @@ local sfx = SFXManager()
 OLGA.SOUND_YAWN = Isaac.GetSoundIdByName("Olga Yawn")
 
 OLGA.YAWN_CHANCE = 1 / 60
+OLGA.SWITCH_STANCE_CHANCE = 1 / 10
 OLGA.WALK_SPEED = 2
 OLGA.HAPPY_DISTANCE = ONE_TILE * 2.2
 OLGA.PETTING_DISTANCE = ONE_TILE * 1.2
@@ -24,7 +25,10 @@ OLGA.ANIMATIONS = {
     YAWN = "Yawn",
     PETTING = "Petting",
     HAPPY_TO_PETTING = "HappyToPetting",
-    PETTING_TO_HAPPY = "PettingToHappy"
+    PETTING_TO_HAPPY = "PettingToHappy",
+    STAND_IDLE = "StandIdle",
+    IDLE_TO_STAND_IDLE = "IdleToStandIdle",
+    STAND_IDLE_TO_IDLE = "StandIdleToIdle"
 }
 
 OLGA.STATES = {
@@ -35,7 +39,11 @@ OLGA.STATES = {
     YAWN = 4,
     PETTING = 5,
     HAPPY_TO_PETTING = 6,
-    PETTING_TO_HAPPY = 7
+    PETTING_TO_HAPPY = 7,
+    STAND_IDLE = 8,
+    IDLE_TO_STAND_IDLE = 9,
+    STAND_IDLE_TO_IDLE = 10
+     
 }
 
 OLGA.PETTING_HAND_COLOR = {
@@ -108,6 +116,7 @@ end
 
 ---@param olga EntityFamiliar
 function OLGA:InitOlga(olga)
+    OLGA:UpdateHandColor()
 end
 
 Mod:AddCallback(ModCallbacks.MC_FAMILIAR_INIT, OLGA.InitOlga, OLGA.FAMILIAR)
@@ -126,14 +135,20 @@ function OLGA:HandleLogic(olga)
     local frame = game:GetFrameCount()
     local playerDistance = player.Position:Distance(olga.Position)
 
+
     if state == OLGA.STATES.IDLE then
         if playerDistance < OLGA.HAPPY_DISTANCE
         and sprite:IsEventTriggered("TransitionHook")
         and room:IsClear() then
             OLGA:SetState(olga, "IDLE_TO_HAPPY")
-        
-        elseif frame % 30 == 0 and rng:RandomFloat() < OLGA.YAWN_CHANCE then
-            OLGA:SetState(olga, "YAWN")
+        end
+
+        if frame % 30 == 0 then
+            if rng:RandomFloat() < OLGA.SWITCH_STANCE_CHANCE then
+                OLGA:SetState(olga, "IDLE_TO_STAND_IDLE")
+            elseif rng:RandomFloat() < OLGA.YAWN_CHANCE then
+                OLGA:SetState(olga, "YAWN")
+            end
         end
     end
 
@@ -158,6 +173,26 @@ function OLGA:HandleLogic(olga)
         end
     end
 
+    if state == OLGA.STATES.STAND_IDLE then
+        if frame % 30 == 0 then
+            if rng:RandomFloat() < OLGA.SWITCH_STANCE_CHANCE then
+                OLGA:SetState(olga, "STAND_IDLE_TO_IDLE")
+            end
+        end
+    end
+
+    if state == OLGA.STATES.IDLE_TO_STAND_IDLE then
+        if sprite:IsFinished(OLGA.ANIMATIONS.IDLE_TO_STAND_IDLE) then
+            OLGA:SetState(olga, "STAND_IDLE")
+        end
+    end
+
+    if state == OLGA.STATES.STAND_IDLE_TO_IDLE then
+        if sprite:IsFinished(OLGA.ANIMATIONS.STAND_IDLE_TO_IDLE) then
+            OLGA:SetState(olga, "IDLE")
+        end
+    end
+    
     if state == OLGA.STATES.HAPPY_TO_PETTING then
         if sprite:IsFinished(OLGA.ANIMATIONS.HAPPY_TO_PETTING) then
             if playerDistance > OLGA.PETTING_DISTANCE then
@@ -233,6 +268,7 @@ function OLGA:UpdateHandColor()
         local sprite = olga:GetSprite()
         local skinColor = player:GetBodyColor()
         local playerType = player:GetPlayerType()
+
 
         for string, value in pairs(OLGA.PETTING_HAND_COLOR) do
 
