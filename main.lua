@@ -2,6 +2,10 @@ local Mod = RegisterMod("Olga", 1)
 local game = Game()
 local OLGA = {}
 
+if not REPENTOGON then
+    return
+end
+
 OLGA.FAMILIAR = Isaac.GetEntityVariantByName("Olga")
 local PETTING_HAND_VARIANT = Isaac.GetEntityVariantByName("Petting Hand")
 local ONE_TILE = 40
@@ -114,9 +118,10 @@ function OLGA:CheckMoveVelocity(olga, movementVector)
     return (not room:GetGridEntity(projectedTile) or room:GetGridEntity(projectedTile).CollisionClass == GridCollisionClass.COLLISION_NONE), velocityToAdd
 end
 
+    
 ---@param olga EntityFamiliar
 function OLGA:InitOlga(olga)
-    OLGA:UpdateHandColor()
+    Isaac.CreateTimer(OLGA.UpdateHandColor, 1, 1, false)
 end
 
 Mod:AddCallback(ModCallbacks.MC_FAMILIAR_INIT, OLGA.InitOlga, OLGA.FAMILIAR)
@@ -249,15 +254,15 @@ function OLGA:SetState(olga, bepis)
     olga:GetSprite():Play(OLGA.ANIMATIONS[bepis], true)
 end
 
-function OLGA:ChangeFamilyMember()
+function OLGA:OnChangeFamilyMember()
     OLGA:UpdateHandColor()
 end
-Mod:AddCallback(ModCallbacks.MC_USE_ITEM, OLGA.ChangeFamilyMember, CollectibleType.COLLECTIBLE_CLICKER)
+Mod:AddCallback(ModCallbacks.MC_USE_ITEM, OLGA.OnChangeFamilyMember, CollectibleType.COLLECTIBLE_CLICKER)
 
-function OLGA:OnCollectible()
+function OLGA:OnPickupCollectible()
     OLGA:UpdateHandColor()
 end
-Mod:AddCallback(ModCallbacks.MC_PRE_ADD_COLLECTIBLE, OLGA.OnCollectible)
+Mod:AddCallback(ModCallbacks.MC_PRE_ADD_COLLECTIBLE, OLGA.OnPickupCollectible)
 
 
 function OLGA:UpdateHandColor()
@@ -300,4 +305,19 @@ function OLGA:UpdateHandColor()
         sprite:LoadGraphics()
     end
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
