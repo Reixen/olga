@@ -14,10 +14,11 @@ local sfx = SFXManager()
 OLGA.SOUND_YAWN = Isaac.GetSoundIdByName("Olga Yawn")
 
 OLGA.YAWN_CHANCE = 1 / 60
-OLGA.SWITCH_STANCE_CHANCE = 1 / 10
+OLGA.SWITCH_STANCE_CHANCE = 1 / 20
 OLGA.WALK_SPEED = 2
 OLGA.HAPPY_DISTANCE = ONE_TILE * 2.2
 OLGA.PETTING_DISTANCE = ONE_TILE * 1.2
+OLGA.SITTING_DISTANCE = ONE_TILE * 1.6
 
 OLGA.MOVE_SIZE = ONE_TILE * 0.6
 
@@ -139,19 +140,23 @@ function OLGA:HandleLogic(olga)
     local room = game:GetRoom()
     local frame = game:GetFrameCount()
     local playerDistance = player.Position:Distance(olga.Position)
+    local pathfinder = olga:GetPathFinder()
+    local data = olga:GetData()
 
-
+    
     if state == OLGA.STATES.IDLE then
-        if playerDistance < OLGA.HAPPY_DISTANCE
-        and sprite:IsEventTriggered("TransitionHook")
-        and room:IsClear() then
+        if playerDistance < OLGA.HAPPY_DISTANCE then
+            if sprite:IsEventTriggered("TransitionHook")
+            and room:IsClear() then
             OLGA:SetState(olga, "IDLE_TO_HAPPY")
+            end
+        elseif rng:RandomFloat() < OLGA.SWITCH_STANCE_CHANCE 
+        and frame % 30 == 0 then
+            OLGA:SetState(olga, "IDLE_TO_STAND_IDLE")
         end
 
         if frame % 30 == 0 then
-            if rng:RandomFloat() < OLGA.SWITCH_STANCE_CHANCE then
-                OLGA:SetState(olga, "IDLE_TO_STAND_IDLE")
-            elseif rng:RandomFloat() < OLGA.YAWN_CHANCE then
+            if rng:RandomFloat() < OLGA.YAWN_CHANCE then
                 OLGA:SetState(olga, "YAWN")
             end
         end
@@ -179,11 +184,17 @@ function OLGA:HandleLogic(olga)
     end
 
     if state == OLGA.STATES.STAND_IDLE then
-        if frame % 30 == 0 then
-            if rng:RandomFloat() < OLGA.SWITCH_STANCE_CHANCE then
-                OLGA:SetState(olga, "STAND_IDLE_TO_IDLE")
-            end
+        if playerDistance > OLGA.SITTING_DISTANCE  then
+                --local random = room:FindFreeTilePosition(room:GetRandomPosition(10), 0)   
+                --olga.Velocity = (random - olga.Position):Normalized() * OLGA.WALK_SPEED
+                olga.Velocity = (player.Position - olga.Position):Normalized() * OLGA.WALK_SPEED * 1.2
+                olga.FlipX = math.abs((player.Position - olga.Position):GetAngleDegrees()) < 90
+        elseif playerDistance < OLGA.SITTING_DISTANCE then
+            olga.Velocity = Vector.Zero
+            OLGA:SetState(olga, "STAND_IDLE_TO_IDLE")
         end
+    else
+        olga.Velocity = Vector.Zero
     end
 
     if state == OLGA.STATES.IDLE_TO_STAND_IDLE then
@@ -243,6 +254,8 @@ function OLGA:HandleLogic(olga)
     if sprite:IsEventTriggered("Yawn") then
         sfx:Play(OLGA.SOUND_YAWN, 2)
     end
+
+    
 
     -- insert here additional state checks, for example if state == OLGA.STATES.WOOF then/if state == OLGA.STATES.SHITTING_AND_CRYING then
 end

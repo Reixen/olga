@@ -1,8 +1,8 @@
 <entities anm2root="gfx/" version="5">
 
     <entity name="Olga" baseHP = "-1"
-		id="3" anm2path="familiar_olga.anm2"
-		friction="0" numGridCollisionPoints="6" 
+		id="3" anm2path="familiar_olga.anm2" friction="1" 
+		numGridCollisionPoints="6" collisionMass="7" collisionRadius="8" 
 		shadowSize="15" tags="cansacrifice">
 	</entity>
 
