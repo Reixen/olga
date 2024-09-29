@@ -14,8 +14,8 @@ local sfx = SFXManager()
 OLGA.SOUND_YAWN = Isaac.GetSoundIdByName("Olga Yawn")
 
 OLGA.YAWN_CHANCE = 1 / 60
-OLGA.SWITCH_STANCE_CHANCE = 1 / 20
-OLGA.WALK_SPEED = 2
+OLGA.SWITCH_STANCE_CHANCE = 1 / 10
+OLGA.WALK_SPEED = 0.7
 OLGA.HAPPY_DISTANCE = ONE_TILE * 2.2
 OLGA.PETTING_DISTANCE = ONE_TILE * 1.2
 OLGA.SITTING_DISTANCE = ONE_TILE * 1.6
@@ -33,7 +33,8 @@ OLGA.ANIMATIONS = {
     PETTING_TO_HAPPY = "PettingToHappy",
     STAND_IDLE = "StandIdle",
     IDLE_TO_STAND_IDLE = "IdleToStandIdle",
-    STAND_IDLE_TO_IDLE = "StandIdleToIdle"
+    STAND_IDLE_TO_IDLE = "StandIdleToIdle",
+    WALKING = "Walking"
 }
 
 OLGA.STATES = {
@@ -47,7 +48,8 @@ OLGA.STATES = {
     PETTING_TO_HAPPY = 7,
     STAND_IDLE = 8,
     IDLE_TO_STAND_IDLE = 9,
-    STAND_IDLE_TO_IDLE = 10
+    STAND_IDLE_TO_IDLE = 10,
+    WALKING = 11
      
 }
 
@@ -123,6 +125,7 @@ end
 ---@param olga EntityFamiliar
 function OLGA:InitOlga(olga)
     Isaac.CreateTimer(OLGA.UpdateHandColor, 1, 1, false)
+    olga.GridCollisionClass = 5
 end
 
 Mod:AddCallback(ModCallbacks.MC_FAMILIAR_INIT, OLGA.InitOlga, OLGA.FAMILIAR)
@@ -142,7 +145,7 @@ function OLGA:HandleLogic(olga)
     local playerDistance = player.Position:Distance(olga.Position)
     local pathfinder = olga:GetPathFinder()
     local data = olga:GetData()
-
+    
     
     if state == OLGA.STATES.IDLE then
         if playerDistance < OLGA.HAPPY_DISTANCE then
@@ -182,19 +185,33 @@ function OLGA:HandleLogic(olga)
             end
         end
     end
+    
+    --movement
 
-    if state == OLGA.STATES.STAND_IDLE then
-        if playerDistance > OLGA.SITTING_DISTANCE  then
-                --local random = room:FindFreeTilePosition(room:GetRandomPosition(10), 0)   
-                --olga.Velocity = (random - olga.Position):Normalized() * OLGA.WALK_SPEED
-                olga.Velocity = (player.Position - olga.Position):Normalized() * OLGA.WALK_SPEED * 1.2
-                olga.FlipX = math.abs((player.Position - olga.Position):GetAngleDegrees()) < 90
-        elseif playerDistance < OLGA.SITTING_DISTANCE then
+
+    if state == OLGA.STATES.STAND_IDLE
+    or state == OLGA.STATES.WALKING then
+        
+        if playerDistance > OLGA.HAPPY_DISTANCE then
+            pathfinder:FindGridPath(player.Position, OLGA.WALK_SPEED, 1, true)
+            olga.FlipX = math.abs((player.Position - olga.Position):GetAngleDegrees()) < 90
+        else
+            local speedDecay = playerDistance / (12 / OLGA.WALK_SPEED)
+            olga.Velocity = (player.Position - olga.Position):Normalized() * speedDecay
+        end
+    
+        if sprite:IsEventTriggered("TransitionHook")
+        and rng:RandomFloat() < OLGA.SWITCH_STANCE_CHANCE 
+        and playerDistance < OLGA.PETTING_DISTANCE then
             olga.Velocity = Vector.Zero
             OLGA:SetState(olga, "STAND_IDLE_TO_IDLE")
         end
-    else
-        olga.Velocity = Vector.Zero
+
+        --if olga.Velocity ~= Vector.Zero 
+        --and state == OLGA.STATES.STAND_IDLE then
+            --OLGA:SetState(olga, "WALKING")
+        --end
+
     end
 
     if state == OLGA.STATES.IDLE_TO_STAND_IDLE then
