@@ -2,7 +2,7 @@
 local Mod = OlgaDog
 local PETTING_HAND = {}
 
-PETTING_HAND.VARIANT = Isaac.GetEntityVariantByName("Petting Hand")
+--PETTING_HAND.VARIANT = Isaac.GetEntityVariantByName("Petting Hand")
 
 PETTING_HAND.COLOR = {
     PINK = -1,
@@ -23,7 +23,8 @@ PETTING_HAND.COMPATIBILITY = {
     "KEEPER"
 }
 --#endregion
---#region Petting Hand Update Callbacks
+--#region Petting Hand Functions
+
 function PETTING_HAND:OnChangeFamilyMember()
     OlgaDog:UpdateHandColor()
 end
@@ -45,47 +46,34 @@ function OlgaDog:UpdateHandColor()
 
         for string, value in pairs(PETTING_HAND.COLOR) do
             string:lower()
-            if skinColor == 1 then
-                if Epiphany then
-                    if playerType == EPlayer.JUDAS
-                    or playerType == EPlayer.JUDAS2
-                    or playerType == EPlayer.JUDAS4
-                    or playerType == EPlayer.JUDAS5 then
-                        if playerType == EPlayer.JUDAS2 then
-                            sprite:ReplaceSpritesheet(2, "gfx/petting_hands/petting_hand_judas_angel.png")
-                        else
-                            sprite:ReplaceSpritesheet(2, "gfx/petting_hands/petting_hand_shadow.png")
-                        end
-                        break
-                    end
-                else
-                    sprite:ReplaceSpritesheet(2, "gfx/petting_hands/petting_hand_" .. string .. ".png")
-                end
-                break
-            elseif skinColor == 0 then
-                if Epiphany then
-                    if playerType == EPlayer.JUDAS1 then
-                        sprite:ReplaceSpritesheet(2, "gfx/petting_hands/petting_hand_judas_angel.png")
-                    end
-                else
-                    sprite:ReplaceSpritesheet(2, "gfx/petting_hands/petting_hand_" .. string .. ".png")
-                end
-                break
-            elseif skinColor == value then
+            if skinColor == value then
                 sprite:ReplaceSpritesheet(2, "gfx/petting_hands/petting_hand_" .. string .. ".png")
                 break
             end
         end
 
         if Epiphany then
+            if playerType == EPlayer.JUDAS
+            or playerType == EPlayer.JUDAS4
+            or playerType == EPlayer.JUDAS5 then
+                sprite:ReplaceSpritesheet(2, "gfx/petting_hands/petting_hand_shadow.png")
+                goto finish
+            elseif playerType == EPlayer.JUDAS2 
+                or playerType == EPlayer.JUDAS1 then
+                sprite:ReplaceSpritesheet(2, "gfx/petting_hands/petting_hand_judas_angel.png")
+                goto finish
+            end
+
             for _, moddedString in pairs(PETTING_HAND.COMPATIBILITY) do
                 local fileName = moddedString:lower()
                 if playerType == EPlayer[moddedString] then
                     sprite:ReplaceSpritesheet(2, "gfx/petting_hands/petting_hand_tr_" .. fileName .. ".png")
+                    break
                 end
-                break
             end
         end
+        
+        ::finish::
         sprite:LoadGraphics()
     end
 end

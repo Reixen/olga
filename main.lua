@@ -10,3 +10,4 @@ OlgaDog.Familiar = Isaac.GetEntityVariantByName("Olga")
 
 include("scripts.olga")
 include("scripts.petting_hand")
+include("scripts.fetch")
