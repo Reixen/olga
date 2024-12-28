@@ -2,8 +2,8 @@
 
     <entity name="Olga" baseHP = "-1"
 		id="3" anm2path="familiar_olga.anm2" friction="1" 
-		numGridCollisionPoints="6" collisionMass="7" collisionRadius="10" 
-		gridCollision = "floor" shadowSize="15" tags="cansacrifice">
+		numGridCollisionPoints="6" collisionMass="7" collisionRadius="8" 
+		gridCollision = "ground" shadowSize="15" tags="cansacrifice">
 	</entity>
 
 	<entity anm2path="effect_petting.anm2" id="1000" 

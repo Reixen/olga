@@ -1,10 +1,12 @@
 --#region Variables
 local Mod = OlgaDog
 
-local game = Mod.Game
+local sfxMan = Mod.SfxMan
 
-local FETCH = {}
-local debugFetch = false
+local FETCH = Mod.Fetch
+
+local MARK_SPEED = 20
+local ONE_SEC = 30
 
 --#endregion
 --#region Callbacks
@@ -12,60 +14,80 @@ local debugFetch = false
 ---@param player EntityPlayer
 function FETCH:OnUseBone(cardId, player, useFlags)
     local data = player:GetData()
-    if not data.IsHoldingBone or data.cardId then 
-        data.IsHoldingBone = false 
-        data.cardId = cardId
-    end
-    if debugFetch then
-        data.IsHoldingBone = true
-        local cardConfig = Isaac.GetItemConfig():GetCard(cardId)
-        local anm2Name = cardConfig.Name
-        local animName = cardConfig.HudAnim
-        local sprite = Sprite()
-        -- make a bone
-        print(anm2Name)
-        sprite:Load(anm2Name, false)
-        sprite:SetAnimation(animName, false)
-        sprite:LoadGraphics()
+    if not data.hasDoggy then return end
 
-        player:AnimatePickup(sprite, false, "LiftItem")
-        print("success")
+    data.cardId = cardId
+    
+    player:AnimateCard(cardId)
+    player:AnimatePickup(player:GetHeldSprite(), false, "LiftItem")
+    --local cardConfig = Isaac.GetItemConfig():GetCard(cardId)
+    --player:AnimatePickup(sprite, false, "LiftItem")
+    if not data.hasMark then
+        local fetchMark = Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.TARGET, 0, player.Position, Vector.Zero, player)
+        local markData = fetchMark:GetData()
+        markData.fetchMark = true
+        markData.cooldown = ONE_SEC * 3.5
     end
-    --return true
+    return true
 end
 Mod:AddCallback(ModCallbacks.MC_PRE_USE_CARD, FETCH.OnUseBone)
+local thrownPickup
+local lastPos
 
-function FETCH:OnRender()
-    if not debugFetch then
-        return
-    end
-    
-    local player = Isaac.GetPlayer()
-    local data = player:GetData()
-    
-    if not data.hasFamiliar then
-        for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Familiar)) do
-            if not familiar then
-                return
-            end
-            data.hasFamiliar = familiar
-        end
+---@param effect EntityEffect
+function FETCH:OnMarkRender(effect)
+    local data = effect:GetData()
+    if not data.fetchMark then return end
+
+    for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Familiar)) do
+        if not familiar then return end
+        data.fam = familiar:ToFamiliar()
+        data.player = data.fam.Player
+        data.playerData = data.player:GetData()
     end
 
-    data.doggyData = data.hasFamiliar:GetData()
-    
-
-
-    
-    if debugFetch then
-        if Input.IsActionPressed(ButtonAction.ACTION_SHOOTDOWN, 0) 
-        and data.IsHoldingBone then
-            player:AnimatePickup(Sprite(), false, "HideItem")
-            data.IsHoldingBone = false
-            print("what")
-            Isaac.Spawn(EntityType.ENTITY_PICKUP, 300, data.cardId, player.Position, Vector.Zero, nil)
+    data.cooldown = data.cooldown - 1
+    if data.cooldown > ONE_SEC then
+        if Input.IsActionPressed(ButtonAction.ACTION_SHOOTDOWN, 0) then
+            effect.Velocity = Vector(0, MARK_SPEED)
         end
-        --player:StopExtraAnimation()
+        if Input.IsActionPressed(ButtonAction.ACTION_SHOOTUP, 0) then
+            effect.Velocity = Vector(0, -MARK_SPEED)
+        end
+        if Input.IsActionPressed(ButtonAction.ACTION_SHOOTRIGHT, 0) then
+            effect.Velocity =  Vector(MARK_SPEED, 0)
+        end
+        if Input.IsActionPressed(ButtonAction.ACTION_SHOOTLEFT, 0) then
+            effect.Velocity =  Vector(-MARK_SPEED, 0)
+        end
+    else
+        -- tear needs to not have fixed time it takes to arrive atmarked
+        -- data.thrownPickup
+        if data.cooldown == ONE_SEC then
+            lastPos = data.player.Position
+            thrownPickup = Isaac.Spawn(
+                            EntityType.ENTITY_TEAR, 
+                            TearVariant.BONE, 
+                            0, 
+                            lastPos, 
+                            Vector.Zero, 
+                            data.player):ToTear() ---@cast thrownPickup EntityTear
+            sfxMan:Play(SoundEffect.SOUND_SHELLGAME)
+            data.player:AnimatePickup(data.player:GetHeldSprite(), false, "HideItem")
+        end
+        if thrownPickup then
+            thrownPickup.TearFlags = TearFlags.TEAR_PIERCING | TearFlags.TEAR_NO_GRID_DAMAGE | TearFlags.TEAR_SPECTRAL
+            local distance = effect.Position:Distance(lastPos)
+            thrownPickup.Velocity = (effect.Position - lastPos):Normalized() * (distance / 29)
+            thrownPickup.FallingAcceleration = data.cooldown > 28 and -5 or 0.25
+        end
+    end
+    if data.cooldown <= 0 then
+        local bone = Isaac.Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TAROTCARD, data.playerData.cardId, effect.Position, Vector.Zero, nil)
+        local famData = data.fam:GetData()
+        famData.isHolding = data.playerData.cardId
+        famData.isFetching = bone:ToPickup().Position
+        effect:Remove()
     end
 end
-Mod:AddCallback(ModCallbacks.MC_POST_RENDER, FETCH.OnRender)
+Mod:AddCallback(ModCallbacks.MC_POST_EFFECT_UPDATE, FETCH.OnMarkRender, EffectVariant.TARGET)
