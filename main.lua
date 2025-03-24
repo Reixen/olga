@@ -17,7 +17,7 @@ OlgaDog.FeedingBowl = {}
 include("scripts.olga_body")
 include("scripts.olga_head")
 include("scripts.petting_hand")
-include("scripts.fetch")
+-- include("scripts.fetch")
 
 ----------------------------------------------------------------
 ---                          TO DO:                          ---

@@ -13,6 +13,7 @@ local ONE_SEC = 30
 
 ---@param player EntityPlayer
 function FETCH:OnUseBone(cardId, player, useFlags)
+    
     local data = player:GetData()
     if not data.hasDoggy then return end
 

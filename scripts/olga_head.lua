@@ -150,6 +150,8 @@ end
 function OLGA_HEAD:HandleHeadLogic(olga, offset)
     local data = olga:GetData()
 
+    if not data.headSprite then return end -- For Sac altar
+
     data.headSprite.FlipX = olga.FlipX
     data.headSprite:Render(Isaac.WorldToScreen(olga.Position + olga:GetNullOffset("head")))
     if olga.Player:HasCollectible(CollectibleType.COLLECTIBLE_BFFS) then

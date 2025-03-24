@@ -214,6 +214,7 @@ function OLGA_BODY:OnInit(olga)
     data.isMoving = true
     data.headAnim = OLGA_HEAD.ANIM.IDLE
     data.bodyAnim = OLGA_BODY.ANIM.SIT
+    data.isHolding = nil
 
     data.headSprite = Sprite()
     data.headSprite:Load("gfx/olga_head.anm2", true)
@@ -236,6 +237,7 @@ function OLGA_BODY:HandleNewRoom()
         if room:IsInitialized() then
             local data = familiar:ToFamiliar():GetData()
             data.wanderCooldown = 0
+            data.randomPosition = nil
             data.canPet = false
         end
     end
