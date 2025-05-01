@@ -1,23 +1,29 @@
 OlgaDog = RegisterMod("Olga", 1)
 
 if not REPENTOGON then return end
-    
+
+local Mod = OlgaDog
+
     -- Variables
-OlgaDog.Game = Game()
-OlgaDog.SfxMan = SFXManager()
-OlgaDog.Familiar = Isaac.GetEntityVariantByName("Olga")
+Mod.Game = Game()
+Mod.SfxMan = SFXManager()
+Mod.Familiar = Isaac.GetEntityVariantByName("Olga")
 
-    -- Le tables
-OlgaDog.OlgaBody = {}
-OlgaDog.OlgaHead = {}
-OlgaDog.PettingHand = {}
-OlgaDog.Fetch = {}
-OlgaDog.FeedingBowl = {}
+Mod.OlgaBody = {}
+Mod.OlgaHead = {}
+Mod.PettingHand = {}
 
-include("scripts.olga_body")
-include("scripts.olga_head")
-include("scripts.petting_hand")
--- include("scripts.fetch")
+Mod.Scripts = {
+    "olga_body",
+    "olga_head",
+    "petting_hand",
+    --"fetch",
+    --"feeding_bowl",
+}
+
+for _, scripts in pairs(Mod.Scripts) do
+    include("scripts." .. scripts)
+end
 
 ----------------------------------------------------------------
 ---                          TO DO:                          ---

@@ -5,7 +5,6 @@ local game = Mod.Game
 local OLGA_HEAD = Mod.OlgaHead
 local OLGA_BODY = Mod.OlgaBody
 
-OLGA_BODY.FAMILIAR = Mod.Familiar
 OLGA_BODY.SWITCH_STANCE_CHANCE = 1 / 20
 OLGA_BODY.WALK_SPEED = 0.4
 
@@ -44,19 +43,17 @@ OLGA_BODY.ANIM_FUNC = {
             OLGA_BODY:SetAnimation(olga, OLGA_BODY.ANIM.SIT_WAGGING)
         end
 
-        if rng:RandomFloat() < OLGA_BODY.SWITCH_STANCE_CHANCE 
-        and frame % 30 == 0 
+        if rng:RandomFloat() < OLGA_BODY.SWITCH_STANCE_CHANCE
+        and frame % 30 == 0
         or data.isHolding then
             OLGA_BODY:SetAnimation(olga, OLGA_BODY.ANIM.SIT_TO_STAND)
         end
     end,
 
     ["SitWagging"] = function(olga)
-        local player = olga.Player
         local sprite = olga:GetSprite()
-        local playerDistance = player.Position:Distance(olga.Position)
         if  sprite:IsEventTriggered("TransitionHook") and
-            playerDistance > OLGA_BODY.HAPPY_DISTANCE then
+        not OLGA_BODY:IsWithin(olga, OLGA_BODY.HAPPY_DISTANCE) then
             OLGA_BODY:SetAnimation(olga, OLGA_BODY.ANIM.SIT)
         end
     end,
@@ -89,13 +86,13 @@ OLGA_BODY.ANIM_FUNC = {
 
         if not data.isFetching then -- If there is an item that needs fetching
             
-            if data.wanderCooldown <= 0 and not data.isHolding then 
+            if data.wanderCooldown <= 0 and not data.isHolding then
 
                 data.randomPosition = olga.Position + RandomVector() * (OLGA_BODY.WANDER_RADIUS / (math.random(100, 200) / 100))
                 data.wanderCooldown = math.random(ONE_SEC * 2, ONE_SEC * 8)
                 
                 local projectedTile = room:GetGridIndex(data.randomPosition)
-                if not data.randomPosition 
+                if not data.randomPosition
                 or not pathfinder:HasPathToPos(data.randomPosition, false) then
                     data.wanderCooldown = 0
                 end
@@ -146,7 +143,7 @@ OLGA_BODY.ANIM_FUNC = {
                 pathfinder:FindGridPath(data.isFetching, OLGA_BODY.WALK_SPEED * 1.5, 1, true)
                 olga.FlipX = math.abs((data.isFetching - olga.Position):GetAngleDegrees()) < 90
                 olga.State = OLGA_BODY.STATE.OBTAIN
-            else   
+            else
                 for _, item in ipairs(Isaac.FindInRadius(data.isFetching, ONE_TILE, EntityPartition.PICKUP)) do
                     if not item then
                         data.isFetching = nil 
@@ -179,14 +176,14 @@ OLGA_BODY.ANIM_FUNC = {
             OLGA_BODY:SetAnimation(olga, OLGA_BODY.ANIM.WALKING)
             data.isMoving = false
 
-        elseif data.isMoving == false 
-        and olga.Velocity:Length() < 0.1 then 
+        elseif data.isMoving == false
+        and olga.Velocity:Length() < 0.1 then
             OLGA_BODY:SetAnimation(olga, OLGA_BODY.ANIM.STAND)
             data.isMoving = true
         end
 
         if sprite:IsEventTriggered("TransitionHook")
-        and rng:RandomFloat() < OLGA_BODY.SWITCH_STANCE_CHANCE 
+        and rng:RandomFloat() < OLGA_BODY.SWITCH_STANCE_CHANCE
         and frame % 90 then
             olga.Velocity = Vector.Zero
             OLGA_BODY:SetAnimation(olga, OLGA_BODY.ANIM.STAND_TO_SIT)
@@ -222,18 +219,25 @@ function OLGA_BODY:OnInit(olga)
 
     olga:AddEntityFlags(EntityFlag.FLAG_NO_KNOCKBACK | EntityFlag.FLAG_NO_PHYSICS_KNOCKBACK)
 end
-Mod:AddCallback(ModCallbacks.MC_FAMILIAR_INIT, OLGA_BODY.OnInit, OLGA_BODY.FAMILIAR)
+Mod:AddCallback(ModCallbacks.MC_FAMILIAR_INIT, OLGA_BODY.OnInit, Mod.Familiar)
 
 function OLGA_BODY:HandleNewRoom()
     local room = game:GetRoom()
     local roomtype = room:GetType()
     if roomtype  == RoomType.ROOM_ISAACS or roomtype == RoomType.ROOM_BARREN then
         if room:IsFirstVisit() then
-            Isaac.Spawn(EntityType.ENTITY_FAMILIAR, OLGA_BODY.FAMILIAR, 0, room:GetCenterPos(), Vector.Zero, nil)
+            Isaac.Spawn(
+                EntityType.ENTITY_FAMILIAR,
+                Mod.Familiar,
+                0,
+                room:GetCenterPos(room:GetCenterPos()),
+                Vector.Zero,
+                nil
+            )
         end
     end
     
-    for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, OLGA_BODY.FAMILIAR)) do
+    for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Familiar)) do
         if room:IsInitialized() then
             local data = familiar:ToFamiliar():GetData()
             data.wanderCooldown = 0
@@ -245,7 +249,7 @@ end
 Mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, OLGA_BODY.HandleNewRoom)
 
 function OLGA_BODY:GoodbyeOlga()
-    for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, OLGA_BODY.FAMILIAR)) do
+    for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Familiar)) do
         familiar:ToFamiliar().Player:GetData().hasDoggy = false
         familiar:Remove()
     end
@@ -271,9 +275,15 @@ function OLGA_BODY:HandleBodyLogic(olga)
     
     OLGA_BODY.ANIM_FUNC[data.bodyAnim](olga)
 end
-Mod:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, OLGA_BODY.HandleBodyLogic, OLGA_BODY.FAMILIAR)
+Mod:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, OLGA_BODY.HandleBodyLogic, Mod.Familiar)
 
 function OLGA_BODY:CanWag(data)
     return data.headAnim == OLGA_HEAD.ANIM.HAPPY or data.headAnim == OLGA_HEAD.ANIM.PETTING
+end
+
+---@param olga EntityFamiliar
+---@param distance number
+function OLGA_BODY:IsWithin(olga, distance)
+    return olga.Player.Position:DistanceSquared(olga.Position) < distance ^ 2
 end
 --#endregion

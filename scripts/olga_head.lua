@@ -6,7 +6,6 @@ local sfxMan = Mod.SfxMan
 
 local OLGA_HEAD = Mod.OlgaHead
 local OLGA_BODY = Mod.OlgaBody
-OLGA_HEAD.FAMILIAR = Mod.Familiar
 
 OLGA_HEAD.SOUND_YAWN = Isaac.GetSoundIdByName("Olga Yawn")
 OLGA_HEAD.YAWN_CHANCE = 1 / 60
@@ -34,20 +33,18 @@ OLGA_HEAD.ANIM = {
 OLGA_HEAD.ANIM_FUNC = {
     ["Idle"] = function(olga)
         local data = olga:GetData()
-        local player = olga.Player
         local frame = game:GetFrameCount()
         local rng = olga:GetDropRNG()
-        local playerDistance = player.Position:Distance(olga.Position)
 
         if data.isHolding and not data.isFetching then
             OLGA_HEAD:SetAnimation(olga, OLGA_HEAD.ANIM.IDLE_TO_HOLD)
         end
 
-        if playerDistance < OLGA_HEAD.HAPPY_DISTANCE then
+        if OLGA_BODY:IsWithin(olga, OLGA_HEAD.HAPPY_DISTANCE) then
             local room = game:GetRoom()
             if  data.headSprite:IsEventTriggered("TransitionHook")
-            and room:IsClear() 
-            and data.canPet 
+            and room:IsClear()
+            and data.canPet
             and not data.isHolding then
                 OLGA_HEAD:SetAnimation(olga, OLGA_HEAD.ANIM.IDLE_TO_HAPPY)
             end
@@ -62,14 +59,12 @@ OLGA_HEAD.ANIM_FUNC = {
 
     ["Happy"] = function(olga)
         local data = olga:GetData()
-        local player = olga.Player
-        local playerDistance = player.Position:Distance(olga.Position)
         if data.headSprite:IsEventTriggered("TransitionHook") then
-            if playerDistance < OLGA_HEAD.PETTING_DISTANCE then
+            if OLGA_BODY:IsWithin(olga, OLGA_HEAD.PETTING_DISTANCE) then
                 Mod.PettingHand:UpdateHandColor()
                 OLGA_HEAD:SetAnimation(olga, OLGA_HEAD.ANIM.HAPPY_TO_PETTING)
 
-            elseif playerDistance > OLGA_HEAD.HAPPY_DISTANCE then
+            elseif not OLGA_BODY:IsWithin(olga, OLGA_HEAD.HAPPY_DISTANCE) then
                 OLGA_HEAD:SetAnimation(olga, OLGA_HEAD.ANIM.HAPPY_TO_IDLE)
             end
         end
@@ -83,9 +78,6 @@ OLGA_HEAD.ANIM_FUNC = {
             local _, terminal = string.find(animName, "To")
             local result = string.upper(string.sub(animName, terminal + 1, #animName))
             OLGA_HEAD:SetAnimation(olga, OLGA_HEAD.ANIM[result])
-        end
-
-        if data.isHolding and not data.isFetching then
         end
     end,
 
@@ -101,10 +93,9 @@ OLGA_HEAD.ANIM_FUNC = {
         end
     end,
 
-    ["Petting"] = function(olga) 
+    ["Petting"] = function(olga)
         local data = olga:GetData()
         local player = olga.Player
-        local playerDistance = player.Position:Distance(olga.Position)
 
         if not data.isHappy then
             player:AddCostume(Isaac.GetItemConfig():GetCollectible(CollectibleType.COLLECTIBLE_NUMBER_ONE), false)
@@ -112,7 +103,7 @@ OLGA_HEAD.ANIM_FUNC = {
         end
 
         if data.headSprite:IsEventTriggered("TransitionHook") then
-            if playerDistance > OLGA_HEAD.PETTING_DISTANCE then
+            if not OLGA_BODY:IsWithin(olga, OLGA_HEAD.PETTING_DISTANCE) then
                 OLGA_HEAD:SetAnimation(olga, OLGA_HEAD.ANIM.PETTING_TO_HAPPY)
                 if data.isHappy and
                 not player:HasCollectible(CollectibleType.COLLECTIBLE_NUMBER_ONE) then
@@ -162,7 +153,7 @@ function OLGA_HEAD:HandleHeadLogic(olga, offset)
 
     OLGA_HEAD.ANIM_FUNC[data.headAnim](olga)
 end
-Mod:AddCallback(ModCallbacks.MC_POST_FAMILIAR_RENDER, OLGA_HEAD.HandleHeadLogic, OLGA_HEAD.FAMILIAR)
+Mod:AddCallback(ModCallbacks.MC_POST_FAMILIAR_RENDER, OLGA_HEAD.HandleHeadLogic, Mod.Familiar)
 
 function OLGA_HEAD:CanIdleAnimation(olga)
     return olga.State ~= OLGA_BODY.STATE.OBTAIN and olga.State ~= OLGA_BODY.STATE.RETRIEVE
