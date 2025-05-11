@@ -310,6 +310,7 @@ Mod:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, DogBody.HandleBodyLogic, Mod.Do
 ---@param olga EntityFamiliar
 function DogBody:OnInit(olga)
     local data = olga:GetData()
+    local sprite = olga:GetSprite()
 
     data.eventCD = DogBody.EVENT_COOLDOWN
     data.animCD = DogBody.EVENT_COOLDOWN * 2
@@ -323,16 +324,40 @@ function DogBody:OnInit(olga)
     data.headSprite:Load("gfx/render_olga_head.anm2", true)
     data.headSprite:Play(Util.HeadAnim.IDLE, true)
 
-    if not DogBody:IsBirthdayWeek() then
-        data.headSprite:GetLayer(7):SetVisible(false)
-        data.headSprite:GetLayer(8):SetVisible(false)
-        olga:GetSprite():GetLayer(3):SetVisible(false)
-    end
-
+    -- Fur Colors
     local persistentSave = saveMan.GetPersistentSave()
     if persistentSave.furColor ~= nil and persistentSave.furColor ~= 0 then
-        Util:ApplyColorPalette(olga:GetSprite(), "olga_shader", persistentSave.furColor)
-        Util:ApplyColorPalette(olga:GetData().headSprite, "olga_shader", persistentSave.furColor, Util.HeadLayerId)
+        Util:ApplyColorPalette(sprite, "olga_shader", persistentSave.furColor)
+        Util:ApplyColorPalette(data.headSprite, "olga_shader", persistentSave.furColor, Util.HeadLayerId)
+    end
+
+    local gameData = Isaac.GetPersistentGameData()
+    local isBday = DogBody:IsBirthdayWeek()
+    if isBday then
+        gameData:TryUnlock(Util.Achievements.PARTY_HAT.ID)
+    end
+
+    -- Hat Costumes
+    if persistentSave.hatCostume == 1 or not persistentSave.hatCostume then
+        if isBday then
+            if not sprite:GetLayer(3):IsVisible() then
+                Util:SetHatVisibility(true, sprite, data.headSprite)
+            end
+
+            Util:ChangeVanity("party", sprite, data.headSprite)
+        else
+            Util:SetHatVisibility(false, sprite, data.headSprite)
+        end
+    else
+        local gameData = Isaac.GetPersistentGameData()
+        local hatCostumes = Mod.Cosmetics:EvaluateUnlockedHats(gameData)
+        local chosenVanity = hatCostumes[persistentSave.hatCostume]
+
+        if chosenVanity == nil or chosenVanity == "none" then
+            Util:SetHatVisibility(false, sprite, data.headSprite)
+        else
+            Util:ChangeVanity(chosenVanity, sprite, data.headSprite)
+        end
     end
 
     olga:AddEntityFlags(EntityFlag.FLAG_NO_KNOCKBACK | EntityFlag.FLAG_NO_PHYSICS_KNOCKBACK)

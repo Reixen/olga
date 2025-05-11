@@ -369,6 +369,24 @@ function Util:CopyTable(table)
     end
     return copy
 end
+
+---@param bool boolean
+---@param sprite Sprite
+---@param headSprite Sprite
+function Util:SetHatVisibility(bool, sprite, headSprite)
+    sprite:GetLayer(3):SetVisible(bool)
+    headSprite:GetLayer(7):SetVisible(bool)
+    headSprite:GetLayer(8):SetVisible(bool)
+end
+
+---@param hatType string
+---@param sprite Sprite
+---@param headSprite Sprite
+function Util:ChangeVanity(hatType, sprite, headSprite)
+    sprite:ReplaceSpritesheet(3, "gfx/familiar/olga_costumes/hat_" .. hatType .. ".png", true)
+    headSprite:ReplaceSpritesheet(7, "gfx/familiar/olga_costumes/hat_" .. hatType .. ".png", true)
+    headSprite:ReplaceSpritesheet(8, "gfx/familiar/olga_costumes/hat_" .. hatType .. ".png", true)
+end
 --endregion
 -- Entity Identifier
 --local PriceTextFontTempesta = Font()

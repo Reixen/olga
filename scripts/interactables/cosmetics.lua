@@ -15,8 +15,23 @@ Cosmetics.CHARGE_BAR_OFFSET = Vector(5, -20)
 Cosmetics.SIGN_OFFSET = Vector(25, 8)
 
 Cosmetics.Costumes = {}
-Cosmetics.Costumes.HATS = {
-    "none"
+Cosmetics.UnlockableHats = {
+    function(persistentData) ---@param persistentData? PersistentGameData
+        local gameData = persistentData or Isaac.GetPersistentGameData()
+        if gameData:Unlocked(Util.Achievements.HAT_COSTUMES.ID) then
+            return {
+                "top",
+                "cowgirl",
+                "dargon"
+            }
+        end
+    end,
+    function(persistentData) ---@param persistentData? PersistentGameData
+        local gameData = persistentData or Isaac.GetPersistentGameData()
+        if gameData:Unlocked(Util.Achievements.PARTY_HAT.ID) then
+            return "party"
+        end
+    end,
 }
 --#endregion
 --#region Callbacks
@@ -46,9 +61,31 @@ function Cosmetics:OnUseDressingTable(slot)
         return
     end
 
-    persistentSave.hatCostume = persistentSave.hatCostume or -1
-    persistentSave.hatCostume = persistentSave.hatCostume >= #Cosmetics.Costumes.HATS and 0 or persistentSave + 1
+    local hatCostumes = Cosmetics:EvaluateUnlockedHats(Isaac.GetPersistentGameData())
+    persistentSave.hatCostume = persistentSave.hatCostume or 1
+    persistentSave.hatCostume = persistentSave.hatCostume >= #hatCostumes and 1 or persistentSave.hatCostume + 1
 
+    local chosenVanity = hatCostumes[persistentSave.hatCostume]
+        for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
+            local sprite = familiar:GetSprite()
+            local olgaData = familiar:GetData()
+
+        if chosenVanity == "none" or chosenVanity == nil then
+            Util:SetHatVisibility(false, sprite, olgaData.headSprite)
+        else
+            local hatLayer = sprite:GetLayer(3)
+            if not hatLayer:IsVisible() then
+                Util:SetHatVisibility(true, sprite, olgaData.headSprite)
+            elseif hatLayer:GetSpritesheetPath():match("party") then -- It's so that they don't swap to the same hat
+                persistentSave.hatCostume = 1
+                Util:SetHatVisibility(false, sprite, olgaData.headSprite)
+            end
+
+            Util:ChangeVanity(chosenVanity, sprite, olgaData.headSprite)
+        end
+
+        Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.POOF01, 0, familiar.Position, Vector.Zero, familiar)
+    end
 end
 Mod:AddCallback(ModCallbacks.MC_POST_SLOT_COLLISION, Cosmetics.OnUseDressingTable, SlotVariant.MOMS_DRESSING_TABLE)
 
@@ -108,27 +145,29 @@ function Cosmetics:PostPlayerUpdate(player)
             goto skip
         end
 
-        local persistentSave = Isaac.GetPersistentGameData()
-        if not persistentSave:Unlocked(Util.Achievements.HAT_COSTUMES.ID)
-        or not persistentSave:Unlocked(Util.Achievements.PARTY_HAT.ID) then
-            return
-        end
-
-        if Input.IsActionPressed(ButtonAction.ACTION_DROP, player.ControllerIndex) then
-            if charge >= Cosmetics.MAX_CHARGE then
-                local endFrame = data.optionSprite:GetCurrentAnimationData():GetLength() - 1
-                local currentFrame = data.optionSprite:GetFrame()
-                local nextFrame = currentFrame < endFrame and currentFrame + 1 or 0
-                data.optionSprite:SetFrame(nextFrame)
-
-                Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.POOF01, 1, slot.Position + Cosmetics.SIGN_OFFSET, Vector.Zero, slot)
-
-                charge = 0
-            else
-                charge = math.min(charge + 1, Cosmetics.MAX_CHARGE)
+        do
+            local persistentSave = Isaac.GetPersistentGameData()
+            if not persistentSave:Unlocked(Util.Achievements.HAT_COSTUMES.ID)
+            and not persistentSave:Unlocked(Util.Achievements.PARTY_HAT.ID) then
+                return
             end
-        else
-            charge = 0
+
+            if Input.IsActionPressed(ButtonAction.ACTION_DROP, player.ControllerIndex) then
+                if charge >= Cosmetics.MAX_CHARGE then
+                    local endFrame = data.optionSprite:GetCurrentAnimationData():GetLength() - 1
+                    local currentFrame = data.optionSprite:GetFrame()
+                    local nextFrame = currentFrame < endFrame and currentFrame + 1 or 0
+                    data.optionSprite:SetFrame(nextFrame)
+
+                    Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.POOF01, 1, slot.Position + Cosmetics.SIGN_OFFSET, Vector.Zero, slot)
+
+                    charge = 0
+                else
+                    charge = math.min(charge + 1, Cosmetics.MAX_CHARGE)
+                end
+            else
+                charge = 0
+            end
         end
 
         ::skip::
@@ -203,4 +242,23 @@ function Cosmetics:RenderChargeBar(HUDSprite, charge, maxCharge, position)
     end
 end
 
+---@param persistentData? PersistentGameData
+---@return table
+function Cosmetics:EvaluateUnlockedHats(persistentData)
+    local hatCostumes = {"none"}
+
+    for _, contents in ipairs(Cosmetics.UnlockableHats) do
+        local unlockedCostumes = contents(persistentData)
+
+        if type(unlockedCostumes) == "table" then
+            for _, hats in ipairs(unlockedCostumes) do
+                hatCostumes[#hatCostumes+1] = hats
+            end
+        elseif type(unlockedCostumes) == "string" then
+            hatCostumes[#hatCostumes+1] = unlockedCostumes
+        end
+    end
+
+    return hatCostumes
+end
 --#endregion
