@@ -3,7 +3,7 @@ local Mod = OlgaDog
 
 local sfxMan = Mod.SfxMan
 
-local FETCH = Mod.Fetch
+local FETCH = {}
 
 local MARK_SPEED = 20
 local ONE_SEC = 30
@@ -27,7 +27,7 @@ function FETCH:OnUseBone(cardId, player, useFlags)
         local fetchMark = Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.TARGET, 0, player.Position, Vector.Zero, player)
         local markData = fetchMark:GetData()
         markData.fetchMark = true
-        markData.cooldown = ONE_SEC * 3.5
+        markData.cooldown = ONE_SEC * 1.5
     end
     return true
 end
@@ -48,7 +48,7 @@ function FETCH:OnMarkRender(effect)
     end
 
     data.cooldown = data.cooldown - 1
-    if data.cooldown > ONE_SEC then
+    if data.cooldown > ONE_SEC / 2 then
         if Input.IsActionPressed(ButtonAction.ACTION_SHOOTDOWN, 0) then
             effect.Velocity = Vector(0, MARK_SPEED)
         end
@@ -64,7 +64,7 @@ function FETCH:OnMarkRender(effect)
     else
         -- tear needs to not have fixed time it takes to arrive atmarked
         -- data.thrownPickup
-        if data.cooldown == ONE_SEC then
+        if data.cooldown == ONE_SEC / 2 then
             lastPos = data.player.Position
             thrownPickup = Isaac.Spawn(
                             EntityType.ENTITY_TEAR, 
@@ -76,11 +76,13 @@ function FETCH:OnMarkRender(effect)
             sfxMan:Play(SoundEffect.SOUND_SHELLGAME)
             data.player:AnimatePickup(data.player:GetHeldSprite(), false, "HideItem")
         end
+
         if thrownPickup then
             thrownPickup.TearFlags = TearFlags.TEAR_PIERCING | TearFlags.TEAR_NO_GRID_DAMAGE | TearFlags.TEAR_SPECTRAL
             local distance = effect.Position:Distance(lastPos)
-            thrownPickup.Velocity = (effect.Position - lastPos):Normalized() * (distance / 29)
-            thrownPickup.FallingAcceleration = data.cooldown > 28 and -5 or 0.25
+            
+            thrownPickup.Velocity = (effect.Position - lastPos):Normalized() * (distance / 30)
+            thrownPickup.FallingAcceleration = data.cooldown > 14 and -20 or 1
         end
     end
     if data.cooldown <= 0 then

@@ -4,17 +4,17 @@ local Mod = OlgaDog
 local game = Mod.Game
 local sfxMan = Mod.SfxMan
 
-local OLGA_HEAD = Mod.OlgaHead
-local OLGA_BODY = Mod.OlgaBody
+local DOG_HEAD = Mod.OlgaHead
+local DOG_BODY = Mod.OlgaBody
 
-OLGA_HEAD.SOUND_YAWN = Isaac.GetSoundIdByName("Olga Yawn")
-OLGA_HEAD.YAWN_CHANCE = 1 / 60
+DOG_HEAD.SOUND_YAWN = Isaac.GetSoundIdByName("Olga Yawn")
+DOG_HEAD.YAWN_CHANCE = 1 / 60
 
 local ONE_TILE = 40
-OLGA_HEAD.HAPPY_DISTANCE = ONE_TILE * 2
-OLGA_HEAD.PETTING_DISTANCE = ONE_TILE * 1.2
+DOG_HEAD.HAPPY_DISTANCE = ONE_TILE * 2
+DOG_HEAD.PETTING_DISTANCE = ONE_TILE * 1.2
 
-OLGA_HEAD.ANIM = {
+DOG_HEAD.ANIM = {
     IDLE = "Idle",
     HAPPY = "Happy",
     HAPPY_TO_IDLE = "HappyToIdle",
@@ -30,29 +30,29 @@ OLGA_HEAD.ANIM = {
 
 --#endregion
 --#region Olga Head State Functions
-OLGA_HEAD.ANIM_FUNC = {
+DOG_HEAD.ANIM_FUNC = {
     ["Idle"] = function(olga)
         local data = olga:GetData()
         local frame = game:GetFrameCount()
         local rng = olga:GetDropRNG()
 
         if data.isHolding and not data.isFetching then
-            OLGA_HEAD:SetAnimation(olga, OLGA_HEAD.ANIM.IDLE_TO_HOLD)
+            DOG_HEAD:SetAnimation(olga, DOG_HEAD.ANIM.IDLE_TO_HOLD)
         end
 
-        if OLGA_BODY:IsWithin(olga, OLGA_HEAD.HAPPY_DISTANCE) then
+        if DOG_BODY:IsWithin(olga, DOG_HEAD.HAPPY_DISTANCE) then
             local room = game:GetRoom()
             if  data.headSprite:IsEventTriggered("TransitionHook")
             and room:IsClear()
             and data.canPet
             and not data.isHolding then
-                OLGA_HEAD:SetAnimation(olga, OLGA_HEAD.ANIM.IDLE_TO_HAPPY)
+                DOG_HEAD:SetAnimation(olga, DOG_HEAD.ANIM.IDLE_TO_HAPPY)
             end
         else data.canPet = true end
 
-        if frame % 30 == 0 and OLGA_HEAD:CanIdleAnimation(olga) then
-            if rng:RandomFloat() < OLGA_HEAD.YAWN_CHANCE then
-                OLGA_HEAD:SetAnimation(olga, OLGA_HEAD.ANIM.YAWN)
+        if frame % 30 == 0 and DOG_HEAD:CanIdleAnimation(olga) then
+            if rng:RandomFloat() < DOG_HEAD.YAWN_CHANCE then
+                DOG_HEAD:SetAnimation(olga, DOG_HEAD.ANIM.YAWN)
             end
         end
     end,
@@ -60,12 +60,12 @@ OLGA_HEAD.ANIM_FUNC = {
     ["Happy"] = function(olga)
         local data = olga:GetData()
         if data.headSprite:IsEventTriggered("TransitionHook") then
-            if OLGA_BODY:IsWithin(olga, OLGA_HEAD.PETTING_DISTANCE) then
+            if DOG_BODY:IsWithin(olga, DOG_HEAD.PETTING_DISTANCE) then
                 Mod.PettingHand:UpdateHandColor()
-                OLGA_HEAD:SetAnimation(olga, OLGA_HEAD.ANIM.HAPPY_TO_PETTING)
+                DOG_HEAD:SetAnimation(olga, DOG_HEAD.ANIM.HAPPY_TO_PETTING)
 
-            elseif not OLGA_BODY:IsWithin(olga, OLGA_HEAD.HAPPY_DISTANCE) then
-                OLGA_HEAD:SetAnimation(olga, OLGA_HEAD.ANIM.HAPPY_TO_IDLE)
+            elseif not DOG_BODY:IsWithin(olga, DOG_HEAD.HAPPY_DISTANCE) then
+                DOG_HEAD:SetAnimation(olga, DOG_HEAD.ANIM.HAPPY_TO_IDLE)
             end
         end
     end,
@@ -77,7 +77,7 @@ OLGA_HEAD.ANIM_FUNC = {
         if sprite:IsFinished(animName) then
             local _, terminal = string.find(animName, "To")
             local result = string.upper(string.sub(animName, terminal + 1, #animName))
-            OLGA_HEAD:SetAnimation(olga, OLGA_HEAD.ANIM[result])
+            DOG_HEAD:SetAnimation(olga, DOG_HEAD.ANIM[result])
         end
     end,
 
@@ -85,11 +85,11 @@ OLGA_HEAD.ANIM_FUNC = {
         local data = olga:GetData()
         local animName = data.headSprite:GetAnimation()
         if data.headSprite:IsFinished(animName) then
-            OLGA_HEAD:SetAnimation(olga, OLGA_HEAD.ANIM.IDLE)
+            DOG_HEAD:SetAnimation(olga, DOG_HEAD.ANIM.IDLE)
         end
 
         if data.headSprite:IsEventTriggered("Yawn") then
-            sfxMan:Play(OLGA_HEAD.SOUND_YAWN, 2)
+            sfxMan:Play(DOG_HEAD.SOUND_YAWN, 2)
         end
     end,
 
@@ -103,8 +103,8 @@ OLGA_HEAD.ANIM_FUNC = {
         end
 
         if data.headSprite:IsEventTriggered("TransitionHook") then
-            if not OLGA_BODY:IsWithin(olga, OLGA_HEAD.PETTING_DISTANCE) then
-                OLGA_HEAD:SetAnimation(olga, OLGA_HEAD.ANIM.PETTING_TO_HAPPY)
+            if not DOG_BODY:IsWithin(olga, DOG_HEAD.PETTING_DISTANCE) then
+                DOG_HEAD:SetAnimation(olga, DOG_HEAD.ANIM.PETTING_TO_HAPPY)
                 if data.isHappy and
                 not player:HasCollectible(CollectibleType.COLLECTIBLE_NUMBER_ONE) then
                     player:RemoveCostume(Isaac.GetItemConfig():GetCollectible(CollectibleType.COLLECTIBLE_NUMBER_ONE))
@@ -118,27 +118,27 @@ OLGA_HEAD.ANIM_FUNC = {
         local data = olga:GetData()
 
         if not data.isFetching and not data.isHolding then
-            OLGA_HEAD:SetAnimation(olga, OLGA_HEAD.ANIM.HOLD_TO_IDLE)
+            DOG_HEAD:SetAnimation(olga, DOG_HEAD.ANIM.HOLD_TO_IDLE)
         end
     end,
 }
-OLGA_HEAD.ANIM_FUNC["IdleToHappy"] = OLGA_HEAD.ANIM_FUNC["HappyToIdle"]
-OLGA_HEAD.ANIM_FUNC["HappyToPetting"] = OLGA_HEAD.ANIM_FUNC["HappyToIdle"]
-OLGA_HEAD.ANIM_FUNC["PettingToHappy"] = OLGA_HEAD.ANIM_FUNC["HappyToIdle"]
-OLGA_HEAD.ANIM_FUNC["IdleToHold"] = OLGA_HEAD.ANIM_FUNC["HappyToIdle"]
-OLGA_HEAD.ANIM_FUNC["HoldToIdle"] = OLGA_HEAD.ANIM_FUNC["HappyToIdle"]
+DOG_HEAD.ANIM_FUNC["IdleToHappy"] = DOG_HEAD.ANIM_FUNC["HappyToIdle"]
+DOG_HEAD.ANIM_FUNC["HappyToPetting"] = DOG_HEAD.ANIM_FUNC["HappyToIdle"]
+DOG_HEAD.ANIM_FUNC["PettingToHappy"] = DOG_HEAD.ANIM_FUNC["HappyToIdle"]
+DOG_HEAD.ANIM_FUNC["IdleToHold"] = DOG_HEAD.ANIM_FUNC["HappyToIdle"]
+DOG_HEAD.ANIM_FUNC["HoldToIdle"] = DOG_HEAD.ANIM_FUNC["HappyToIdle"]
 
 --#endregion
 --#region Olga Callbacks and Functions
 
-function OLGA_HEAD:SetAnimation(olga, anim)
+function DOG_HEAD:SetAnimation(olga, anim)
     local data = olga:GetData()
     data.headAnim = anim
     data.headSprite:Play(anim, true)
 end
 
 ---@param olga EntityFamiliar
-function OLGA_HEAD:HandleHeadLogic(olga, offset)
+function DOG_HEAD:HandleHeadLogic(olga, offset)
     local data = olga:GetData()
 
     if not data.headSprite then return end -- For Sac altar
@@ -151,11 +151,11 @@ function OLGA_HEAD:HandleHeadLogic(olga, offset)
         data.headSprite.Scale = Vector.One
     end
 
-    OLGA_HEAD.ANIM_FUNC[data.headAnim](olga)
+    DOG_HEAD.ANIM_FUNC[data.headAnim](olga)
 end
-Mod:AddCallback(ModCallbacks.MC_POST_FAMILIAR_RENDER, OLGA_HEAD.HandleHeadLogic, Mod.Familiar)
+Mod:AddCallback(ModCallbacks.MC_POST_FAMILIAR_RENDER, DOG_HEAD.HandleHeadLogic, Mod.Familiar)
 
-function OLGA_HEAD:CanIdleAnimation(olga)
-    return olga.State ~= OLGA_BODY.STATE.OBTAIN and olga.State ~= OLGA_BODY.STATE.RETRIEVE
+function DOG_HEAD:CanIdleAnimation(olga)
+    return olga.State ~= DOG_BODY.STATE.OBTAIN and olga.State ~= DOG_BODY.STATE.RETRIEVE
 end
 --#endregion

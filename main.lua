@@ -17,7 +17,8 @@ Mod.Scripts = {
     "olga_body",
     "olga_head",
     "petting_hand",
-    --"fetch",
+    "fetch",
+    "debug",
     --"feeding_bowl",
 }
 
@@ -31,11 +32,20 @@ end
 ---
 --- 1) Head + Body
 ---     - Animations bro
----         - Sleep
----         - Feed on thy bowl
----         - Running
----         - Signature bark bark idle animation
----         - 3 more idle animations
+---         - Lie Down
+---             - When initialized, sleep
+---             - Wake up and stretch if approached.
+---             - Lie back to position if within range, otherwise stand.
+---         - Sit
+---             - Scratch
+---         - Stand
+---             - Feed on Bowl
+---             - Running
+---             - Bark Bark Idle Animtion
+---         - Head Specific Idle Animations
+---             - Curious
+---             - Bark
+---             - Lean
 ---     - Optimize
 --- 2) Fetch
 ---     - Create fetching Stick (card)
