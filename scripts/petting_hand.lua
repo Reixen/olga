@@ -1,8 +1,10 @@
 --#region Variables
-local Mod = OlgaDog
-local PETTING_HAND = Mod.PettingHand
+local Mod = OlgaMod
+local PettingHand = {}
+OlgaMod.PettingHand = PettingHand
 
-PETTING_HAND.COLOR = {
+
+PettingHand.COLOR = {
     PINK = -1,
     WHITE = 0,
     BLACK = 1,
@@ -13,7 +15,7 @@ PETTING_HAND.COLOR = {
     SHADOW = 6
 }
 
-PETTING_HAND.COMPATIBILITY = {
+PettingHand.COMPATIBILITY = {
     "MAGDALENE",
     "EDEN",
     "BLUEBABY",
@@ -23,26 +25,26 @@ PETTING_HAND.COMPATIBILITY = {
 --#endregion
 --#region Petting Hand Functions
 
-function PETTING_HAND:OnChangeFamilyMember()
-    PETTING_HAND:UpdateHandColor()
+function PettingHand:OnChangeFamilyMember()
+    PettingHand:UpdateHandColor()
 end
-Mod:AddCallback(ModCallbacks.MC_USE_ITEM, PETTING_HAND.OnChangeFamilyMember, CollectibleType.COLLECTIBLE_CLICKER)
+Mod:AddCallback(ModCallbacks.MC_USE_ITEM, PettingHand.OnChangeFamilyMember, CollectibleType.COLLECTIBLE_CLICKER)
 
 --#endregion
 --#region Petting Hand Update Function
 
 -- Update the petting hand color based on the player's skin
-function PETTING_HAND:UpdateHandColor()
-    for _, doggy in pairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Familiar)) do
+function PettingHand:UpdateHandColor()
+    for _, doggy in pairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
         if not doggy then return end
         local olga = doggy:ToFamiliar() ---@cast olga EntityFamiliar
         local player = olga.Player
         local sprite = olga:GetData().headSprite
         local skinColor = player:GetBodyColor()
         local playerType = player:GetPlayerType()
-        local EPlayer = Epiphany.PlayerType
+        local EPlayer = Epiphany and Epiphany.PlayerType or nil
 
-        for string, value in pairs(PETTING_HAND.COLOR) do
+        for string, value in pairs(PettingHand.COLOR) do
             string:lower()
             if skinColor == value then
                 sprite:ReplaceSpritesheet(0, "gfx/petting_hands/petting_hand_" .. string .. ".png")
@@ -62,7 +64,7 @@ function PETTING_HAND:UpdateHandColor()
                 goto finish
             end
 
-            for _, moddedString in pairs(PETTING_HAND.COMPATIBILITY) do
+            for _, moddedString in pairs(PettingHand.COMPATIBILITY) do
                 local fileName = moddedString:lower()
                 if playerType == EPlayer[moddedString] then
                     sprite:ReplaceSpritesheet(0, "gfx/petting_hands/petting_hand_tr_" .. fileName .. ".png")

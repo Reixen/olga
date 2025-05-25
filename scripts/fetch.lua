@@ -1,9 +1,10 @@
 --#region Variables
-local Mod = OlgaDog
+local Mod = OlgaMod
+
+local Fetch = {}
+OlgaMod.Consumable.Fetch = Fetch
 
 local sfxMan = Mod.SfxMan
-
-local FETCH = {}
 
 local MARK_SPEED = 20
 local ONE_SEC = 30
@@ -12,13 +13,12 @@ local ONE_SEC = 30
 --#region Callbacks
 
 ---@param player EntityPlayer
-function FETCH:OnUseBone(cardId, player, useFlags)
-    
+function Fetch:OnUseBone(cardId, player, useFlags)
     local data = player:GetData()
     if not data.hasDoggy then return end
 
     data.cardId = cardId
-    
+
     player:AnimateCard(cardId)
     player:AnimatePickup(player:GetHeldSprite(), false, "LiftItem")
     --local cardConfig = Isaac.GetItemConfig():GetCard(cardId)
@@ -31,16 +31,17 @@ function FETCH:OnUseBone(cardId, player, useFlags)
     end
     return true
 end
-Mod:AddCallback(ModCallbacks.MC_PRE_USE_CARD, FETCH.OnUseBone)
+Mod:AddCallback(ModCallbacks.MC_PRE_USE_CARD, Fetch.OnUseBone)
+
 local thrownPickup
 local lastPos
 
 ---@param effect EntityEffect
-function FETCH:OnMarkRender(effect)
+function Fetch:OnMarkRender(effect)
     local data = effect:GetData()
     if not data.fetchMark then return end
 
-    for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Familiar)) do
+    for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
         if not familiar then return end
         data.fam = familiar:ToFamiliar()
         data.player = data.fam.Player
@@ -67,11 +68,11 @@ function FETCH:OnMarkRender(effect)
         if data.cooldown == ONE_SEC / 2 then
             lastPos = data.player.Position
             thrownPickup = Isaac.Spawn(
-                            EntityType.ENTITY_TEAR, 
-                            TearVariant.BONE, 
-                            0, 
-                            lastPos, 
-                            Vector.Zero, 
+                            EntityType.ENTITY_TEAR,
+                            TearVariant.BONE,
+                            0,
+                            lastPos,
+                            Vector.Zero,
                             data.player):ToTear() ---@cast thrownPickup EntityTear
             sfxMan:Play(SoundEffect.SOUND_SHELLGAME)
             data.player:AnimatePickup(data.player:GetHeldSprite(), false, "HideItem")
@@ -80,7 +81,8 @@ function FETCH:OnMarkRender(effect)
         if thrownPickup then
             thrownPickup.TearFlags = TearFlags.TEAR_PIERCING | TearFlags.TEAR_NO_GRID_DAMAGE | TearFlags.TEAR_SPECTRAL
             local distance = effect.Position:Distance(lastPos)
-            
+
+            -- sin wave, effect would be better
             thrownPickup.Velocity = (effect.Position - lastPos):Normalized() * (distance / 30)
             thrownPickup.FallingAcceleration = data.cooldown > 14 and -20 or 1
         end
@@ -93,4 +95,4 @@ function FETCH:OnMarkRender(effect)
         effect:Remove()
     end
 end
-Mod:AddCallback(ModCallbacks.MC_POST_EFFECT_UPDATE, FETCH.OnMarkRender, EffectVariant.TARGET)
+Mod:AddCallback(ModCallbacks.MC_POST_EFFECT_UPDATE, Fetch.OnMarkRender, EffectVariant.TARGET)
