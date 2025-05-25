@@ -10,7 +10,7 @@ local game = Mod.Game
 local sfxMan = Mod.SfxMan
 
 DogHead.SOUND_YAWN = Isaac.GetSoundIdByName("Olga Yawn")
-DogHead.YAWN_CHANCE = 1 / 60
+DogHead.YAWN_CHANCE = 1 / 120
 
 local ONE_TILE = 40
 DogHead.HAPPY_DISTANCE = ONE_TILE * 2
@@ -24,7 +24,7 @@ DogHead.ANIM_FUNC = {
         local rng = olga:GetDropRNG()
 
         if data.isHolding and not data.isFetching then
-            DogHead:SetAnimation(olga, Util.HeadAnim.IDLE_TO_HOLD)
+            Util:SetAnimation(olga, Util.HeadAnim.IDLE_TO_HOLD, true)
         end
 
         if Util:IsWithin(olga, DogHead.HAPPY_DISTANCE) then
@@ -37,6 +37,7 @@ DogHead.ANIM_FUNC = {
             end
         else data.canPet = true end
 
+        -- I need to change this lol
         if frame % 30 == 0 and Util:CanIdleAnimation(olga) then
             if rng:RandomFloat() < DogHead.YAWN_CHANCE then
                 Util:SetAnimation(olga, Util.HeadAnim.YAWN, true)

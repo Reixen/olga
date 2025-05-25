@@ -7,7 +7,7 @@ OlgaMod.Dog.Body = DogBody
 
 local game = Mod.Game
 
-DogBody.SWITCH_STANCE_CHANCE = 1 / 40
+DogBody.SWITCH_STANCE_CHANCE = 1 / 80
 DogBody.WALK_SPEED = 0.4
 
 local ONE_TILE = 40
@@ -81,6 +81,7 @@ DogBody.ANIM_FUNC = {
                 if not data.randomPosition
                 or not pathfinder:HasPathToPos(data.randomPosition, false) then
                     data.wanderCooldown = 0
+                    --print("no path dummy")
                 end
 
                 -- if theres a gridEnt in that position then reset go create another position
@@ -140,9 +141,12 @@ DogBody.ANIM_FUNC = {
                     -- how do i check if theres nothing in that area bro
                     local pickup = item:ToPickup()
                     if pickup.SubType == data.isHolding then
-                        pickup:Remove()
+                        pickup:GetSprite():Play("Collect")
+                        pickup:Die()
                         data.isFetching = nil
-                        olga.State = Util.DogState.RETRIEVE
+                        Isaac.CreateTimer(function()
+                            olga.State = Util.DogState.RETRIEVE
+                        end, 6, 1, false)
                         break
                     end
                 end
