@@ -49,9 +49,10 @@ function Util:SetAnimation(olga, anim, isHead)
 end
 
 ---@param olga EntityFamiliar
+---@param target Vector
 ---@param distance number
-function Util:IsWithin(olga, distance)
-    return olga.Player.Position:DistanceSquared(olga.Position) < distance ^ 2
+function Util:IsWithin(olga, target, distance)
+    return olga.Position:DistanceSquared(target) < distance ^ 2
 end
 
 ---@param olga EntityFamiliar

@@ -27,7 +27,7 @@ DogHead.ANIM_FUNC = {
             Util:SetAnimation(olga, Util.HeadAnim.IDLE_TO_HOLD, true)
         end
 
-        if Util:IsWithin(olga, DogHead.HAPPY_DISTANCE) then
+        if Util:IsWithin(olga, olga.Player.Position, DogHead.HAPPY_DISTANCE) then
             local room = game:GetRoom()
             if  data.headSprite:IsEventTriggered("TransitionHook")
             and room:IsClear()
@@ -48,11 +48,11 @@ DogHead.ANIM_FUNC = {
     [Util.HeadAnim.HAPPY] = function(olga)
         local data = olga:GetData()
         if data.headSprite:IsEventTriggered("TransitionHook") then
-            if Util:IsWithin(olga, DogHead.PETTING_DISTANCE) then
+            if Util:IsWithin(olga, olga.Player.Position, DogHead.PETTING_DISTANCE) then
                 Mod.PettingHand:UpdateHandColor()
                 Util:SetAnimation(olga, Util.HeadAnim.HAPPY_TO_PETTING, true)
 
-            elseif not Util:IsWithin(olga, DogHead.HAPPY_DISTANCE) then
+            elseif not Util:IsWithin(olga, olga.Player.Position, DogHead.HAPPY_DISTANCE) then
                 Util:SetAnimation(olga, Util.HeadAnim.HAPPY_TO_IDLE, true)
             end
         end
@@ -90,7 +90,7 @@ DogHead.ANIM_FUNC = {
         end
 
         if data.headSprite:IsEventTriggered("TransitionHook") then
-            if not Util:IsWithin(olga, DogHead.PETTING_DISTANCE) then
+            if not Util:IsWithin(olga, player.Position, DogHead.PETTING_DISTANCE) then
                 Util:SetAnimation(olga, Util.HeadAnim.PETTING_TO_HAPPY, true)
                 if data.isHappy and
                 not player:HasCollectible(CollectibleType.COLLECTIBLE_NUMBER_ONE) then
