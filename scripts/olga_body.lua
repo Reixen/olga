@@ -89,44 +89,16 @@ DogBody.ANIM_FUNC = {
                     data.targetPos = nil
                 elseif pathfindingResult == DogBody.PathfindingResult.NO_PATH then
                     data.eventCD = olga.FrameCount + DogBody.EVENT_COOLDOWN
+                    olga.Velocity = Vector.Zero
                     data.targetPos = nil
                 end
             end
         end
 
-        --if data.eventCD > -1 then data.eventCD = data.eventCD - 1 end
-
         --if not data.isFetching then -- If there is an item that needs fetching
 
-            --if data.eventCD <= 0 and not data.isHolding then
-
-
-                ---- if theres a gridEnt in that position then reset go create another position
-                ----local gridEnt = room:GetGridEntityFromPos(data.randomPosition)
-                ----if gridEnt and gridEnt.Position:Distance(data.randomPosition) < DogBody.ROCK_RADIUS 
-                ----and gridEnt.CollisionClass ~= GridCollisionClass.COLLISION_NONE then
-                    ----print("theres a gridEnt here")
-                    ----data.eventCD = 0
-                ----end
-            --end
-
             --if data.isHolding then data.randomPosition = olga.Player.Position end -- if holding an item, go towards player instead
-
-            ---- Normal Algo
-            --if data.randomPosition then
-
-                --if data.isHolding and olga.Position:Distance(olga.Player.Position) < ONE_TILE
-                --or not pathfinder:HasPathToPos(olga.Player.Position) and data.isHolding then
-                    --Isaac.Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TAROTCARD, data.isHolding, olga.Position, Vector.Zero, nil)
-                    --data.isHolding = nil
-                --elseif olga.Velocity:Length() < 0.5
-                --or not pathfinder:HasPathToPos(data.randomPosition, false) then
-                    --olga.Velocity = Vector.Zero
-                    --olga.State = Util.DogState.STANDING
-                    --data.randomPosition = nil
-                    --data.eventCD = ONE_SEC * 5
-                --end
-            --end
+            -- insert normal algo
 
             ---- Fetchin Algo
         --else
@@ -188,9 +160,10 @@ DogBody.ANIM_FUNC = {
         -- Switching
         if sprite:IsEventTriggered("TransitionHook")
         and rng:RandomFloat() < DogBody.EVENT_CHANCE
-        and olga.FrameCount % ONE_SEC * 3 then
-            -- olga.Velocity = Vector.Zero
-            -- Util:SetAnimation(olga, Util.BodyAnim.STAND_TO_SIT)
+        and olga.FrameCount % ONE_SEC == 0 then
+            data.targetPos = nil
+            olga.Velocity = Vector.Zero
+            Util:SetAnimation(olga, Util.BodyAnim.STAND_TO_SIT)
         end
     end
 }
@@ -282,26 +255,32 @@ Mod:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, DogBody.HandleBodyLogic, Mod.Do
 function DogBody:Pathfind(olga, target, speed, decay)
     if not target then return DogBody.PathfindingResult.ERROR end
 
+    local room = game:GetRoom()
     local pathfinder = olga:GetPathFinder()
 
-    if not pathfinder:HasPathToPos(target, true) then
-        if olga:CollidesWithGrid() then
-        end
-            
-    end
-        --end return DogBody.PathfindingResult.NO_PATH end
-
     olga.FlipX = not (olga.Velocity.X < 0)
+
+    if not pathfinder:HasPathToPos(target, true) then
+        local gridIdx = room:GetGridIndex(olga.Position)
+        if olga:CollidesWithGrid()
+        and room:GetGridCollision(gridIdx) ~= GridCollisionClass.COLLISION_NONE then
+            pathfinder:EvadeTarget(room:GetGridPosition(gridIdx))
+        else
+            return DogBody.PathfindingResult.NO_PATH
+        end
+    end
 
     if not Util:IsWithin(olga, target, ONE_TILE / 2) then
         pathfinder:FindGridPath(target, speed, 1, true)
         return DogBody.PathfindingResult.APPROACHING
+
     elseif not Util:IsWithin(olga, target, 1) then
         local input = math.ceil(olga.Position:Distance(target)) / 100
         local walkSpeed = decay and speed - decay * (speed * input) or speed
         olga:GetSprite().PlaybackSpeed = 1 * (1 - input)
         pathfinder:FindGridPath(target, walkSpeed, 1, true)
         return DogBody.PathfindingResult.APPROACHING
+
     else
         olga:GetSprite().PlaybackSpeed = 1
         return DogBody.PathfindingResult.SUCCESSFUL
@@ -371,7 +350,3 @@ function DogBody:FindValidPositions(gridlength, gridIdx, room)
 
     return idxTable
 end
-
-
-
-

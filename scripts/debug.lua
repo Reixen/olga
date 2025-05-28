@@ -8,10 +8,11 @@ local Util = OlgaMod.Util
 
 --#endregion
 --#region Functions
+-- for loop soon
 --Console.RegisterCommand("debugOlga", "", "", true, AutocompleteType.NONE)
 Console.RegisterCommand("olgadebug switch", "Switches the stance of Olga Familiar", "Switches between standing and sitting", true, AutocompleteType.NONE)
 Console.RegisterCommand("olgadebug animate", "Plays a random head animation", "Plays a random head animation", true, AutocompleteType.NONE)
-Console.RegisterCommand("olgadebug fetch", "Makes all consumables throwable", "Cannot consume cards/runes", true, AutocompleteType.NONE)
+--Console.RegisterCommand("olgadebug fetch", "Makes all consumables throwable", "Cannot consume cards/runes", true, AutocompleteType.NONE)
 
 function Debug:Command(command, args)
     if command == "olgadebug" then
@@ -37,14 +38,14 @@ function Debug:Command(command, args)
                 Util:SetAnimation(olga, Util.HeadAnim.YAWN, true)
             end
         elseif args == "fetch" then
-            for _, player in ipairs(Isaac.FindByType(EntityType.ENTITY_PLAYER)) do
-                local data = player:ToPlayer():GetData()
-                if not data.canFetch then
-                    data.canFetch = true
-                else
-                    data.canFetch = false
-                end
-            end
+            --for _, player in ipairs(Isaac.FindByType(EntityType.ENTITY_PLAYER)) do
+                --local data = player:ToPlayer():GetData()
+                --if not data.canFetch then
+                    --data.canFetch = true
+                --else
+                    --data.canFetch = false
+                --end
+            --end
         end
     end
 end

@@ -20,8 +20,8 @@ local scriptName = {
     "olga_body",
     "olga_head",
     "petting_hand",
-    "fetch",
-    "debug",
+    --"fetch",
+    --"debug",
     --"feeding_bowl",
 }
 
