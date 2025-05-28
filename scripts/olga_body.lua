@@ -8,13 +8,13 @@ OlgaMod.Dog.Body = DogBody
 local game = Mod.Game
 
 DogBody.EVENT_CHANCE = 1 / 80
-DogBody.WANDER_CHANCE = 1 / 5
+DogBody.WANDER_CHANCE = 1 / 2
 DogBody.WALK_SPEED = 0.4
 DogBody.DECAY_STRENGTH = 1.3
 
 local ONE_TILE = 40
 local ONE_SEC = 30
-DogBody.WANDER_RADIUS = 3
+DogBody.WANDER_RADIUS = 5
 DogBody.HAPPY_DISTANCE = ONE_TILE * 2.2
 
 DogBody.EVENT_COOLDOWN = ONE_SEC * 2
@@ -82,7 +82,7 @@ DogBody.ANIM_FUNC = {
                 data.targetPos = DogBody:ChooseRandomPosition(olga)
             elseif data.targetPos ~= nil then
                 local pathfindingResult = DogBody:Pathfind(olga, data.targetPos, DogBody.WALK_SPEED, DogBody.DECAY_STRENGTH)
-                
+
                 if pathfindingResult == DogBody.PathfindingResult.SUCCESSFUL then
                     olga.Velocity = Vector.Zero
                     data.eventCD = olga.FrameCount + DogBody.EVENT_COOLDOWN
@@ -284,7 +284,12 @@ function DogBody:Pathfind(olga, target, speed, decay)
 
     local pathfinder = olga:GetPathFinder()
 
-    if not pathfinder:HasPathToPos(target, true) then return DogBody.PathfindingResult.NO_PATH end
+    if not pathfinder:HasPathToPos(target, true) then
+        if olga:CollidesWithGrid() then
+        end
+            
+    end
+        --end return DogBody.PathfindingResult.NO_PATH end
 
     olga.FlipX = not (olga.Velocity.X < 0)
 
@@ -311,17 +316,16 @@ function DogBody:ChooseRandomPosition(olga)
         room:GetGridIndex(olga.Position),
         room
     )
-
     if #validPos == 0 then return nil end
 
     local theGamble = math.random(#validPos)
     local chosenPos = room:GetGridPosition(validPos[theGamble])
 
-    table.remove(validPos, theGamble)
-    for _, val in pairs(validPos) do
-        Isaac.Spawn(EntityType.ENTITY_EFFECT, 507, 2, room:GetGridPosition(val), Vector.Zero, nil):ToEffect():GetSprite():Play("Quality-1")
-    end
-    Isaac.Spawn(EntityType.ENTITY_EFFECT, 507, 2, chosenPos, Vector.Zero, nil):ToEffect():GetSprite():Play("Quality3")
+    --table.remove(validPos, theGamble)
+    --for _, val in pairs(validPos) do
+        --Isaac.Spawn(EntityType.ENTITY_EFFECT, 507, 2, room:GetGridPosition(val), Vector.Zero, nil):ToEffect():GetSprite():Play("Quality-1")
+    --end
+    --Isaac.Spawn(EntityType.ENTITY_EFFECT, 507, 2, chosenPos, Vector.Zero, nil):ToEffect():GetSprite():Play("Quality3")
 
     local posVariance = math.random() < 0.5 and -10 or 10
     return chosenPos + (RandomVector() * posVariance)
@@ -331,37 +335,40 @@ end
 ---@param gridIdx integer
 function DogBody:FindValidPositions(gridlength, gridIdx, room)
     local idxTable = {}
-    local tempTable = {}
-    tempTable[1] = {gridIdx, 0}
+    local queueSize = {}
+    local finishedIdx = 0
+    queueSize[1] = {gridIdx, 0}
+ 
+    -- Breadth-first search my beloved
+    while finishedIdx < #queueSize do
+        local queuePos = finishedIdx + 1
+        local gridIdxPos = room:GetGridPosition(queueSize[queuePos][1])
+        local gridDistance = queueSize[queuePos][2] + 1
 
-    while #tempTable > 0 do
-
-        local tableVal = #tempTable
-        local gridIdxPos = room:GetGridPosition(tempTable[tableVal][1])
-        local gridDistance = tempTable[tableVal][2] + 1
-
+        -- Check four adjacent tiles
         for i = 1, 4 do
             local potentialPos = gridIdxPos + Vector(40, 0):Rotated(i * 90)
             local potentialIdx = room:GetGridIndex(potentialPos)
 
-            if room:GetGridCollision(potentialIdx) == GridCollisionClass.COLLISION_NONE and
-            not idxTable[potentialIdx]
-            and potentialIdx ~= gridIdx
-            and gridDistance <= gridlength then
+            -- If it's not in the idxTable and it's something she can walk towards, cache it
+            if not idxTable[potentialIdx]
+            and gridDistance <= gridlength
+            and room:GetGridCollision(potentialIdx) == GridCollisionClass.COLLISION_NONE
+            and potentialIdx ~= gridIdx then
                 idxTable[potentialIdx] = gridDistance
-                tempTable[#tempTable + 1] = {potentialIdx, gridDistance}
+                queueSize[#queueSize+1] = {potentialIdx, gridDistance}
             end
         end
 
-        table.remove(tempTable, tableVal)
+        finishedIdx = queuePos
     end
 
-    -- Reuse variables to turn the table into a less stupid version
-    local tempTable = idxTable
-    local idxTable = {}
-    for v, _ in pairs(tempTable) do
+    queueSize = idxTable
+    idxTable = {}
+    for v, _ in pairs(queueSize) do
         idxTable[#idxTable+1] = v
     end
+
     return idxTable
 end
 
