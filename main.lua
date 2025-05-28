@@ -50,6 +50,7 @@ end
 ---             - Bark
 ---             - Lean
 ---     - Optimize
+---     - Fix Head Reflection being wonky
 --- 2) Fetch
 ---     - Create fetching Stick (card)
 ---     - Create Mark sprite for fetching

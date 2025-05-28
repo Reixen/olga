@@ -221,8 +221,11 @@ Mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, DogBody.HandleNewRoom)
 
 function DogBody:GoodbyeOlga()
     for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
-        familiar:ToFamiliar().Player:GetData().hasDoggy = false
-        familiar:Remove()
+        local data = familiar:ToFamiliar().Player:GetData()
+        if data.isDoggyPerpetual == false then
+            data.hasDoggy = false
+            familiar:Remove()
+        end
     end
 end
 Mod:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, DogBody.GoodbyeOlga)

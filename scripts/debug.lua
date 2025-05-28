@@ -13,6 +13,7 @@ local Util = OlgaMod.Util
 Console.RegisterCommand("olgadebug switch", "Switches the stance of Olga Familiar", "Switches between standing and sitting", true, AutocompleteType.NONE)
 Console.RegisterCommand("olgadebug animate", "Plays a random head animation", "Plays a random head animation", true, AutocompleteType.NONE)
 --Console.RegisterCommand("olgadebug fetch", "Makes all consumables throwable", "Cannot consume cards/runes", true, AutocompleteType.NONE)
+Console.RegisterCommand("olgadebug perpetual", "Prevents Olga from disappearing on next floor.", "Self-explanatory", true, AutocompleteType.NONE)
 
 function Debug:Command(command, args)
     if command == "olgadebug" then
@@ -46,6 +47,15 @@ function Debug:Command(command, args)
                     --data.canFetch = false
                 --end
             --end
+        elseif args == "perpetual" then
+            for _, player in ipairs(Isaac.FindByType(EntityType.ENTITY_PLAYER)) do
+                local data = player:ToPlayer():GetData()
+                if not data.isDoggyPerpetual then
+                    data.isDoggyPerpetual = true
+                else
+                    data.isDoggyPerpetual = false
+                end
+            end
         end
     end
 end
