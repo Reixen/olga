@@ -21,8 +21,8 @@ local scriptName = {
     "olga_head",
     "petting_hand",
     --"fetch",
-    --"debug",
     --"feeding_bowl",
+    "debug",
 }
 
 for _, scripts in ipairs(scriptName) do

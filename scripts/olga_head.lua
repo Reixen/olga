@@ -76,7 +76,7 @@ DogHead.ANIM_FUNC = {
         end
 
         if data.headSprite:IsEventTriggered("Yawn") then
-            sfxMan:Play(DogHead.SOUND_YAWN, 2)
+            sfxMan:Play(DogHead.SOUND_YAWN, 1, 2, false, math.random(9, 12)/10)
         end
     end,
 
