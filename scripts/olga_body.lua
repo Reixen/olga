@@ -31,15 +31,16 @@ DogBody.PathfindingResult = {
 DogBody.ANIM_FUNC = {
     [Util.BodyAnim.SIT] = function(olga)
         local data = olga:GetData()
-        local frame = game:GetFrameCount()
+        local frameCount = olga.FrameCount
         local rng = olga:GetDropRNG()
 
-        if DogBody:CanWag(data.headSprite:GetAnimation()) then
+        if DogBody:CanWag(data.headSprite:GetAnimation())
+        or Util:IsWithin(olga, olga.Player.Position, ONE_TILE * 2) then
             Util:SetAnimation(olga, Util.BodyAnim.SIT_WAGGING)
         end
 
         if rng:RandomFloat() < DogBody.SWITCH_CHANCE
-        and frame % 30 == 0
+        and frameCount % 30 == 0
         or data.isHolding then
             Util:SetAnimation(olga, Util.BodyAnim.SIT_TO_STAND)
         end
@@ -73,11 +74,12 @@ DogBody.ANIM_FUNC = {
         local data = olga:GetData()
         local rng = olga:GetDropRNG()
         local sprite = olga:GetSprite()
+        local frameCount = olga.FrameCount
 
-        if data.eventCD < olga.FrameCount then
+        if data.eventCD < frameCount then
 
             if not data.targetPos
-            and (olga.FrameCount % ONE_SEC == 0 and rng:RandomFloat() < DogBody.WANDER_CHANCE) then
+            and rng:RandomFloat() < DogBody.WANDER_CHANCE then
                 data.targetPos = DogBody:ChooseRandomPosition(olga)
             elseif data.targetPos ~= nil then
                 local pathfindingResult = DogBody:Pathfind(olga, data.targetPos, DogBody.WALK_SPEED, DogBody.DECAY_STRENGTH)
@@ -85,10 +87,10 @@ DogBody.ANIM_FUNC = {
                 if pathfindingResult == DogBody.PathfindingResult.SUCCESSFUL
                 or pathfindingResult == DogBody.PathfindingResult.NO_PATH then
                     olga.Velocity = Vector.Zero
-                    data.eventCD = olga.FrameCount + DogBody.EVENT_COOLDOWN
+                    data.eventCD = frameCount + DogBody.EVENT_COOLDOWN
                     data.targetPos = nil
                 else
-                    print("Thou shall, " ..tostring(pathfindingResult))
+                    --print("Thou shall, " ..tostring(pathfindingResult))
                 end
             end
         end
@@ -169,13 +171,16 @@ DogBody.ANIM_FUNC[Util.BodyAnim.STAND_TO_SIT] = DogBody.ANIM_FUNC[Util.BodyAnim.
 DogBody.ANIM_FUNC[Util.BodyAnim.WALKING] = DogBody.ANIM_FUNC[Util.BodyAnim.STAND]
 
 --#endregion
---#region Olga Callbacks and Functions
+--#region Olga Head Animation Functions
+--#endregion
+--#region Olga Callbacks
 ---@param olga EntityFamiliar
 function DogBody:OnInit(olga)
     local data = olga:GetData()
 
     data.heldItemSprite = Sprite()
     data.eventCD = olga.FrameCount + DogBody.EVENT_COOLDOWN
+    data.animCD = olga.FrameCount + Mod.Util.ANIM_COOLDOWN
     data.targetPos = nil
     data.isMoving = true
     data.isHolding = nil
@@ -235,9 +240,6 @@ Mod:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, DogBody.GoodbyeOlga)
 function DogBody:HandleBodyLogic(olga)
     local data = olga:GetData()
 
-    data.headSprite.FlipX = olga.FlipX
-    data.headSprite.Scale = olga.Player:HasCollectible(CollectibleType.COLLECTIBLE_BFFS) and Vector(1.25, 1.25) or Vector.One
-    data.headSprite:Update()
 
     if not data.hasOwner then
         local nearestPlayer = game:GetNearestPlayer(olga.Position)
@@ -257,7 +259,8 @@ function DogBody:HandleBodyLogic(olga)
     DogBody.ANIM_FUNC[olga:GetSprite():GetAnimation()](olga)
 end
 Mod:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, DogBody.HandleBodyLogic, Mod.Dog.VARIANT)
-
+--#endregion
+--#region Olga Helper Functions
 ---@param anim string
 function DogBody:CanWag(anim)
     return anim == Util.HeadAnim.HAPPY or anim == Util.HeadAnim.PETTING
@@ -365,3 +368,4 @@ function DogBody:FindValidPositions(gridlength, gridIdx, room)
 
     return idxTable
 end
+--#endregion

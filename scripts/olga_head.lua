@@ -9,8 +9,11 @@ local Util = OlgaMod.Util
 local game = Mod.Game
 local sfxMan = Mod.SfxMan
 
+local ONE_SEC = 30
 DogHead.SOUND_YAWN = Isaac.GetSoundIdByName("Olga Yawn")
-DogHead.EVENT_CHANCE = 1 / 120
+DogHead.ANIM_CHANCE = 1 / 20
+DogHead.MINI_ANIM_CHANCE = 1 / 3
+DogHead.REPEAT_CHANCE = 1 / 5
 
 local ONE_TILE = 40
 DogHead.HAPPY_DISTANCE = ONE_TILE * 2
@@ -20,7 +23,7 @@ DogHead.PETTING_DISTANCE = ONE_TILE * 1.2
 DogHead.ANIM_FUNC = {
     [Util.HeadAnim.IDLE] = function(olga)
         local data = olga:GetData()
-        local frame = game:GetFrameCount()
+        local frameCount = olga.FrameCount
         local rng = olga:GetDropRNG()
 
         if data.isHolding and not data.isFetching then
@@ -37,10 +40,16 @@ DogHead.ANIM_FUNC = {
             end
         else data.canPet = true end
 
-        -- I need to change this lol
-        if frame % 30 == 0 and Util:CanIdleAnimation(olga) then
-            if rng:RandomFloat() < DogHead.EVENT_CHANCE then
-                Util:SetAnimation(olga, Util.HeadAnim.YAWN, true)
+        if Util:CanIdleAnimation(olga)
+        and data.animCD < frameCount
+        and data.headSprite:IsEventTriggered("TransitionHook") then
+            if rng:RandomFloat() < DogHead.ANIM_CHANCE then
+                if rng:RandomFloat() < DogHead.MINI_ANIM_CHANCE then
+                    Util:DoMiniIdleAnim(olga)
+                else
+                    Util:SetAnimation(olga, Util.HeadAnim.YAWN, true)
+                end
+                data.animCD = olga.FrameCount + Util.ANIM_COOLDOWN
             end
         end
     end,
@@ -101,6 +110,19 @@ DogHead.ANIM_FUNC = {
         end
     end,
 
+    [Util.HeadAnim.EAR_FLICK_L] = function (olga) ---@param olga EntityFamiliar
+        local sprite = olga:GetData().headSprite ---@cast sprite Sprite
+        local rng = olga:GetDropRNG()
+        if sprite:IsFinished(sprite:GetAnimation()) then
+            if rng:RandomFloat() < DogHead.REPEAT_CHANCE then
+                Util:DoMiniIdleAnim(olga, Util.MiniAnim.EARFLICK)
+            else
+                Util:SetAnimation(olga, Util.HeadAnim.IDLE, true)
+            end
+        end
+    end,
+
+    -- Unused
     [Util.HeadAnim.HOLD] = function(olga) ---@param olga EntityFamiliar
         local data = olga:GetData()
 
@@ -112,6 +134,9 @@ DogHead.ANIM_FUNC = {
 DogHead.ANIM_FUNC[Util.HeadAnim.IDLE_TO_HAPPY] = DogHead.ANIM_FUNC[Util.HeadAnim.HAPPY_TO_IDLE]
 DogHead.ANIM_FUNC[Util.HeadAnim.HAPPY_TO_PETTING] = DogHead.ANIM_FUNC[Util.HeadAnim.HAPPY_TO_IDLE]
 DogHead.ANIM_FUNC[Util.HeadAnim.PETTING_TO_HAPPY] = DogHead.ANIM_FUNC[Util.HeadAnim.HAPPY_TO_IDLE]
+DogHead.ANIM_FUNC[Util.HeadAnim.EAR_FLICK_R] = DogHead.ANIM_FUNC[Util.HeadAnim.EAR_FLICK_L]
+DogHead.ANIM_FUNC[Util.HeadAnim.EAR_FLICK_BOTH] = DogHead.ANIM_FUNC[Util.HeadAnim.EAR_FLICK_L]
+-- Unused
 DogHead.ANIM_FUNC[Util.HeadAnim.IDLE_TO_HOLD] = DogHead.ANIM_FUNC[Util.HeadAnim.HAPPY_TO_IDLE]
 DogHead.ANIM_FUNC[Util.HeadAnim.HOLD_TO_IDLE] = DogHead.ANIM_FUNC[Util.HeadAnim.HAPPY_TO_IDLE]
 
@@ -123,7 +148,7 @@ function DogHead:OnHeadRender(olga, offset)
     local data = olga:GetData()
 
     if not data.headSprite then return end -- For Sac altar
-    
+
     local renderMode = Mod.Room():GetRenderMode()
 
     -- Water reflections
@@ -133,7 +158,11 @@ function DogHead:OnHeadRender(olga, offset)
 
     data.headSprite:Render(Isaac.WorldToRenderPosition(olga.Position + olga.PositionOffset + olga:GetNullOffset("head")) + offset)
 
-    if Isaac.GetFrameCount() % 2 == 0 then
+    if Isaac.GetFrameCount() % 2 == 0 and not game:IsPaused() then
+        data.headSprite.FlipX = olga.FlipX
+        data.headSprite.Scale = olga.Player:HasCollectible(CollectibleType.COLLECTIBLE_BFFS) and Vector(1.25, 1.25) or Vector.One
+        data.headSprite:Update()
+
         DogHead.ANIM_FUNC[data.headSprite:GetAnimation()](olga)
     end
 end

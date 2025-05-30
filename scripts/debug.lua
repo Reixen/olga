@@ -27,9 +27,11 @@ function Debug:Command(command, args)
 
                 if olga.State == Util.DogState.SITTING then
                     Util:SetAnimation(olga, Util.BodyAnim.SIT_TO_STAND)
+                    olga.Velocity = Vector.Zero
                 elseif olga.State == Util.DogState.STANDING then
                     Util:SetAnimation(olga, Util.BodyAnim.STAND_TO_SIT)
                 end
+                olga.Velocity = Vector.Zero
             end
         elseif args == "animate" then
             for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do

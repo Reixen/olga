@@ -13,6 +13,10 @@ Util.HeadAnim= {
     PETTING = "Petting",
     HAPPY_TO_PETTING = "HappyToPetting",
     PETTING_TO_HAPPY = "PettingToHappy",
+    EAR_FLICK_L = "EarFlickLeft",
+    EAR_FLICK_R = "EarFlickRight",
+    EAR_FLICK_BOTH = "EarFlickBoth",
+    -- Unused
     IDLE_TO_HOLD = "IdleToHold",
     HOLD = "Hold",
     HOLD_TO_IDLE = "HoldToIdle"
@@ -33,6 +37,17 @@ Util.DogState = {
     OBTAIN = 2,
     RETRIEVE = 3,
 }
+
+Util.MiniAnim = {
+    EARFLICK = 1
+}
+
+Util.MiniAnimVariants = {
+    {"EarFlick", {"Left", "Right", "Both"}}
+}
+
+local ONE_SEC = 30
+Util.ANIM_COOLDOWN = ONE_SEC * 5
 
 --#endregion
 --#region Functions
@@ -69,6 +84,13 @@ end
 ---@param olga EntityFamiliar
 function Util:CanIdleAnimation(olga)
     return olga.State ~= Util.DogState.OBTAIN and olga.State ~= Util.DogState.RETRIEVE
+end
+
+---@param olga EntityFamiliar
+---@param anim integer?
+function Util:DoMiniIdleAnim(olga, anim)
+    local animGamble = not anim and Util.MiniAnimVariants[math.random(#Util.MiniAnimVariants)] or Util.MiniAnimVariants[anim]
+    Util:SetAnimation(olga, animGamble[1] .. animGamble[2][math.random(#animGamble[2])], true)
 end
 
 ---@param olga EntityFamiliar
