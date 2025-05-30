@@ -27,8 +27,4 @@
 		collisionRadius="12" numGridCollisionPoints="24" shadowSize="16" stageHP="0">
     </entity>
 
-	<!--entity anm2path="effect_petting.anm2" id="1000" 
-		variant="3056" name="Petting Hand">
-	</entity-->
-
 </entities>

@@ -14,6 +14,7 @@ OlgaMod.Debug = {}
 OlgaMod.Fetch = {}
 
 OlgaMod.Dog.VARIANT = Isaac.GetEntityVariantByName("Olga")
+OlgaMod.TRINKET_SUBTYPE = Isaac.GetTrinketIdByName("Crude Drawing")
 
 local scriptName = {
     "util",

@@ -60,11 +60,6 @@ function Util:CanIdleAnimation(olga)
     return olga.State ~= Util.DogState.OBTAIN and olga.State ~= Util.DogState.RETRIEVE
 end
 
----@param anim string
-function Util:CanWag(anim)
-    return anim == Util.HeadAnim.HAPPY or anim == Util.HeadAnim.PETTING
-end
-
 ---@param olga EntityFamiliar
 function Util:DoIdleAnim(olga)
 end

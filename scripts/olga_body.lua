@@ -35,7 +35,7 @@ DogBody.ANIM_FUNC = {
         local frame = game:GetFrameCount()
         local rng = olga:GetDropRNG()
 
-        if Util:CanWag(data) then
+        if DogBody:CanWag(data.headSprite:GetAnimation()) then
             Util:SetAnimation(olga, Util.BodyAnim.SIT_WAGGING)
         end
 
@@ -220,10 +220,16 @@ Mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, DogBody.HandleNewRoom)
 
 function DogBody:GoodbyeOlga()
     for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
-        local data = familiar:ToFamiliar().Player:GetData()
-        if data.isDoggyPerpetual == false then
+        local player = familiar:ToFamiliar().Player
+        if player:HasTrinket(Mod.TRINKET_SUBTYPE, false) then return end
+
+        local data = player:GetData()
+        if not data.isDoggyPerpetual then
+            local room = game:GetRoom()
+            local pos = room:FindFreePickupSpawnPosition(player.Position)
             data.hasDoggy = false
             familiar:Remove()
+            Isaac.Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TRINKET, Mod.TRINKET_SUBTYPE, pos, Vector.Zero, player)
         end
     end
 end
@@ -249,6 +255,11 @@ function DogBody:HandleBodyLogic(olga)
     DogBody.ANIM_FUNC[olga:GetSprite():GetAnimation()](olga)
 end
 Mod:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, DogBody.HandleBodyLogic, Mod.Dog.VARIANT)
+
+---@param anim string
+function DogBody:CanWag(anim)
+    return anim == Util.HeadAnim.HAPPY or anim == Util.HeadAnim.PETTING
+end
 
 ---@param olga EntityFamiliar
 ---@param target Vector
