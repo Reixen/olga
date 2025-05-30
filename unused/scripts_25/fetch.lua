@@ -2,7 +2,7 @@
 local Mod = OlgaMod
 
 local Fetch = {}
-OlgaMod.Fetch = Fetch
+OlgaMod.Consumable.Fetch = Fetch
 
 local sfxMan = Mod.SfxMan
 
@@ -12,22 +12,11 @@ local ONE_SEC = 30
 --#endregion
 --#region Callbacks
 
----@param pickup EntityPickup
-function Fetch:PrePickupMorph(pickup)
-    if pickup.Type ~= EntityType.ENTITY_PICKUP then return end
-
-    if pickup.Variant == PickupVariant.PICKUP_TAROTCARD then
-        if pickup.SubType == Mod.Pickup.STICK_ID
-        or pickup.SubType == Mod.Pickup.FEEDING_BOWL_ID
-        or pickup.SubType == Mod.Pickup.TENNIS_BALL_ID then
-            return false
-        end
-    elseif pickup.Variant == PickupVariant.PICKUP_TRINKET
-    and pickup.SubType == Mod.Pickup.CRUDE_DRAWING_ID then
-        return false
-    end
+---@param type EntityType
+---@param variant TrinketType
+function Fetch:PreMorph(_, type, variant)
+    
 end
-Mod:AddCallback(ModCallbacks.MC_PRE_PICKUP_MORPH, Fetch.PrePickupMorph)
 
 if true then return end
 

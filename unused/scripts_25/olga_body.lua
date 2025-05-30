@@ -83,13 +83,12 @@ DogBody.ANIM_FUNC = {
             elseif data.targetPos ~= nil then
                 local pathfindingResult = DogBody:Pathfind(olga, data.targetPos, DogBody.WALK_SPEED, DogBody.DECAY_STRENGTH)
 
+                print(pathfindingResult)
                 if pathfindingResult == DogBody.PathfindingResult.SUCCESSFUL
                 or pathfindingResult == DogBody.PathfindingResult.NO_PATH then
                     olga.Velocity = Vector.Zero
                     data.eventCD = olga.FrameCount + DogBody.EVENT_COOLDOWN
                     data.targetPos = nil
-                else
-                    print("Thou shall, " ..tostring(pathfindingResult))
                 end
             end
         end
@@ -220,14 +219,14 @@ Mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, DogBody.HandleNewRoom)
 function DogBody:GoodbyeOlga()
     for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
         local player = familiar:ToFamiliar().Player
-        if player:HasTrinket(Mod.Pickup.CRUDE_DRAWING_ID, false) then return end
+        if player:HasTrinket(Mod.TRINKET_SUBTYPE, false) then return end
 
         local data = Util:GetData(player, "olgaMod")
         local room = game:GetRoom()
         local pos = room:FindFreePickupSpawnPosition(player.Position)
         data.hasDoggy = false
         familiar:Remove()
-        Isaac.Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TRINKET, Mod.Pickup.CRUDE_DRAWING_ID, pos, Vector.Zero, player)
+        Isaac.Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TRINKET, Mod.TRINKET_SUBTYPE, pos, Vector.Zero, player)
     end
 end
 Mod:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, DogBody.GoodbyeOlga)

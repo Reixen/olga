@@ -55,6 +55,17 @@ function Util:IsWithin(olga, target, distance)
     return olga.Position:DistanceSquared(target) < distance ^ 2
 end
 
+-- Special thanks to Kerkel
+---@param entity Entity
+---@param identifier any
+---@param default any
+function Util:GetData(entity, identifier, default)
+    local data = entity:GetData()
+    data._OlgaMod = data._OlgaMod or {}
+    data._OlgaMod[identifier] = data._OlgaMod[identifier] or default or {}
+    return data._OlgaMod[identifier]
+end
+
 ---@param olga EntityFamiliar
 function Util:CanIdleAnimation(olga)
     return olga.State ~= Util.DogState.OBTAIN and olga.State ~= Util.DogState.RETRIEVE

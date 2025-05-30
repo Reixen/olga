@@ -8,4 +8,8 @@
         name="Feeding Bowl" mimiccharge="4" pickup="334" achievement ="9999"
     />
 
+    <card type="object" hud="Tennis Ball" description="Can be thrown" 
+        name="Tennis Ball" mimiccharge="4" pickup="335" achievement ="9999"
+    />
+
 </pocketitems>

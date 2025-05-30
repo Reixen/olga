@@ -10,7 +10,7 @@ local game = Mod.Game
 local sfxMan = Mod.SfxMan
 
 DogHead.SOUND_YAWN = Isaac.GetSoundIdByName("Olga Yawn")
-DogHead.YAWN_CHANCE = 1 / 120
+DogHead.EVENT_CHANCE = 1 / 120
 
 local ONE_TILE = 40
 DogHead.HAPPY_DISTANCE = ONE_TILE * 2
@@ -39,7 +39,7 @@ DogHead.ANIM_FUNC = {
 
         -- I need to change this lol
         if frame % 30 == 0 and Util:CanIdleAnimation(olga) then
-            if rng:RandomFloat() < DogHead.YAWN_CHANCE then
+            if rng:RandomFloat() < DogHead.EVENT_CHANCE then
                 Util:SetAnimation(olga, Util.HeadAnim.YAWN, true)
             end
         end
@@ -125,11 +125,7 @@ function DogHead:HandleHeadLogic(olga)
 
     data.headSprite.FlipX = olga.FlipX
     data.headSprite:Render(Isaac.WorldToScreen(olga.Position + olga:GetNullOffset("head")))
-    if olga.Player:HasCollectible(CollectibleType.COLLECTIBLE_BFFS) then
-        data.headSprite.Scale = Vector(1.25, 1.25)
-    else
-        data.headSprite.Scale = Vector.One
-    end
+    data.headSprite.Scale = olga.Player:HasCollectible(CollectibleType.COLLECTIBLE_BFFS) and Vector(1.25, 1.25) or Vector.One
 
     DogHead.ANIM_FUNC[data.headSprite:GetAnimation()](olga)
 end
