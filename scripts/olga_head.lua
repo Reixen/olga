@@ -11,7 +11,7 @@ local sfxMan = Mod.SfxMan
 
 local ONE_SEC = 30
 DogHead.SOUND_YAWN = Isaac.GetSoundIdByName("Olga Yawn")
-DogHead.ANIM_CHANCE = 1 / 20
+DogHead.ANIM_CHANCE = 1 / 30
 DogHead.MINI_ANIM_CHANCE = 1 / 3
 DogHead.REPEAT_CHANCE = 1 / 5
 
@@ -111,15 +111,29 @@ DogHead.ANIM_FUNC = {
     end,
 
     [Util.HeadAnim.EAR_FLICK_L] = function (olga) ---@param olga EntityFamiliar
-        local sprite = olga:GetData().headSprite ---@cast sprite Sprite
+        local data = olga:GetData()
+        local sprite = data.headSprite ---@cast sprite Sprite
         local rng = olga:GetDropRNG()
-        if sprite:IsFinished(sprite:GetAnimation()) then
+        local animName = sprite:GetAnimation()
+        if sprite:IsFinished(animName) then
             if rng:RandomFloat() < DogHead.REPEAT_CHANCE then
-                Util:DoMiniIdleAnim(olga, Util.MiniAnim.EARFLICK)
+                local _, terminal = string.find(animName, "_")
+                local result = string.sub(animName, 1, terminal - 1)
+                Util:DoMiniIdleAnim(olga, Util.MiniAnim[result])
             else
                 Util:SetAnimation(olga, Util.HeadAnim.IDLE, true)
             end
         end
+
+        if Util:IsWithin(olga, olga.Player.Position, DogHead.HAPPY_DISTANCE) then
+            local room = Mod.Room()
+            if  data.headSprite:IsEventTriggered("TransitionHook")
+            and room:IsClear()
+            and data.canPet
+            and not data.isHolding then
+                Util:SetAnimation(olga, Util.HeadAnim.IDLE_TO_HAPPY, true)
+            end
+        else data.canPet = true end
     end,
 
     -- Unused
@@ -136,6 +150,9 @@ DogHead.ANIM_FUNC[Util.HeadAnim.HAPPY_TO_PETTING] = DogHead.ANIM_FUNC[Util.HeadA
 DogHead.ANIM_FUNC[Util.HeadAnim.PETTING_TO_HAPPY] = DogHead.ANIM_FUNC[Util.HeadAnim.HAPPY_TO_IDLE]
 DogHead.ANIM_FUNC[Util.HeadAnim.EAR_FLICK_R] = DogHead.ANIM_FUNC[Util.HeadAnim.EAR_FLICK_L]
 DogHead.ANIM_FUNC[Util.HeadAnim.EAR_FLICK_BOTH] = DogHead.ANIM_FUNC[Util.HeadAnim.EAR_FLICK_L]
+DogHead.ANIM_FUNC[Util.HeadAnim.EAR_ROTATE_L] = DogHead.ANIM_FUNC[Util.HeadAnim.EAR_FLICK_L]
+DogHead.ANIM_FUNC[Util.HeadAnim.EAR_ROTATE_R] = DogHead.ANIM_FUNC[Util.HeadAnim.EAR_FLICK_L]
+DogHead.ANIM_FUNC[Util.HeadAnim.EAR_ROTATE_BOTH] = DogHead.ANIM_FUNC[Util.HeadAnim.EAR_FLICK_L]
 -- Unused
 DogHead.ANIM_FUNC[Util.HeadAnim.IDLE_TO_HOLD] = DogHead.ANIM_FUNC[Util.HeadAnim.HAPPY_TO_IDLE]
 DogHead.ANIM_FUNC[Util.HeadAnim.HOLD_TO_IDLE] = DogHead.ANIM_FUNC[Util.HeadAnim.HAPPY_TO_IDLE]

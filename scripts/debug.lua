@@ -27,7 +27,6 @@ function Debug:Command(command, args)
 
                 if olga.State == Util.DogState.SITTING then
                     Util:SetAnimation(olga, Util.BodyAnim.SIT_TO_STAND)
-                    olga.Velocity = Vector.Zero
                 elseif olga.State == Util.DogState.STANDING then
                     Util:SetAnimation(olga, Util.BodyAnim.STAND_TO_SIT)
                 end

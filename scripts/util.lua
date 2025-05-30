@@ -13,9 +13,12 @@ Util.HeadAnim= {
     PETTING = "Petting",
     HAPPY_TO_PETTING = "HappyToPetting",
     PETTING_TO_HAPPY = "PettingToHappy",
-    EAR_FLICK_L = "EarFlickLeft",
-    EAR_FLICK_R = "EarFlickRight",
-    EAR_FLICK_BOTH = "EarFlickBoth",
+    EAR_FLICK_L = "EarFlick_Left",
+    EAR_FLICK_R = "EarFlick_Right",
+    EAR_FLICK_BOTH = "EarFlick_Both",
+    EAR_ROTATE_L = "EarRotate_Left",
+    EAR_ROTATE_R = "EarRotate_Right",
+    EAR_ROTATE_BOTH = "EarRotate_Both",
     -- Unused
     IDLE_TO_HOLD = "IdleToHold",
     HOLD = "Hold",
@@ -39,11 +42,13 @@ Util.DogState = {
 }
 
 Util.MiniAnim = {
-    EARFLICK = 1
+    ["EarFlick"] = 1,
+    ["EarRotate"] = 2
 }
 
 Util.MiniAnimVariants = {
-    {"EarFlick", {"Left", "Right", "Both"}}
+    {"EarFlick", {"Left", "Right", "Both"}},
+    {"EarRotate", {"Left", "Right", "Both"}}
 }
 
 local ONE_SEC = 30
@@ -90,7 +95,7 @@ end
 ---@param anim integer?
 function Util:DoMiniIdleAnim(olga, anim)
     local animGamble = not anim and Util.MiniAnimVariants[math.random(#Util.MiniAnimVariants)] or Util.MiniAnimVariants[anim]
-    Util:SetAnimation(olga, animGamble[1] .. animGamble[2][math.random(#animGamble[2])], true)
+    Util:SetAnimation(olga, animGamble[1] .. "_" .. animGamble[2][math.random(#animGamble[2])], true)
 end
 
 ---@param olga EntityFamiliar
