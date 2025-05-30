@@ -83,13 +83,11 @@ DogBody.ANIM_FUNC = {
             elseif data.targetPos ~= nil then
                 local pathfindingResult = DogBody:Pathfind(olga, data.targetPos, DogBody.WALK_SPEED, DogBody.DECAY_STRENGTH)
 
-                if pathfindingResult == DogBody.PathfindingResult.SUCCESSFUL then
+                print(pathfindingResult)
+                if pathfindingResult == DogBody.PathfindingResult.SUCCESSFUL
+                or pathfindingResult == DogBody.PathfindingResult.NO_PATH then
                     olga.Velocity = Vector.Zero
                     data.eventCD = olga.FrameCount + DogBody.EVENT_COOLDOWN
-                    data.targetPos = nil
-                elseif pathfindingResult == DogBody.PathfindingResult.NO_PATH then
-                    data.eventCD = olga.FrameCount + DogBody.EVENT_COOLDOWN
-                    olga.Velocity = Vector.Zero
                     data.targetPos = nil
                 end
             end
@@ -185,7 +183,7 @@ function DogBody:OnInit(olga)
     data.isHolding = nil
 
     data.headSprite = Sprite()
-    data.headSprite:Load("gfx/olga_head.anm2", true)
+    data.headSprite:Load("gfx/render_olga_head.anm2", true)
     Util:SetAnimation(olga, Util.HeadAnim.IDLE, true)
 
     olga:AddEntityFlags(EntityFlag.FLAG_NO_KNOCKBACK | EntityFlag.FLAG_NO_PHYSICS_KNOCKBACK)
@@ -214,6 +212,7 @@ function DogBody:HandleNewRoom()
             data.eventCD = 0
             data.targetPos = nil
             data.canPet = false
+            familiar:ToFamiliar().Velocity = Vector.Zero
         end
     end
 end

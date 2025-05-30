@@ -1,13 +1,34 @@
 <entities anm2root="gfx/" version="5">
 
     <entity name="Olga" baseHP = "-1"
-		id="3" anm2path="familiar_olga.anm2" friction="1" 
+		id="3" anm2path="familiar_olga_body.anm2" friction="1" 
 		numGridCollisionPoints="6" collisionMass="7" collisionRadius="8" 
 		gridCollision = "ground" shadowSize="15" tags="cansacrifice">
 	</entity>
 
-	<entity anm2path="effect_petting.anm2" id="1000" 
-		variant="3056" name="Petting Hand">
+	<entity name="Fetching Object"
+		id="1000" variant="333" anm2path="effect_fetching_object.anm2"
+		baseHP="0" boss="0" champion="0" collisionDamage="0" collisionMass="0"
+		collisionRadius="1" friction="1" numGridCollisionPoints="0" shadowSize="18" stageHP="0">
+        <gibs amount="0" blood="0" bone="0" eye="0" gut="0" large="0" />
 	</entity>
+	
+	<!-- Pickups -->
+
+	<entity name="Stick"
+		id ="5" variant="300" subtype="333" anm2path="object_stick.anm2" friction="1"
+		baseHP="0" boss="0" champion="0" collisionDamage="0" collisionMass="3" 
+		collisionRadius="12" numGridCollisionPoints="24" shadowSize="16" stageHP="0">
+    </entity>
+
+	<entity name="Feeding Bowl"
+		id ="5" variant="300" subtype="334" anm2path="object_feeding_bowl.anm2" friction="1"
+		baseHP="0" boss="0" champion="0" collisionDamage="0" collisionMass="3" 
+		collisionRadius="12" numGridCollisionPoints="24" shadowSize="16" stageHP="0">
+    </entity>
+
+	<!--entity anm2path="effect_petting.anm2" id="1000" 
+		variant="3056" name="Petting Hand">
+	</entity-->
 
 </entities>
