@@ -28,7 +28,7 @@ DogHead.ANIM_FUNC = {
         end
 
         if Util:IsWithin(olga, olga.Player.Position, DogHead.HAPPY_DISTANCE) then
-            local room = game:GetRoom()
+            local room = Mod.Room()
             if  data.headSprite:IsEventTriggered("TransitionHook")
             and room:IsClear()
             and data.canPet
@@ -118,15 +118,23 @@ DogHead.ANIM_FUNC[Util.HeadAnim.HOLD_TO_IDLE] = DogHead.ANIM_FUNC[Util.HeadAnim.
 --#endregion
 --#region Olga Callback
 ---@param olga EntityFamiliar
-function DogHead:HandleHeadLogic(olga)
+---@param offset Vector
+function DogHead:OnHeadRender(olga, offset)
     local data = olga:GetData()
 
     if not data.headSprite then return end -- For Sac altar
+    
+    local renderMode = Mod.Room():GetRenderMode()
 
-    data.headSprite.FlipX = olga.FlipX
-    data.headSprite:Render(Isaac.WorldToScreen(olga.Position + olga:GetNullOffset("head")))
-    data.headSprite.Scale = olga.Player:HasCollectible(CollectibleType.COLLECTIBLE_BFFS) and Vector(1.25, 1.25) or Vector.One
+    -- Water reflections
+    if renderMode ~= RenderMode.RENDER_WATER_ABOVE and renderMode ~= RenderMode.RENDER_NORMAL then
+        return
+    end
 
-    DogHead.ANIM_FUNC[data.headSprite:GetAnimation()](olga)
+    data.headSprite:Render(Isaac.WorldToRenderPosition(olga.Position + olga.PositionOffset + olga:GetNullOffset("head")) + offset)
+
+    if Isaac.GetFrameCount() % 2 == 0 then
+        DogHead.ANIM_FUNC[data.headSprite:GetAnimation()](olga)
+    end
 end
-Mod:AddCallback(ModCallbacks.MC_POST_FAMILIAR_RENDER, DogHead.HandleHeadLogic, Mod.Dog.VARIANT)
+Mod:AddCallback(ModCallbacks.MC_POST_FAMILIAR_RENDER, DogHead.OnHeadRender, Mod.Dog.VARIANT)

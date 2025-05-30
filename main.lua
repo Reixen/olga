@@ -5,6 +5,7 @@ if not REPENTOGON then return end
     -- Variables
 OlgaMod.Game = Game()
 OlgaMod.SfxMan = SFXManager()
+OlgaMod.Room = function() return OlgaMod.Game:GetRoom() end
 
 OlgaMod.Dog = {}
 OlgaMod.PettingHand = {}

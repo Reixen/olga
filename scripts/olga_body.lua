@@ -27,8 +27,7 @@ DogBody.PathfindingResult = {
 }
 
 --#endregion
---#region Olga Body State Functions
-
+--#region Olga Body Animation Functions
 DogBody.ANIM_FUNC = {
     [Util.BodyAnim.SIT] = function(olga)
         local data = olga:GetData()
@@ -190,7 +189,7 @@ end
 Mod:AddCallback(ModCallbacks.MC_FAMILIAR_INIT, DogBody.OnInit, Mod.Dog.VARIANT)
 
 function DogBody:HandleNewRoom()
-    local room = game:GetRoom()
+    local room = Mod.Room()
     local roomtype = room:GetType()
     if roomtype  == RoomType.ROOM_ISAACS or roomtype == RoomType.ROOM_BARREN then
         if room:IsFirstVisit() then
@@ -223,7 +222,7 @@ function DogBody:GoodbyeOlga()
         if player:HasTrinket(Mod.Pickup.CRUDE_DRAWING_ID, false) then return end
 
         local data = Util:GetData(player, "olgaMod")
-        local room = game:GetRoom()
+        local room = Mod.Room()
         local pos = room:FindFreePickupSpawnPosition(player.Position)
         data.hasDoggy = false
         familiar:Remove()
@@ -236,6 +235,8 @@ Mod:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, DogBody.GoodbyeOlga)
 function DogBody:HandleBodyLogic(olga)
     local data = olga:GetData()
 
+    data.headSprite.FlipX = olga.FlipX
+    data.headSprite.Scale = olga.Player:HasCollectible(CollectibleType.COLLECTIBLE_BFFS) and Vector(1.25, 1.25) or Vector.One
     data.headSprite:Update()
 
     if not data.hasOwner then
@@ -269,7 +270,7 @@ end
 function DogBody:Pathfind(olga, target, speed, decay)
     if not target then return DogBody.PathfindingResult.ERROR end
 
-    local room = game:GetRoom()
+    local room = Mod.Room()
     local pathfinder = olga:GetPathFinder()
 
     olga.FlipX = not (olga.Velocity.X < 0)
@@ -303,7 +304,7 @@ end
 
 ---@param olga EntityFamiliar
 function DogBody:ChooseRandomPosition(olga)
-    local room = game:GetRoom()
+    local room = Mod.Room()
     local validPos = DogBody:FindValidPositions(
         DogBody.WANDER_RADIUS,
         room:GetGridIndex(olga.Position),
