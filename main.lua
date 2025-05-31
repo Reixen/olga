@@ -53,7 +53,6 @@ end
 ---             - Bark Bark Idle Animtion
 ---         - Head Specific Idle Animations
 ---             - Curious
----             - Bark
 ---             - Lean
 ---     - Optimize
 ---     - Fix Head Reflection being wonky

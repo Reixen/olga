@@ -48,7 +48,7 @@ DogHead.ANIM_FUNC = {
                 if rng:RandomFloat() < DogHead.MINI_ANIM_CHANCE then
                     Util:DoMiniIdleAnim(data.headSprite)
                 else
-                    data.headSprite:Play(Util.IdleAnim[2], true)
+                    data.headSprite:Play(Util.IdleAnim[math.random(#Util.IdleAnim)], true)
                 end
                 data.animCD = olga.FrameCount + Util.ANIM_COOLDOWN
             end

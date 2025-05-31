@@ -7,6 +7,8 @@ OlgaMod.Fetch = Fetch
 local sfxMan = Mod.SfxMan
 
 local MARK_SPEED = 20
+Fetch.FETCH_TARGET_SUBTYPE = Isaac.GetEntitySubTypeByName("Fetch Target")
+Fetch.PICKUP_CHANCE = 1 / 6
 local ONE_SEC = 30
 
 --#endregion
@@ -29,8 +31,52 @@ function Fetch:PrePickupMorph(pickup)
 end
 Mod:AddCallback(ModCallbacks.MC_PRE_PICKUP_MORPH, Fetch.PrePickupMorph)
 
+---@param rng RNG
+---@param spawnPos Vector
+function Fetch:SpawnFetchPickup(rng, spawnPos)
+    for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
+        if math.random() < Fetch.PICKUP_CHANCE then
+            local data = familiar:ToFamiliar():GetData()
+            local subType
+            if not data.hasStick and not data.hasBall then
+                if math.random() < 0.5 then
+                    subType = Mod.Pickup.STICK_ID
+                    data.hasStick = true
+                else
+                    subType = Mod.Pickup.TENNIS_BALL_ID
+                    data.hasBall = true
+                end
+            elseif not data.hasStick then
+                subType = Mod.Pickup.STICK_ID
+                data.hasStick = true
+            elseif not data.hasBall then
+                subType = Mod.Pickup.TENNIS_BALL_ID
+                data.hasBall = true
+            end
+
+            if not subType then break end
+
+            Isaac.Spawn(
+                EntityType.ENTITY_PICKUP,
+                PickupVariant.PICKUP_TAROTCARD,
+                subType,
+                spawnPos,
+                Vector.Zero,
+                nil
+            )
+            break
+        end
+    end
+end
+Mod:AddCallback(ModCallbacks.MC_PRE_SPAWN_CLEAN_AWARD, Fetch.SpawnFetchPickup)
+
 if true then return end
 
+---@param player EntityPlayer
+function Fetch:OnPickupUse(cardId, player)
+    player:AnimateCard(cardId)
+    player:AnimatePickup(player:GetHeldSprite(), false, "LiftItem")
+end
 ---@param player EntityPlayer
 function Fetch:OnUseBone(cardId, player, useFlags)
     local data = player:GetData()

@@ -17,7 +17,7 @@ local ONE_SEC = 30
 DogBody.WANDER_RADIUS = 5
 DogBody.HAPPY_DISTANCE = ONE_TILE * 2.2
 
-DogBody.EVENT_COOLDOWN = ONE_SEC * 2
+DogBody.EVENT_COOLDOWN = ONE_SEC * 3
 
 DogBody.PathfindingResult = {
     ERROR = -1,
@@ -213,7 +213,7 @@ function DogBody:HandleNewRoom()
     for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
         if room:IsInitialized() then
             local data = familiar:ToFamiliar():GetData()
-            data.eventCD = 0
+            data.eventCD = familiar.FrameCount + DogBody.EVENT_COOLDOWN
             data.targetPos = nil
             data.canPet = false
             familiar:ToFamiliar().Velocity = Vector.Zero
@@ -224,15 +224,19 @@ Mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, DogBody.HandleNewRoom)
 
 function DogBody:GoodbyeOlga()
     for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
-        local player = familiar:ToFamiliar().Player
-        if player:HasTrinket(Mod.Pickup.CRUDE_DRAWING_ID, false) then return end
+        local olga = familiar:ToFamiliar()
+        local data = olga:GetData()
+        data.hasStick = nil
+        data.hasBall = nil
 
-        local data = Util:GetData(player, "olgaMod")
+        if PlayerManager.AnyoneHasTrinket(Mod.Pickup.CRUDE_DRAWING_ID) then break end
+
+        local pData = Util:GetData(familiar:ToFamiliar().Player, "olgaMod")
         local room = Mod.Room()
-        local pos = room:FindFreePickupSpawnPosition(player.Position)
-        data.hasDoggy = false
+        local pos = room:FindFreePickupSpawnPosition(room:GetCenterPos())
+        pData.hasDoggy = false
         familiar:Remove()
-        Isaac.Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TRINKET, Mod.Pickup.CRUDE_DRAWING_ID, pos, Vector.Zero, player)
+        Isaac.Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TRINKET, Mod.Pickup.CRUDE_DRAWING_ID, pos, Vector.Zero, nil)
     end
 end
 Mod:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, DogBody.GoodbyeOlga)
