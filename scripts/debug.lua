@@ -26,9 +26,9 @@ function Debug:Command(command, args)
                 data.randomPosition = nil
 
                 if olga.State == Util.DogState.SITTING then
-                    Util:SetAnimation(olga, Util.BodyAnim.SIT_TO_STAND)
+                    olga:GetSprite():Play(Util.BodyAnim.SIT_TO_STAND, true)
                 elseif olga.State == Util.DogState.STANDING then
-                    Util:SetAnimation(olga, Util.BodyAnim.STAND_TO_SIT)
+                    olga:GetSprite():Play(Util.BodyAnim.STAND_TO_SIT, true)
                 end
                 olga.Velocity = Vector.Zero
             end
@@ -36,7 +36,7 @@ function Debug:Command(command, args)
             for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
                 local olga = familiar:ToFamiliar()
                 if not olga then return end
-                Util:SetAnimation(olga, Util.HeadAnim.YAWN, true)
+                olga:GetData().headSprite:Play(Util.HeadAnim.YAWN, true)
             end
         elseif args == "fetch" then
             --for _, player in ipairs(Isaac.FindByType(EntityType.ENTITY_PLAYER)) do

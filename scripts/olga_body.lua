@@ -33,16 +33,17 @@ DogBody.ANIM_FUNC = {
         local data = olga:GetData()
         local frameCount = olga.FrameCount
         local rng = olga:GetDropRNG()
+        local sprite = olga:GetSprite()
 
         if DogBody:CanWag(data.headSprite:GetAnimation())
         or Util:IsWithin(olga, olga.Player.Position, ONE_TILE * 2) then
-            Util:SetAnimation(olga, Util.BodyAnim.SIT_WAGGING)
+            sprite:Play(Util.BodyAnim.SIT_WAGGING, true)
         end
 
         if rng:RandomFloat() < DogBody.SWITCH_CHANCE
         and frameCount % 30 == 0
         or data.isHolding then
-            Util:SetAnimation(olga, Util.BodyAnim.SIT_TO_STAND)
+            sprite:Play(Util.BodyAnim.SIT_TO_STAND, true)
         end
     end,
 
@@ -50,7 +51,7 @@ DogBody.ANIM_FUNC = {
         local sprite = olga:GetSprite()
         if  sprite:IsEventTriggered("TransitionHook") and
         not Util:IsWithin(olga, olga.Player.Position, DogBody.HAPPY_DISTANCE) then
-            Util:SetAnimation(olga, Util.BodyAnim.SIT)
+            sprite:Play(Util.BodyAnim.SIT, true)
         end
     end,
 
@@ -60,7 +61,7 @@ DogBody.ANIM_FUNC = {
         if sprite:IsFinished(animName) then
             local _, terminal = string.find(animName, "To")
             local result = string.upper(string.sub(animName, terminal + 1, #animName))
-            Util:SetAnimation(olga, Util.BodyAnim[result])
+            sprite:Play(Util.BodyAnim[result], true)
         end
 
         if sprite:IsPlaying(Util.BodyAnim.STAND_TO_SIT) then
@@ -148,12 +149,12 @@ DogBody.ANIM_FUNC = {
         -- Animation
         if olga.Velocity:Length() > 0.1
         and data.isMoving == true then
-            Util:SetAnimation(olga, Util.BodyAnim.WALKING)
+            sprite:Play(Util.BodyAnim.WALKING, true)
             data.isMoving = false
 
         elseif data.isMoving == false
         and olga.Velocity:Length() < 0.1 then
-            Util:SetAnimation(olga, Util.BodyAnim.STAND)
+            sprite:Play(Util.BodyAnim.STAND, true)
             data.isMoving = true
         end
 
@@ -163,7 +164,7 @@ DogBody.ANIM_FUNC = {
         and olga.FrameCount % ONE_SEC == 0 then
             data.targetPos = nil
             olga.Velocity = Vector.Zero
-            Util:SetAnimation(olga, Util.BodyAnim.STAND_TO_SIT)
+            sprite:Play(Util.BodyAnim.STAND_TO_SIT, true)
         end
     end
 }
@@ -186,8 +187,8 @@ function DogBody:OnInit(olga)
     data.isHolding = nil
 
     data.headSprite = Sprite()
-    data.headSprite:Load("gfx/render_olga_head.anm2", true)
-    Util:SetAnimation(olga, Util.HeadAnim.IDLE, true)
+    data.headSprite:Load("gfx/render_olga_head.anm2", true) 
+    data.headSprite:Play(Util.HeadAnim.IDLE, true)
 
     olga:AddEntityFlags(EntityFlag.FLAG_NO_KNOCKBACK | EntityFlag.FLAG_NO_PHYSICS_KNOCKBACK)
 end
