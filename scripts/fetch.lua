@@ -38,23 +38,27 @@ function Fetch:SpawnFetchPickup(rng, spawnPos)
         if math.random() < Fetch.PICKUP_CHANCE then
             local data = familiar:ToFamiliar():GetData()
             local subType
-            if not data.hasStick and not data.hasBall then
-                if math.random() < 0.5 then
-                    subType = Mod.Pickup.STICK_ID
-                    data.hasStick = true
-                else
-                    subType = Mod.Pickup.TENNIS_BALL_ID
-                    data.hasBall = true
-                end
-            elseif not data.hasStick then
-                subType = Mod.Pickup.STICK_ID
-                data.hasStick = true
-            elseif not data.hasBall then
+
+            -- el the goat
+            if data.hasBall == nil then
                 subType = Mod.Pickup.TENNIS_BALL_ID
                 data.hasBall = true
             end
 
-            if not subType then break end
+            if data.hasStick == nil then
+                subType = Mod.Pickup.STICK_ID
+                data.hasStick = true
+            end
+
+            if data.hasStick and data.hasBall then
+                if math.random() < 0.5 then
+                    subType = Mod.Pickup.TENNIS_BALL_ID
+                    data.hasStick = false
+                else
+                    subType = Mod.Pickup.STICK_ID
+                    data.hasBall = false
+                end
+            end
 
             Isaac.Spawn(
                 EntityType.ENTITY_PICKUP,
