@@ -35,10 +35,11 @@ Util.HeadAnim= {
 Util.BodyAnim = {
     SIT = "Sit",
     SIT_WAGGING = "SitWagging",
+    STAND = "Stand",
+    WALKING = "Walking",
+    -- Transitionals
     SIT_TO_STAND = "SitToStand",
     STAND_TO_SIT = "StandToSit",
-    STAND = "Stand",
-    WALKING = "Walking"
 }
 
 Util.DogState = {
@@ -108,17 +109,17 @@ function Util:FillEmptyAnimFunctions(enums, animFunc, transitionAnim, miniIdleAn
 
         local isTransition = string.find(enumName, "To")
 
-        if not miniIdleAnim and not idleAnim then
-            goto skip
-        end
-
-        local isMiniIdle = string.find(enumName, "_")
-
         if isTransition then
             animFunc[enumName] = transitionAnim
             print(enumName .. " is transitional!")
             goto skip
         end
+
+        if not miniIdleAnim and not idleAnim then
+            goto skip
+        end
+
+        local isMiniIdle = string.find(enumName, "_")
 
         if isMiniIdle then
             animFunc[enumName] = miniIdleAnim

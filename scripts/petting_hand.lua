@@ -1,21 +1,10 @@
 --#region Variables
 local Mod = OlgaMod
+
 local PettingHand = {}
 OlgaMod.PettingHand = PettingHand
 
-
-PettingHand.COLOR = {
-    PINK = -1,
-    WHITE = 0,
-    BLACK = 1,
-    BLUE = 2,
-    RED = 3,
-    GREEN = 4,
-    GREY = 5,
-    SHADOW = 6
-}
-
-PettingHand.COMPATIBILITY = {
+PettingHand.ModdedHands = {
     "MAGDALENE",
     "EDEN",
     "BLUEBABY",
@@ -30,9 +19,6 @@ function PettingHand:OnChangeFamilyMember()
 end
 Mod:AddCallback(ModCallbacks.MC_USE_ITEM, PettingHand.OnChangeFamilyMember, CollectibleType.COLLECTIBLE_CLICKER)
 
---#endregion
---#region Petting Hand Update Function
-
 -- Update the petting hand color based on the player's skin
 function PettingHand:UpdateHandColor()
     for _, doggy in pairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
@@ -40,13 +26,13 @@ function PettingHand:UpdateHandColor()
         local olga = doggy:ToFamiliar() ---@cast olga EntityFamiliar
         local player = olga.Player
         local sprite = olga:GetData().headSprite
-        local skinColor = player:GetBodyColor()
+        local playerColor = player:GetBodyColor()
         local playerType = player:GetPlayerType()
         local EPlayer = Epiphany and Epiphany.PlayerType or nil
 
-        for string, value in pairs(PettingHand.COLOR) do
+        for string, value in pairs(SkinColor) do
             string:lower()
-            if skinColor == value then
+            if playerColor == value then
                 sprite:ReplaceSpritesheet(0, "gfx/petting_hands/petting_hand_" .. string .. ".png")
                 break
             end
@@ -64,7 +50,7 @@ function PettingHand:UpdateHandColor()
                 goto finish
             end
 
-            for _, moddedString in pairs(PettingHand.COMPATIBILITY) do
+            for _, moddedString in pairs(PettingHand.ModdedHands) do
                 local fileName = moddedString:lower()
                 if playerType == EPlayer[moddedString] then
                     sprite:ReplaceSpritesheet(0, "gfx/petting_hands/petting_hand_tr_" .. fileName .. ".png")

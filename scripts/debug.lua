@@ -39,7 +39,6 @@ function Debug:Command(command, args)
             local olga = familiar:ToFamiliar()
             if not olga then return end
             olga:GetData().headSprite:Play(Mod.Dog.Head.IdleAnim[math.random(#Mod.Dog.Head.IdleAnim)], true)
-            Mod.Util:AddUnderscore("GladPetting")
         end
 
     elseif args == "fetch" then

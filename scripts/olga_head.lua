@@ -234,3 +234,4 @@ function DogHead:TryTurningGlad(olga, data)
         data.headSprite:Play(Util.HeadAnim.IDLE_TO_GLAD, true)
     end
 end
+--#endregion
