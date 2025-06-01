@@ -7,19 +7,22 @@ OlgaMod.Util = Util
 Util.HeadAnim= {
     IDLE = "Idle",
     HAPPY = "Happy",
+    PETTING = "Petting",
+    -- Transition Animations
     HAPPY_TO_IDLE = "HappyToIdle",
     IDLE_TO_HAPPY = "IdleToHappy",
-    YAWN = "Yawn",
-    PETTING = "Petting",
     HAPPY_TO_PETTING = "HappyToPetting",
     PETTING_TO_HAPPY = "PettingToHappy",
+    -- Mini Idle Animations
     EAR_FLICK_L = "EarFlick_Left",
     EAR_FLICK_R = "EarFlick_Right",
     EAR_FLICK_BOTH = "EarFlick_Both",
     EAR_ROTATE_L = "EarRotate_Left",
     EAR_ROTATE_R = "EarRotate_Right",
     EAR_ROTATE_BOTH = "EarRotate_Both",
+    -- Idle Animations
     BARK = "Bark",
+    YAWN = "Yawn",
     -- Unused
     IDLE_TO_HOLD = "IdleToHold",
     HOLD = "Hold",
@@ -42,20 +45,6 @@ Util.DogState = {
     RETRIEVE = 3
 }
 
-Util.IdleAnim = {
-    "Yawn",
-    "Bark"
-}
-
-Util.MiniIdle = {
-    ["EarFlick"] = 1,
-    ["EarRotate"] = 2
-}
-
-Util.MiniIdleVariants = {
-    {"EarFlick", {"Left", "Right", "Both"}},
-    {"EarRotate", {"Left", "Right", "Both"}}
-}
 
 local ONE_SEC = 30
 Util.ANIM_COOLDOWN = ONE_SEC * 5
@@ -78,16 +67,4 @@ function Util:GetData(entity, identifier, default)
     data._OlgaMod = data._OlgaMod or {}
     data._OlgaMod[identifier] = data._OlgaMod[identifier] or default or {}
     return data._OlgaMod[identifier]
-end
-
----@param olga EntityFamiliar
-function Util:CanIdleAnimation(olga)
-    return olga.State ~= Util.DogState.OBTAIN and olga.State ~= Util.DogState.RETRIEVE
-end
-
----@param sprite Sprite
----@param anim integer?
-function Util:DoMiniIdleAnim(sprite, anim)
-    local animGamble = not anim and Util.MiniIdleVariants[math.random(#Util.MiniIdleVariants)] or Util.MiniIdleVariants[anim]
-    sprite:Play(animGamble[1] .. "_" .. animGamble[2][math.random(#animGamble[2])], true)
 end

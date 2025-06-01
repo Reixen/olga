@@ -19,6 +19,22 @@ DogHead.REPEAT_CHANCE = 1 / 6
 local ONE_TILE = 40
 DogHead.HAPPY_DISTANCE = ONE_TILE * 2
 DogHead.PETTING_DISTANCE = ONE_TILE * 1.2
+
+DogHead.IdleAnim = {
+    "Yawn",
+    "Bark"
+}
+
+DogHead.MiniIdleVariants = {
+    {"EarFlick", {"Left", "Right", "Both"}},
+    {"EarRotate", {"Left", "Right", "Both"}}
+}
+
+DogHead.MiniIdle = {}
+for i, value in ipairs(DogHead.MiniIdleVariants) do
+    DogHead.MiniIdle[value[1]] = i
+end
+
 --#endregion
 --#region Olga Head State Functions
 DogHead.ANIM_FUNC = {
@@ -31,27 +47,22 @@ DogHead.ANIM_FUNC = {
             data.headSprite:Play(Util.HeadAnim.IDLE_TO_HOLD, true)
         end
 
-        if Util:IsWithin(olga, olga.Player.Position, DogHead.HAPPY_DISTANCE) then
-            local room = Mod.Room()
-            if  data.headSprite:IsEventTriggered("TransitionHook")
-            and room:IsClear()
-            and data.canPet
-            and not data.isHolding then
-                data.headSprite:Play(Util.HeadAnim.IDLE_TO_HAPPY, true)
-            end
-        else data.canPet = true end
+        DogHead:TryTurningHappy(olga, data, data.headSprite)
 
-        if Util:CanIdleAnimation(olga)
-        and data.animCD < frameCount
-        and data.headSprite:IsEventTriggered("TransitionHook") then
-            if rng:RandomFloat() < DogHead.ANIM_CHANCE then
-                if rng:RandomFloat() < DogHead.MINI_ANIM_CHANCE then
-                    Util:DoMiniIdleAnim(data.headSprite)
-                else
-                    data.headSprite:Play(Util.IdleAnim[math.random(#Util.IdleAnim)], true)
-                end
-                data.animCD = olga.FrameCount + Util.ANIM_COOLDOWN
+        if not data.headSprite:IsEventTriggered("TransitionHook")
+        or not DogHead:CanIdleAnimation(olga)
+        or data.animCD > frameCount then
+            return
+        end
+
+        if rng:RandomFloat() < DogHead.ANIM_CHANCE then
+
+            if rng:RandomFloat() < DogHead.MINI_ANIM_CHANCE then
+                DogHead:DoMiniIdleAnim(data.headSprite)
+            else
+                data.headSprite:Play(DogHead.IdleAnim[math.random(#DogHead.IdleAnim)], true)
             end
+            data.animCD = olga.FrameCount + Util.ANIM_COOLDOWN
         end
     end,
 
@@ -87,6 +98,10 @@ DogHead.ANIM_FUNC = {
         if data.headSprite:IsEventTriggered("Yawn") then
             sfxMan:Play(DogHead.SOUND_YAWN, 1, 2, false, math.random(9, 12)/10)
         end
+
+        if data.headSprite:IsEventTriggered("Bark") then
+            sfxMan:Play(DogHead.SOUND_BARK, 1.5, 2, false, 1)
+        end
     end,
 
     [Util.HeadAnim.PETTING] = function(olga)
@@ -98,15 +113,16 @@ DogHead.ANIM_FUNC = {
             data.isHappy = true
         end
 
-        if data.headSprite:IsEventTriggered("TransitionHook") then
-            if not Util:IsWithin(olga, player.Position, DogHead.PETTING_DISTANCE) then
-                data.headSprite:Play(Util.HeadAnim.PETTING_TO_HAPPY, true)
-                if data.isHappy and
-                not player:HasCollectible(CollectibleType.COLLECTIBLE_NUMBER_ONE) then
-                    player:RemoveCostume(Isaac.GetItemConfig():GetCollectible(CollectibleType.COLLECTIBLE_NUMBER_ONE))
-                    data.isHappy = nil
-                end
-            end
+        if not data.headSprite:IsEventTriggered("TransitionHook")
+        or Util:IsWithin(olga, player.Position, DogHead.PETTING_DISTANCE) then
+            return
+        end
+
+        data.headSprite:Play(Util.HeadAnim.PETTING_TO_HAPPY, true)
+
+        if data.isHappy and not player:HasCollectible(CollectibleType.COLLECTIBLE_NUMBER_ONE) then
+            player:RemoveCostume(Isaac.GetItemConfig():GetCollectible(CollectibleType.COLLECTIBLE_NUMBER_ONE))
+            data.isHappy = nil
         end
     end,
 
@@ -120,32 +136,13 @@ DogHead.ANIM_FUNC = {
             if rng:RandomFloat() < DogHead.REPEAT_CHANCE then
                 local _, terminal = string.find(animName, "_")
                 local result = string.sub(animName, 1, terminal - 1)
-                Util:DoMiniIdleAnim(sprite, Util.MiniIdle[result])
+                DogHead:DoMiniIdleAnim(sprite, DogHead.MiniIdle[result])
             else
                 sprite:Play(Util.HeadAnim.IDLE, true)
             end
         end
 
-        if Util:IsWithin(olga, olga.Player.Position, DogHead.HAPPY_DISTANCE) then
-            local room = Mod.Room()
-            if  sprite:IsEventTriggered("TransitionHook")
-            and room:IsClear()
-            and data.canPet
-            and not data.isHolding then
-                sprite:Play(Util.HeadAnim.IDLE_TO_HAPPY, true)
-            end
-        else data.canPet = true end
-    end,
-
-    [Util.HeadAnim.BARK] = function (olga) ---@param olga EntityFamiliar
-        local data = olga:GetData()
-        if data.headSprite:IsFinished(data.headSprite:GetAnimation()) then
-            data.headSprite:Play(Util.HeadAnim.IDLE, true)
-        end
-
-        if data.headSprite:IsEventTriggered("Bark") then
-            sfxMan:Play(DogHead.SOUND_BARK, 1.5, 2, false, 1)
-        end
+        DogHead:TryTurningHappy(olga, data, sprite)
     end,
 
     -- Unused
@@ -165,6 +162,7 @@ DogHead.ANIM_FUNC[Util.HeadAnim.EAR_FLICK_BOTH] = DogHead.ANIM_FUNC[Util.HeadAni
 DogHead.ANIM_FUNC[Util.HeadAnim.EAR_ROTATE_L] = DogHead.ANIM_FUNC[Util.HeadAnim.EAR_FLICK_L]
 DogHead.ANIM_FUNC[Util.HeadAnim.EAR_ROTATE_R] = DogHead.ANIM_FUNC[Util.HeadAnim.EAR_FLICK_L]
 DogHead.ANIM_FUNC[Util.HeadAnim.EAR_ROTATE_BOTH] = DogHead.ANIM_FUNC[Util.HeadAnim.EAR_FLICK_L]
+DogHead.ANIM_FUNC[Util.HeadAnim.BARK] = DogHead.ANIM_FUNC[Util.HeadAnim.YAWN]
 -- Unused
 DogHead.ANIM_FUNC[Util.HeadAnim.IDLE_TO_HOLD] = DogHead.ANIM_FUNC[Util.HeadAnim.HAPPY_TO_IDLE]
 DogHead.ANIM_FUNC[Util.HeadAnim.HOLD_TO_IDLE] = DogHead.ANIM_FUNC[Util.HeadAnim.HAPPY_TO_IDLE]
@@ -187,12 +185,43 @@ function DogHead:OnHeadRender(olga, offset)
 
     data.headSprite:Render(Isaac.WorldToRenderPosition(olga.Position + olga.PositionOffset + olga:GetNullOffset("head")) + offset)
 
-    if Isaac.GetFrameCount() % 2 == 0 and not game:IsPaused() then
-        data.headSprite.FlipX = olga.FlipX
-        data.headSprite.Scale = olga.Player:HasCollectible(CollectibleType.COLLECTIBLE_BFFS) and Vector(1.25, 1.25) or Vector.One
-        data.headSprite:Update()
+    if not (Isaac.GetFrameCount() % 2 == 0) or game:IsPaused() then return end
 
-        DogHead.ANIM_FUNC[data.headSprite:GetAnimation()](olga)
-    end
+    data.headSprite.FlipX = olga.FlipX
+    data.headSprite.Scale = olga.Player:HasCollectible(CollectibleType.COLLECTIBLE_BFFS) and Vector(1.25, 1.25) or Vector.One
+    data.headSprite:Update()
+
+    DogHead.ANIM_FUNC[data.headSprite:GetAnimation()](olga)
 end
 Mod:AddCallback(ModCallbacks.MC_POST_FAMILIAR_RENDER, DogHead.OnHeadRender, Mod.Dog.VARIANT)
+--#endregion
+--#region Olga Helper Functions
+
+---@param olga EntityFamiliar
+function DogHead:CanIdleAnimation(olga)
+    return olga.State ~= Util.DogState.OBTAIN and olga.State ~= Util.DogState.RETRIEVE
+end
+
+---@param sprite Sprite
+---@param anim integer?
+function DogHead:DoMiniIdleAnim(sprite, anim)
+    local animGamble = not anim and DogHead.MiniIdleVariants[math.random(#DogHead.MiniIdleVariants)] or DogHead.MiniIdleVariants[anim]
+    local name, variants = table.unpack(animGamble)
+    sprite:Play(name .. "_" .. variants[math.random(#variants)], true)
+end
+
+---@param olga EntityFamiliar
+---@param data table
+---@param sprite Sprite
+function DogHead:TryTurningHappy(olga, data, sprite)
+    if not Util:IsWithin(olga, olga.Player.Position, DogHead.HAPPY_DISTANCE) then
+        data.canPet = true
+        return
+    end
+
+    local room = Mod.Room()
+    if sprite:IsEventTriggered("TransitionHook") and room:IsClear()
+    and data.canPet and not data.isHolding then
+        sprite:Play(Util.HeadAnim.IDLE_TO_HAPPY, true)
+    end
+end

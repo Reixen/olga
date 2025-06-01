@@ -40,8 +40,7 @@ DogBody.ANIM_FUNC = {
             sprite:Play(Util.BodyAnim.SIT_WAGGING, true)
         end
 
-        if rng:RandomFloat() < DogBody.SWITCH_CHANCE
-        and frameCount % 30 == 0
+        if (rng:RandomFloat() < DogBody.SWITCH_CHANCE and frameCount % 30 == 0 and data.eventCD < frameCount)
         or data.isHolding then
             sprite:Play(Util.BodyAnim.SIT_TO_STAND, true)
         end
@@ -77,12 +76,31 @@ DogBody.ANIM_FUNC = {
         local sprite = olga:GetSprite()
         local frameCount = olga.FrameCount
 
+        -- Animations
+        if olga.Velocity:Length() > 0.1
+        and data.isMoving then
+            sprite:Play(Util.BodyAnim.WALKING, true)
+            data.isMoving = false
+
+        elseif olga.Velocity:Length() <= 0.1
+        and not data.isMoving then
+            sprite:Play(Util.BodyAnim.STAND, true)
+            data.isMoving = true
+        end
+
         if data.eventCD < frameCount then
 
-            if not data.targetPos
-            and rng:RandomFloat() < DogBody.WANDER_CHANCE then
-                data.targetPos = DogBody:ChooseRandomPosition(olga)
-            elseif data.targetPos ~= nil then
+            -- Switching
+            if sprite:IsEventTriggered("TransitionHook")
+            and rng:RandomFloat() < DogBody.SWITCH_CHANCE
+            and olga.FrameCount % ONE_SEC == 0 then
+                data.targetPos = nil
+                olga.Velocity = Vector.Zero
+                data.eventCD = frameCount + DogBody.EVENT_COOLDOWN
+                sprite:Play(Util.BodyAnim.STAND_TO_SIT, true)
+            end
+
+            if data.targetPos then
                 local pathfindingResult = DogBody:Pathfind(olga, data.targetPos, DogBody.WALK_SPEED, DogBody.DECAY_STRENGTH)
 
                 if pathfindingResult == DogBody.PathfindingResult.SUCCESSFUL
@@ -93,6 +111,11 @@ DogBody.ANIM_FUNC = {
                 else
                     --print("Thou shall, " ..tostring(pathfindingResult))
                 end
+                return
+            end
+
+            if rng:RandomFloat() < DogBody.WANDER_CHANCE then
+                data.targetPos = DogBody:ChooseRandomPosition(olga)
             end
         end
 
@@ -146,26 +169,6 @@ DogBody.ANIM_FUNC = {
             --olga.Velocity = (player.Position - olga.Position):Normalized() * speedDecay
         --end
 
-        -- Animation
-        if olga.Velocity:Length() > 0.1
-        and data.isMoving == true then
-            sprite:Play(Util.BodyAnim.WALKING, true)
-            data.isMoving = false
-
-        elseif data.isMoving == false
-        and olga.Velocity:Length() < 0.1 then
-            sprite:Play(Util.BodyAnim.STAND, true)
-            data.isMoving = true
-        end
-
-        -- Switching
-        if sprite:IsEventTriggered("TransitionHook")
-        and rng:RandomFloat() < DogBody.SWITCH_CHANCE
-        and olga.FrameCount % ONE_SEC == 0 then
-            data.targetPos = nil
-            olga.Velocity = Vector.Zero
-            sprite:Play(Util.BodyAnim.STAND_TO_SIT, true)
-        end
     end
 }
 DogBody.ANIM_FUNC[Util.BodyAnim.STAND_TO_SIT] = DogBody.ANIM_FUNC[Util.BodyAnim.SIT_TO_STAND]
@@ -181,7 +184,7 @@ function DogBody:OnInit(olga)
 
     data.heldItemSprite = Sprite()
     data.eventCD = olga.FrameCount + DogBody.EVENT_COOLDOWN
-    data.animCD = olga.FrameCount + Mod.Util.ANIM_COOLDOWN
+    data.animCD = olga.FrameCount + Util.ANIM_COOLDOWN
     data.targetPos = nil
     data.isMoving = true
     data.isHolding = nil
@@ -196,29 +199,21 @@ Mod:AddCallback(ModCallbacks.MC_FAMILIAR_INIT, DogBody.OnInit, Mod.Dog.VARIANT)
 
 function DogBody:HandleNewRoom()
     local room = Mod.Room()
-    local roomtype = room:GetType()
-    if roomtype  == RoomType.ROOM_ISAACS or roomtype == RoomType.ROOM_BARREN then
-        if room:IsFirstVisit() then
-            Isaac.Spawn(
-                EntityType.ENTITY_FAMILIAR,
-                Mod.Dog.VARIANT,
-                0,
-                room:GetCenterPos(),
-                Vector.Zero,
-                nil
-            )
-        end
-    end
+    local roomType = room:GetType()
 
     for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
-        if room:IsInitialized() then
-            local data = familiar:ToFamiliar():GetData()
-            data.eventCD = familiar.FrameCount + DogBody.EVENT_COOLDOWN
-            data.targetPos = nil
-            data.canPet = false
-            familiar:ToFamiliar().Velocity = Vector.Zero
-        end
+        local data = familiar:ToFamiliar():GetData()
+        data.targetPos = nil
+        data.canPet = false
+        familiar:ToFamiliar().Velocity = Vector.Zero
     end
+
+    if (roomType ~= RoomType.ROOM_ISAACS and roomType ~= RoomType.ROOM_BARREN)
+    or not room:IsFirstVisit() then
+        return
+    end
+
+    Isaac.Spawn(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT, 0, room:GetCenterPos(), Vector.Zero, nil)
 end
 Mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, DogBody.HandleNewRoom)
 
@@ -245,23 +240,10 @@ Mod:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, DogBody.GoodbyeOlga)
 function DogBody:HandleBodyLogic(olga)
     local data = olga:GetData()
 
-
-    if not data.hasOwner then
-        local nearestPlayer = game:GetNearestPlayer(olga.Position)
-        if nearestPlayer.Position:Distance(olga.Position) < DogBody.HAPPY_DISTANCE then
-            olga.SpawnerEntity = nearestPlayer
-            olga.Player = nearestPlayer
-            data.hasOwner = true
-
-            local pData = Util:GetData(olga.Player, "olgaMod")
-            pData.hasDoggy = true
-
-            Mod.PettingHand:UpdateHandColor()
-        end
-        return
-    end
-
     DogBody.ANIM_FUNC[olga:GetSprite():GetAnimation()](olga)
+
+    if data.hasOwner then return end
+    DogBody:FindDogOwner(olga, data)
 end
 Mod:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, DogBody.HandleBodyLogic, Mod.Dog.VARIANT)
 --#endregion
@@ -340,7 +322,7 @@ function DogBody:FindValidPositions(gridlength, gridIdx, room)
     local queueSize = {}
     local finishedIdx = 0
     queueSize[1] = {gridIdx, 0}
- 
+
     -- Breadth-first search my beloved
     while finishedIdx < #queueSize do
         local queuePos = finishedIdx + 1
@@ -372,5 +354,24 @@ function DogBody:FindValidPositions(gridlength, gridIdx, room)
     end
 
     return idxTable
+end
+
+---@param olga EntityFamiliar
+---@param data table
+function DogBody:FindDogOwner(olga, data)
+    local nearestPlayer = game:GetNearestPlayer(olga.Position)
+
+    if not Util:IsWithin(olga, nearestPlayer.Position, DogBody.HAPPY_DISTANCE) then
+        return
+    end
+
+    olga.SpawnerEntity = nearestPlayer
+    olga.Player = nearestPlayer
+    data.hasOwner = true
+
+    local pData = Util:GetData(olga.Player, "olgaMod")
+    pData.hasDoggy = true
+
+    Mod.PettingHand:UpdateHandColor()
 end
 --#endregion

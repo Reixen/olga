@@ -31,11 +31,12 @@ function Fetch:PrePickupMorph(pickup)
 end
 Mod:AddCallback(ModCallbacks.MC_PRE_PICKUP_MORPH, Fetch.PrePickupMorph)
 
----@param rng RNG
 ---@param spawnPos Vector
-function Fetch:SpawnFetchPickup(rng, spawnPos)
+function Fetch:SpawnFetchPickup(_, spawnPos)
     for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
-        if math.random() < Fetch.PICKUP_CHANCE then
+        local rng = familiar:ToFamiliar():GetDropRNG()
+
+        if rng:RandomFloat() < Fetch.PICKUP_CHANCE then
             local data = familiar:ToFamiliar():GetData()
             local subType
 
@@ -51,7 +52,7 @@ function Fetch:SpawnFetchPickup(rng, spawnPos)
             end
 
             if data.hasStick and data.hasBall then
-                if math.random() < 0.5 then
+                if rng:RandomFloat() < 0.5 then
                     subType = Mod.Pickup.TENNIS_BALL_ID
                     data.hasStick = false
                 else
@@ -60,14 +61,7 @@ function Fetch:SpawnFetchPickup(rng, spawnPos)
                 end
             end
 
-            Isaac.Spawn(
-                EntityType.ENTITY_PICKUP,
-                PickupVariant.PICKUP_TAROTCARD,
-                subType,
-                spawnPos,
-                Vector.Zero,
-                nil
-            )
+            Isaac.Spawn( EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TAROTCARD, subType, spawnPos, Vector.Zero, nil)
             break
         end
     end
