@@ -1,6 +1,6 @@
 --#region Variables
 local Mod = OlgaMod
-local Util = OlgaMod.Util
+local Util = Mod.Util
 
 local DogBody = {}
 OlgaMod.Dog.Body = DogBody
@@ -22,8 +22,9 @@ DogBody.EVENT_COOLDOWN = ONE_SEC * 3
 DogBody.PathfindingResult = {
     ERROR = -1,
     NO_PATH = 0,
-    APPROACHING = 1,
-    SUCCESSFUL = 2
+    COLLIDING = 1,
+    APPROACHING = 2,
+    SUCCESSFUL = 3
 }
 
 --#endregion
@@ -42,6 +43,7 @@ DogBody.ANIM_FUNC = {
 
         if (rng:RandomFloat() < DogBody.SWITCH_CHANCE and frameCount % 30 == 0 and data.eventCD < frameCount)
         or data.isHolding then
+            olga.State = Util.DogState.STANDING
             sprite:Play(Util.BodyAnim.SIT_TO_STAND, true)
         end
     end,
@@ -54,22 +56,7 @@ DogBody.ANIM_FUNC = {
         end
     end,
 
-    [Util.BodyAnim.SIT_TO_STAND] = function(olga)
-        local sprite = olga:GetSprite()
-        local animName = sprite:GetAnimation()
-        if sprite:IsFinished(animName) then
-            local _, terminal = string.find(animName, "To")
-            local result = string.upper(string.sub(animName, terminal + 1, #animName))
-            sprite:Play(Util.BodyAnim[result], true)
-        end
-
-        if sprite:IsPlaying(Util.BodyAnim.STAND_TO_SIT) then
-            olga.State = Util.DogState.SITTING
-        elseif sprite:IsPlaying(Util.BodyAnim.SIT_TO_STAND) then
-            olga.State = Util.DogState.STANDING
-        end
-    end,
-
+    -- Movement animations
     [Util.BodyAnim.STAND] = function(olga)
         local data = olga:GetData()
         local rng = olga:GetDropRNG()
@@ -98,18 +85,19 @@ DogBody.ANIM_FUNC = {
                 olga.Velocity = Vector.Zero
                 data.eventCD = frameCount + DogBody.EVENT_COOLDOWN
                 sprite:Play(Util.BodyAnim.STAND_TO_SIT, true)
+                olga.State = Util.DogState.SITTING
             end
 
             if data.targetPos then
-                local pathfindingResult = DogBody:Pathfind(olga, data.targetPos, DogBody.WALK_SPEED, DogBody.DECAY_STRENGTH)
+                local pathfindingResult = DogBody:Pathfind(olga, data, data.targetPos, DogBody.WALK_SPEED, DogBody.DECAY_STRENGTH)
 
                 if pathfindingResult == DogBody.PathfindingResult.SUCCESSFUL
                 or pathfindingResult == DogBody.PathfindingResult.NO_PATH then
                     olga.Velocity = Vector.Zero
                     data.eventCD = frameCount + DogBody.EVENT_COOLDOWN
                     data.targetPos = nil
-                else
-                    --print("Thou shall, " ..tostring(pathfindingResult))
+                elseif pathfindingResult == DogBody.PathfindingResult.COLLIDING then
+                    print("at frame " .. tostring(olga.FrameCount))
                 end
                 return
             end
@@ -168,11 +156,27 @@ DogBody.ANIM_FUNC = {
             --local speedDecay = playerDistance / (12 / DogBody.WALK_SPEED)
             --olga.Velocity = (player.Position - olga.Position):Normalized() * speedDecay
         --end
+    end,
 
-    end
+    -- Transitional animations
+    [Util.BodyAnim.SIT_TO_STAND] = function(olga)
+        local sprite = olga:GetSprite()
+        local animName = sprite:GetAnimation()
+        if sprite:IsFinished(animName) then
+            local animToPlay = Util:FindAnimSubstring(animName)
+            sprite:Play(Util.BodyAnim[animToPlay], true)
+        end
+    end,
 }
 DogBody.ANIM_FUNC[Util.BodyAnim.STAND_TO_SIT] = DogBody.ANIM_FUNC[Util.BodyAnim.SIT_TO_STAND]
 DogBody.ANIM_FUNC[Util.BodyAnim.WALKING] = DogBody.ANIM_FUNC[Util.BodyAnim.STAND]
+
+-- Use when there's more animations
+--Util:FillEmptyAnimFunctions(
+    --Util.BodyAnim,
+    --DogBody.ANIM_FUNC,
+    --DogBody.ANIM_FUNC[Util.BodyAnim.SIT_TO_STAND]
+--)
 
 --#endregion
 --#region Olga Head Animation Functions
@@ -185,6 +189,7 @@ function DogBody:OnInit(olga)
     data.heldItemSprite = Sprite()
     data.eventCD = olga.FrameCount + DogBody.EVENT_COOLDOWN
     data.animCD = olga.FrameCount + Util.ANIM_COOLDOWN
+    data.attentionCD = olga.FrameCount + Util.ATTENTION_COOLDOWN
     data.targetPos = nil
     data.isMoving = true
     data.isHolding = nil
@@ -250,29 +255,37 @@ Mod:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, DogBody.HandleBodyLogic, Mod.Do
 --#region Olga Helper Functions
 ---@param anim string
 function DogBody:CanWag(anim)
-    return anim == Util.HeadAnim.HAPPY or anim == Util.HeadAnim.PETTING
+    return anim == Util.HeadAnim.GLAD or anim == Util.HeadAnim.GLAD_PETTING
 end
 
 ---@param olga EntityFamiliar
+---@param data table
 ---@param target Vector
 ---@param speed number
 ---@param decay? number
-function DogBody:Pathfind(olga, target, speed, decay)
+function DogBody:Pathfind(olga, data, target, speed, decay)
     if not target then return DogBody.PathfindingResult.ERROR end
 
     local room = Mod.Room()
     local pathfinder = olga:GetPathFinder()
+    local gridIdx = room:GetGridIndex(olga.Position)
 
     olga.FlipX = not (olga.Velocity.X < 0)
 
     if not pathfinder:HasPathToPos(target, true) then
-        local gridIdx = room:GetGridIndex(olga.Position)
-        if olga:CollidesWithGrid()
-        and room:GetGridCollision(gridIdx) ~= GridCollisionClass.COLLISION_NONE then
-            pathfinder:EvadeTarget(room:GetGridPosition(gridIdx))
-        else
+        if not olga:CollidesWithGrid() and room:GetGridCollision(gridIdx) == GridCollisionClass.COLLISION_NONE then
             return DogBody.PathfindingResult.NO_PATH
         end
+
+        --TODO: Give her a split second to pathfind out, then Vector.Zero to her Velocity
+        if room:GetGridCollision(gridIdx) ~= GridCollisionClass.COLLISION_NONE then
+            pathfinder:EvadeTarget(room:GetGridPosition(gridIdx))
+            return DogBody.PathfindingResult.COLLIDING
+        end
+
+        -- Her last chance of escaping if it's an open position
+        olga.Velocity = (room:GetGridPosition(gridIdx) - olga.Position):Resized(speed * 5)
+        return DogBody.PathfindingResult.COLLIDING
     end
 
     if not Util:IsWithin(olga, target, ONE_TILE / 2) then

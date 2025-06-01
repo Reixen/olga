@@ -22,7 +22,7 @@ function Debug:Command(command, args)
         for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
             local olga = familiar:ToFamiliar()
             if not olga then return end
-           
+
             local data = olga:GetData()
             data.targetPos = nil
 
@@ -38,7 +38,8 @@ function Debug:Command(command, args)
         for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
             local olga = familiar:ToFamiliar()
             if not olga then return end
-            olga:GetData().headSprite:Play(Util.HeadAnim.YAWN, true)
+            olga:GetData().headSprite:Play(Mod.Dog.Head.IdleAnim[math.random(#Mod.Dog.Head.IdleAnim)], true)
+            Mod.Util:AddUnderscore("GladPetting")
         end
 
     elseif args == "fetch" then
