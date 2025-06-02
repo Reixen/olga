@@ -51,3 +51,5 @@ function Debug:Command(command, args)
 end
 Mod:AddCallback(ModCallbacks.MC_EXECUTE_CMD, Debug.Command)
 --#endregion
+
+

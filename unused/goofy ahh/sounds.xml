@@ -1,0 +1,21 @@
+<sounds root="sfx/">
+
+    <sound name ="Olga Yawn">
+        <sample weight="1" path="olga_yawn.wav" />
+    </sound>
+
+    <sound name ="Olga Bark">
+        <sample weight="1" path="olga_bark1.wav" />
+        <sample weight="1" path="olga_bark2.wav" />
+        <sample weight="1" path="olga_bark3.wav" />
+    </sound>
+
+    <sound name ="E">
+        <sample weight="1" path="text.wav" />
+    </sound>
+
+    <sound name ="C">
+        <sample weight="1" path="came.wav" />
+    </sound>
+
+</sounds>
