@@ -19,9 +19,8 @@ function Debug:Command(command, args)
 
     if args == "switch" then
 
-        for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
-            local olga = familiar:ToFamiliar()
-            if not olga then return end
+        for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do ---@cast familiar EntityFamiliar
+            local olga = familiar
 
             local data = olga:GetData()
             data.targetPos = nil
@@ -35,10 +34,8 @@ function Debug:Command(command, args)
         end
 
     elseif args == "animate" then
-        for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
-            local olga = familiar:ToFamiliar()
-            if not olga then return end
-            olga:GetData().headSprite:Play(Mod.Dog.Head.IdleAnim[math.random(#Mod.Dog.Head.IdleAnim)], true)
+        for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do ---@cast familiar EntityFamiliar
+            familiar:GetData().headSprite:Play(Mod.Dog.Head.IdleAnim[math.random(#Mod.Dog.Head.IdleAnim)], true)
         end
 
     elseif args == "fetch" then

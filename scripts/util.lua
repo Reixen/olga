@@ -4,6 +4,8 @@ local Mod = OlgaMod
 local Util = {}
 OlgaMod.Util = Util
 
+Util.ID = "olgaMod"
+
 Util.HeadAnim= {
     IDLE = "Idle",
     GLAD = "Glad",
@@ -111,7 +113,6 @@ function Util:FillEmptyAnimFunctions(enums, animFunc, transitionAnim, miniIdleAn
 
         if isTransition then
             animFunc[enumName] = transitionAnim
-            print(enumName .. " is transitional!")
             goto skip
         end
 
@@ -123,12 +124,10 @@ function Util:FillEmptyAnimFunctions(enums, animFunc, transitionAnim, miniIdleAn
 
         if isMiniIdle then
             animFunc[enumName] = miniIdleAnim
-            print(enumName .. " is a mini idle!")
             goto skip
         end
 
         animFunc[enumName] = idleAnim
-        print(enumName .. " is an idle animation!")
 
         ::skip::
     end
@@ -147,3 +146,4 @@ function Util:FindAnimSubstring(animName, isMiniIdle)
     local subString = string.sub(animName, terminal + 1, #animName)
     return Util:ToEnumName(subString)
 end
+--endregion

@@ -4,6 +4,8 @@ local Mod = OlgaMod
 local PettingHand = {}
 OlgaMod.PettingHand = PettingHand
 
+PettingHand.SUBSTRING_START = 6
+
 PettingHand.ModdedHands = {
     "MAGDALENE",
     "EDEN",
@@ -21,19 +23,18 @@ Mod:AddCallback(ModCallbacks.MC_USE_ITEM, PettingHand.OnChangeFamilyMember, Coll
 
 -- Update the petting hand color based on the player's skin
 function PettingHand:UpdateHandColor()
-    for _, doggy in pairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
-        if not doggy then return end
-        local olga = doggy:ToFamiliar() ---@cast olga EntityFamiliar
-        local player = olga.Player
-        local sprite = olga:GetData().headSprite
+    for _, doggy in pairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do ---@cast doggy EntityFamiliar
+        local player = doggy.Player
+        local sprite = doggy:GetData().headSprite
         local playerColor = player:GetBodyColor()
         local playerType = player:GetPlayerType()
         local EPlayer = Epiphany and Epiphany.PlayerType or nil
 
         for string, value in pairs(SkinColor) do
-            string:lower()
+            local colorStr = string:sub(PettingHand.SUBSTRING_START, -1)
+
             if playerColor == value then
-                sprite:ReplaceSpritesheet(0, "gfx/petting_hands/petting_hand_" .. string .. ".png")
+                sprite:ReplaceSpritesheet(0, "gfx/petting_hands/petting_hand_" .. colorStr .. ".png")
                 break
             end
         end
@@ -58,7 +59,7 @@ function PettingHand:UpdateHandColor()
                 end
             end
         end
-        
+
         ::finish::
         sprite:LoadGraphics()
     end

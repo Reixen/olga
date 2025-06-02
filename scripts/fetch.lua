@@ -6,10 +6,26 @@ OlgaMod.Fetch = Fetch
 
 local sfxMan = Mod.SfxMan
 
-local MARK_SPEED = 20
 Fetch.FETCH_TARGET_SUBTYPE = Isaac.GetEntitySubTypeByName("Fetch Target")
+Fetch.FETCHING_OBJECT_VARIANT = Isaac.GetEntityVariantByName("Fetching Object")
+
+Fetch.TARGET_SPEED = 15
 Fetch.PICKUP_CHANCE = 1 / 6
+
 local ONE_SEC = 30
+Fetch.MARK_TIMEOUT = ONE_SEC * 2
+Fetch.OBJECT_TIMEOUT = ONE_SEC * 5
+-- Fetching duration if the distance equals to the base length
+Fetch.DURATION = ONE_SEC
+Fetch.TIMEOUT_INCREASE = 1.5
+
+local ONE_TILE = 40
+Fetch.BASE_LENGTH = ONE_TILE * 3
+-- Amount of time to reduce/increase per tile
+Fetch.UNITS_PER_TILE = ONE_SEC / 24
+Fetch.SPIN_STRENGTH = 8
+Fetch.ARC_HEIGHT = 46
+Fetch.ARC_SHIFT = 6
 
 --#endregion
 --#region Callbacks
@@ -68,94 +84,145 @@ function Fetch:SpawnFetchPickup(_, spawnPos)
 end
 Mod:AddCallback(ModCallbacks.MC_PRE_SPAWN_CLEAN_AWARD, Fetch.SpawnFetchPickup)
 
-if true then return end
-
+---@param cardId Card
 ---@param player EntityPlayer
-function Fetch:OnPickupUse(cardId, player)
-    player:AnimateCard(cardId)
-    player:AnimatePickup(player:GetHeldSprite(), false, "LiftItem")
+function Fetch:OnUsePickup(cardId, player)
+    local objectSprite = player:GetHeldSprite()
+    player:AnimatePickup(objectSprite, false, "LiftItem")
+
+    local pickupName = Isaac.GetItemConfig():GetCard(cardId).Name
+    pickupName = pickupName:gsub(" ", "_")
+
+    local target = Isaac.Spawn(
+        EntityType.ENTITY_EFFECT, EffectVariant.TARGET, Fetch.FETCH_TARGET_SUBTYPE,
+        player.Position, Vector.Zero, player):ToEffect() ---@cast target EntityEffect
+    target.Timeout = Fetch.MARK_TIMEOUT
+
+    local targetData = target:GetData()
+    targetData.controllerIdx = player.ControllerIndex
+    targetData.objSprite = objectSprite
+    targetData.objID = cardId
+    targetData.objName = pickupName
+
+    local targetSprite = target:GetSprite()
+    targetSprite:ReplaceSpritesheet(2, "gfx/items/pickups/" .. pickupName .. ".png", true)
+
 end
----@param player EntityPlayer
-function Fetch:OnUseBone(cardId, player, useFlags)
-    local data = player:GetData()
-    if not data.hasDoggy or not data.canFetch then return end
+Mod:AddCallback(ModCallbacks.MC_USE_CARD, Fetch.OnUsePickup, Mod.Pickup.STICK_ID)
+Mod:AddCallback(ModCallbacks.MC_USE_CARD, Fetch.OnUsePickup, Mod.Pickup.TENNIS_BALL_ID)
 
-    data.cardId = cardId
-
-    player:AnimateCard(cardId)
-    player:AnimatePickup(player:GetHeldSprite(), false, "LiftItem")
-    --local cardConfig = Isaac.GetItemConfig():GetCard(cardId)
-    --player:AnimatePickup(sprite, false, "LiftItem")
-    if not data.hasMark then
-        local fetchMark = Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.TARGET, 0, player.Position, Vector.Zero, player)
-        local markData = fetchMark:GetData()
-        markData.fetchMark = true
-        markData.cooldown = ONE_SEC * 1.5
+---@param target EntityEffect
+function Fetch:OnTargetInit(target)
+    if target.SubType ~= Fetch.FETCH_TARGET_SUBTYPE then
+        return
     end
-    return true
+
+    target:GetSprite():PlayOverlay("Object", true)
+    target.Color = Color(1, 1, 1, 1, 0, 0, 0)
+    target.GridCollisionClass = EntityGridCollisionClass.GRIDCOLL_WALLS
 end
-Mod:AddCallback(ModCallbacks.MC_PRE_USE_CARD, Fetch.OnUseBone)
+Mod:AddCallback(ModCallbacks.MC_POST_EFFECT_INIT, Fetch.OnTargetInit, EffectVariant.TARGET)
 
-local thrownPickup
-local lastPos
-
----@param effect EntityEffect
-function Fetch:OnMarkRender(effect)
-    local data = effect:GetData()
-    if not data.fetchMark then return end
-
-    for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
-        if not familiar then return end
-        data.fam = familiar:ToFamiliar()
-        data.player = data.fam.Player
-        data.playerData = data.player:GetData()
+---@param target EntityEffect
+function Fetch:OnTargetUpdate(target)
+    if target.SubType ~= Fetch.FETCH_TARGET_SUBTYPE then
+        return
     end
 
-    data.cooldown = data.cooldown - 1
-    if data.cooldown > ONE_SEC / 2 then
-        if Input.IsActionPressed(ButtonAction.ACTION_SHOOTDOWN, 0) then
-            effect.Velocity = Vector(0, MARK_SPEED)
-        end
-        if Input.IsActionPressed(ButtonAction.ACTION_SHOOTUP, 0) then
-            effect.Velocity = Vector(0, -MARK_SPEED)
-        end
-        if Input.IsActionPressed(ButtonAction.ACTION_SHOOTRIGHT, 0) then
-            effect.Velocity =  Vector(MARK_SPEED, 0)
-        end
-        if Input.IsActionPressed(ButtonAction.ACTION_SHOOTLEFT, 0) then
-            effect.Velocity =  Vector(-MARK_SPEED, 0)
-        end
-    else
-        -- tear needs to not have fixed time it takes to arrive atmarked
-        -- data.thrownPickup
-        if data.cooldown == ONE_SEC / 2 then
-            lastPos = data.player.Position
-            thrownPickup = Isaac.Spawn(
-                            EntityType.ENTITY_TEAR,
-                            TearVariant.BONE,
-                            0,
-                            lastPos,
-                            Vector.Zero,
-                            data.player):ToTear() ---@cast thrownPickup EntityTear
-            sfxMan:Play(SoundEffect.SOUND_SHELLGAME)
-            data.player:AnimatePickup(data.player:GetHeldSprite(), false, "HideItem")
-        end
-
-        if thrownPickup then
-            thrownPickup.TearFlags = TearFlags.TEAR_PIERCING | TearFlags.TEAR_NO_GRID_DAMAGE | TearFlags.TEAR_SPECTRAL
-            local distance = effect.Position:Distance(lastPos)
-
-            -- sin wave, effect would be better
-            thrownPickup.Velocity = (effect.Position - lastPos):Normalized() * (distance / 30)
-            thrownPickup.FallingAcceleration = data.cooldown > 14 and -20 or 1
-        end
+    local data = target:GetData()
+    if not data.controllerIdx then
+        return
     end
-    if data.cooldown <= 0 then
-        local bone = Isaac.Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TAROTCARD, data.playerData.cardId, effect.Position, Vector.Zero, nil)
-        local famData = data.fam:GetData()
-        famData.isHolding = data.playerData.cardId
-        famData.isFetching = bone:ToPickup().Position
-        effect:Remove()
+
+    local timeToAdd = 0
+
+    if Input.IsActionPressed(ButtonAction.ACTION_SHOOTDOWN, data.controllerIdx) then
+        local actionValDown = Input.GetActionValue(ButtonAction.ACTION_SHOOTDOWN, data.controllerIdx)
+        timeToAdd = timeToAdd + actionValDown
+        target.Velocity = Vector(target.Velocity.X, target.Velocity.Y + Fetch.TARGET_SPEED * actionValDown)
+    end
+
+    if Input.IsActionPressed(ButtonAction.ACTION_SHOOTUP, data.controllerIdx) then
+        local actionValUp = Input.GetActionValue(ButtonAction.ACTION_SHOOTUP, data.controllerIdx)
+        timeToAdd = timeToAdd + actionValUp
+        target.Velocity = Vector(target.Velocity.X, target.Velocity.Y - Fetch.TARGET_SPEED * actionValUp)
+    end
+
+    if Input.IsActionPressed(ButtonAction.ACTION_SHOOTLEFT, data.controllerIdx) then
+        local actionValLeft = Input.GetActionValue(ButtonAction.ACTION_SHOOTLEFT, data.controllerIdx)
+        timeToAdd = timeToAdd + actionValLeft
+        target.Velocity = Vector(target.Velocity.X - Fetch.TARGET_SPEED * actionValLeft, target.Velocity.Y)
+    end
+
+    if Input.IsActionPressed(ButtonAction.ACTION_SHOOTRIGHT, data.controllerIdx) then
+        local actionValRight = Input.GetActionValue(ButtonAction.ACTION_SHOOTRIGHT, data.controllerIdx)
+        timeToAdd = timeToAdd + actionValRight
+        target.Velocity = Vector(target.Velocity.X + Fetch.TARGET_SPEED * actionValRight, target.Velocity.Y)
+    end
+
+    target.Timeout = target.Timeout + math.floor(timeToAdd * Fetch.TIMEOUT_INCREASE)
+end
+Mod:AddCallback(ModCallbacks.MC_POST_EFFECT_UPDATE, Fetch.OnTargetUpdate, EffectVariant.TARGET)
+
+---@param entity Entity
+function Fetch:OnTargetRemove(entity)
+    if entity.Variant ~= EffectVariant.TARGET or entity.SubType ~= Fetch.FETCH_TARGET_SUBTYPE then
+        return
+    end
+
+    local data = entity:GetData()
+    local player = entity.SpawnerEntity:ToPlayer() ---@cast player EntityPlayer
+    player:AnimatePickup(data.objSprite, false, "HideItem")
+    sfxMan:Play(SoundEffect.SOUND_SHELLGAME)
+
+    local object = Isaac.Spawn(EntityType.ENTITY_EFFECT, Fetch.FETCHING_OBJECT_VARIANT, 0, player.Position, Vector.Zero, player):ToEffect() ---@cast object EntityEffect
+    local objData = object:GetData()
+    objData.pickupID = data.objID
+    objData.endPoint = entity.Position
+    objData.duration = Fetch:GetThrowDuration(entity.Position:Distance(player.Position))
+    object:GetSprite():Play(data.objName, true)
+    object.Color = Color(0, 0, 0, 0)
+end
+Mod:AddCallback(ModCallbacks.MC_POST_ENTITY_REMOVE, Fetch.OnTargetRemove, EntityType.ENTITY_EFFECT)
+
+---@param object EntityEffect
+function Fetch:OnObjectUpdate(object)
+    local data = object:GetData()
+    object.Color = Color(1, 1, 1, 1)
+
+    local arcHeight = Fetch.ARC_HEIGHT + (Fetch.ARC_HEIGHT / 6) * data.duration
+    local arcLength = math.pi / (data.duration * ONE_SEC)
+
+    --          Amplitude     --      Period   --       Input      --    Left/Right
+    local arc = arcHeight * math.sin(arcLength * (object.FrameCount + Fetch.ARC_SHIFT))
+    object.SpriteOffset = Vector(0, -arc)
+    object.SpriteRotation = object.FrameCount * Fetch.SPIN_STRENGTH
+
+    if not data.velocity then data.velocity = -(object.Position - data.endPoint) / (data.duration * ONE_SEC - Fetch.ARC_SHIFT * 1.2) end
+    object.Velocity = data.velocity
+
+    local endDuration = data.duration * ONE_SEC - Fetch.ARC_SHIFT
+    if object.FrameCount > endDuration then
+        object:Remove()
+    elseif object.FrameCount > endDuration - 3 and object.FrameCount < endDuration - 2 then
+        local player = object.SpawnerEntity:ToPlayer() ---@cast player EntityPlayer
+        Isaac.Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TAROTCARD, data.pickupID, data.endPoint, Vector.Zero, player)
     end
 end
-Mod:AddCallback(ModCallbacks.MC_POST_EFFECT_UPDATE, Fetch.OnMarkRender, EffectVariant.TARGET)
+Mod:AddCallback(ModCallbacks.MC_POST_EFFECT_UPDATE, Fetch.OnObjectUpdate, Fetch.FETCHING_OBJECT_VARIANT)
+
+
+-- Returns the amount of time (seconds) needed to finish the travel
+---@param distance number
+function Fetch:GetThrowDuration(distance)
+    if distance < Fetch.BASE_LENGTH then
+        local tiles = distance / ONE_TILE
+        local frames = Fetch.DURATION - tiles * Fetch.UNITS_PER_TILE
+        return frames / ONE_SEC
+    end
+
+    local tiles = (distance - Fetch.BASE_LENGTH) / ONE_TILE
+    local frames = Fetch.UNITS_PER_TILE * tiles + Fetch.DURATION
+    return frames / ONE_SEC
+end
+--endregion

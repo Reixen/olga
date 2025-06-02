@@ -187,11 +187,10 @@ function DogBody:OnInit(olga)
     local data = olga:GetData()
 
     data.heldItemSprite = Sprite()
-    data.eventCD = olga.FrameCount + DogBody.EVENT_COOLDOWN
-    data.animCD = olga.FrameCount + Util.ANIM_COOLDOWN
-    data.attentionCD = olga.FrameCount + Util.ATTENTION_COOLDOWN
+    data.eventCD = DogBody.EVENT_COOLDOWN
+    data.animCD = Util.ANIM_COOLDOWN
+    data.attentionCD = 0
     data.targetPos = nil
-    data.isMoving = true
     data.isHolding = nil
 
     data.headSprite = Sprite()
@@ -199,6 +198,7 @@ function DogBody:OnInit(olga)
     data.headSprite:Play(Util.HeadAnim.IDLE, true)
 
     olga:AddEntityFlags(EntityFlag.FLAG_NO_KNOCKBACK | EntityFlag.FLAG_NO_PHYSICS_KNOCKBACK)
+    olga.GridCollisionClass = EntityGridCollisionClass.GRIDCOLL_GROUND
 end
 Mod:AddCallback(ModCallbacks.MC_FAMILIAR_INIT, DogBody.OnInit, Mod.Dog.VARIANT)
 
@@ -207,10 +207,10 @@ function DogBody:HandleNewRoom()
     local roomType = room:GetType()
 
     for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
-        local data = familiar:ToFamiliar():GetData()
+        local data = familiar:GetData()
         data.targetPos = nil
         data.canPet = false
-        familiar:ToFamiliar().Velocity = Vector.Zero
+        familiar.Velocity = Vector.Zero
     end
 
     if (roomType ~= RoomType.ROOM_ISAACS and roomType ~= RoomType.ROOM_BARREN)
@@ -223,15 +223,14 @@ end
 Mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, DogBody.HandleNewRoom)
 
 function DogBody:GoodbyeOlga()
-    for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
-        local olga = familiar:ToFamiliar()
-        local data = olga:GetData()
+    for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do ---@cast familiar EntityFamiliar
+        local data = familiar:GetData()
         data.hasStick = nil
         data.hasBall = nil
 
         if PlayerManager.AnyoneHasTrinket(Mod.Pickup.CRUDE_DRAWING_ID) then break end
 
-        local pData = Util:GetData(familiar:ToFamiliar().Player, "olgaMod")
+        local pData = Util:GetData(familiar.Player, Mod.Util.ID)
         local room = Mod.Room()
         local pos = room:FindFreePickupSpawnPosition(room:GetCenterPos())
         pData.hasDoggy = false
@@ -383,7 +382,7 @@ function DogBody:FindDogOwner(olga, data)
     data.hasOwner = true
 
     local pData = Util:GetData(olga.Player, "olgaMod")
-    pData.hasDoggy = true
+    pData.hasDoggy = olga
 
     Mod.PettingHand:UpdateHandColor()
 end
