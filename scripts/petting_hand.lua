@@ -24,7 +24,7 @@ Mod:AddCallback(ModCallbacks.MC_USE_ITEM, PettingHand.OnChangeFamilyMember, Coll
 -- Update the petting hand color based on the player's skin
 function PettingHand:UpdateHandColor()
     for _, doggy in pairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do ---@cast doggy EntityFamiliar
-        local player = doggy.Player
+        local player = doggy.Player and doggy.Player or doggy.SpawnerEntity:ToPlayer()
         local sprite = doggy:GetData().headSprite
         local playerColor = player:GetBodyColor()
         local playerType = player:GetPlayerType()
