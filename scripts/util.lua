@@ -4,6 +4,8 @@ local Mod = OlgaMod
 local Util = {}
 OlgaMod.Util = Util
 
+local sfxMan = Mod.SfxMan
+
 Util.ID = "olgaMod"
 
 Util.HeadAnim= {
@@ -55,6 +57,39 @@ local ONE_SEC = 30
 Util.ANIM_COOLDOWN = ONE_SEC * 5
 Util.ATTENTION_COOLDOWN = ONE_SEC * 60
 
+--#endregion
+--#region All Pickup Callbacks
+---@param pickup EntityPickup
+function Util:PrePickupMorph(pickup)
+    if pickup.Type ~= EntityType.ENTITY_PICKUP then return end
+
+    if pickup.Variant == PickupVariant.PICKUP_TAROTCARD then
+        if pickup.SubType == Mod.Pickup.STICK_ID
+        or pickup.SubType == Mod.Pickup.FEEDING_BOWL_ID
+        or pickup.SubType == Mod.Pickup.TENNIS_BALL_ID then
+            return false
+        end
+    elseif pickup.Variant == PickupVariant.PICKUP_TRINKET
+    and pickup.SubType == Mod.Pickup.CRUDE_DRAWING_ID then
+        return false
+    end
+end
+Mod:AddCallback(ModCallbacks.MC_PRE_PICKUP_MORPH, Util.PrePickupMorph)
+
+---@param pickup EntityPickup
+---@param collider Entity
+function Util:OnPickupCollision(pickup, collider)
+    if pickup.SubType ~= Mod.Pickup.STICK_ID and pickup.SubType ~= Mod.Pickup.TENNIS_BALL_ID
+    and pickup.SubType ~= Mod.Pickup.FEEDING_BOWL_ID or collider.Type ~= EntityType.ENTITY_PLAYER then
+        return
+    end
+
+    if sfxMan:IsPlaying(SoundEffect.SOUND_BOOK_PAGE_TURN_12) then
+        sfxMan:Stop(SoundEffect.SOUND_BOOK_PAGE_TURN_12)
+        sfxMan:Play(SoundEffect.SOUND_SHELLGAME)
+    end
+end
+Mod:AddCallback(ModCallbacks.MC_POST_PICKUP_COLLISION, Util.OnPickupCollision, PickupVariant.PICKUP_TAROTCARD)
 --#endregion
 --#region Helper Functions
 -- Returns a boolean if olga is near the target. DistanceSquared is faster I heard.

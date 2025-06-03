@@ -28,26 +28,8 @@ Fetch.ARC_HEIGHT = 46
 Fetch.ARC_SHIFT = 6
 
 --#endregion
---#region Callbacks
-
----@param pickup EntityPickup
-function Fetch:PrePickupMorph(pickup)
-    if pickup.Type ~= EntityType.ENTITY_PICKUP then return end
-
-    if pickup.Variant == PickupVariant.PICKUP_TAROTCARD then
-        if pickup.SubType == Mod.Pickup.STICK_ID
-        or pickup.SubType == Mod.Pickup.FEEDING_BOWL_ID
-        or pickup.SubType == Mod.Pickup.TENNIS_BALL_ID then
-            return false
-        end
-    elseif pickup.Variant == PickupVariant.PICKUP_TRINKET
-    and pickup.SubType == Mod.Pickup.CRUDE_DRAWING_ID then
-        return false
-    end
-end
-Mod:AddCallback(ModCallbacks.MC_PRE_PICKUP_MORPH, Fetch.PrePickupMorph)
-
----@param spawnPos Vector
+--#region Fetch Callbacks
+--@param spawnPos Vector
 function Fetch:SpawnFetchPickup(_, spawnPos)
     for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
         local rng = familiar:ToFamiliar():GetDropRNG()
@@ -107,6 +89,8 @@ function Fetch:OnUsePickup(cardId, player)
     local targetSprite = target:GetSprite()
     targetSprite:ReplaceSpritesheet(2, "gfx/items/pickups/" .. pickupName .. ".png", true)
 
+    local data = Mod.Util:GetData(player, Mod.Util.ID)
+    data.isUsingPickup = cardId
 end
 Mod:AddCallback(ModCallbacks.MC_USE_CARD, Fetch.OnUsePickup, Mod.Pickup.STICK_ID)
 Mod:AddCallback(ModCallbacks.MC_USE_CARD, Fetch.OnUsePickup, Mod.Pickup.TENNIS_BALL_ID)
@@ -171,17 +155,22 @@ function Fetch:OnTargetRemove(entity)
     end
 
     local data = entity:GetData()
-    local player = entity.SpawnerEntity:ToPlayer() ---@cast player EntityPlayer
+    local player = entity.SpawnerEntity and entity.SpawnerEntity:ToPlayer() or nil ---@cast player EntityPlayer
+
+    -- This is needed in case they exit the run
+    if not player then return end
+
     player:AnimatePickup(data.objSprite, false, "HideItem")
     sfxMan:Play(SoundEffect.SOUND_SHELLGAME)
 
     local object = Isaac.Spawn(EntityType.ENTITY_EFFECT, Fetch.FETCHING_OBJECT_VARIANT, 0, player.Position, Vector.Zero, player):ToEffect() ---@cast object EntityEffect
     local objData = object:GetData()
     objData.pickupID = data.objID
-    objData.endPoint = entity.Position
     objData.duration = Fetch:GetThrowDuration(entity.Position:Distance(player.Position))
     object:GetSprite():Play(data.objName, true)
     object.Color = Color(0, 0, 0, 0)
+
+    object.Velocity = -(object.Position - entity.Position) / (objData.duration * ONE_SEC - (Fetch.ARC_SHIFT / 1.1)) -- shift closer to mark
 end
 Mod:AddCallback(ModCallbacks.MC_POST_ENTITY_REMOVE, Fetch.OnTargetRemove, EntityType.ENTITY_EFFECT)
 
@@ -198,19 +187,45 @@ function Fetch:OnObjectUpdate(object)
     object.SpriteOffset = Vector(0, -arc)
     object.SpriteRotation = object.FrameCount * Fetch.SPIN_STRENGTH
 
-    if not data.velocity then data.velocity = -(object.Position - data.endPoint) / (data.duration * ONE_SEC - Fetch.ARC_SHIFT * 1.2) end
-    object.Velocity = data.velocity
-
     local endDuration = data.duration * ONE_SEC - Fetch.ARC_SHIFT
     if object.FrameCount > endDuration then
         object:Remove()
-    elseif object.FrameCount > endDuration - 3 and object.FrameCount < endDuration - 2 then
-        local player = object.SpawnerEntity:ToPlayer() ---@cast player EntityPlayer
-        Isaac.Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TAROTCARD, data.pickupID, data.endPoint, Vector.Zero, player)
     end
 end
 Mod:AddCallback(ModCallbacks.MC_POST_EFFECT_UPDATE, Fetch.OnObjectUpdate, Fetch.FETCHING_OBJECT_VARIANT)
 
+---@param entity Entity
+function Fetch:OnObjectRemove(entity)
+    if entity.Variant ~= Fetch.FETCHING_OBJECT_VARIANT then
+        return
+    end
+
+    local data = entity:GetData()
+    local player = entity.SpawnerEntity and entity.SpawnerEntity:ToPlayer() or nil ---@cast player EntityPlayer
+
+    -- This is needed in case they exit the run
+    if not player then return end
+
+    local pickup = Isaac.Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TAROTCARD, data.pickupID, entity.Position, Vector.Zero, player)
+    local sprite = pickup:GetSprite()
+    sprite:SetFrame(4)
+
+    local pData = Mod.Util:GetData(player, Mod.Util.ID)
+    pData.isUsingPickup = false
+end
+Mod:AddCallback(ModCallbacks.MC_POST_ENTITY_REMOVE, Fetch.OnObjectRemove, EntityType.ENTITY_EFFECT)
+
+-- When they exit the run mid-fetch
+function Fetch:OnRunExit()
+    for _, entity in pairs(Isaac.FindByType(EntityType.ENTITY_PLAYER, PlayerVariant.PLAYER)) do
+        local player = entity:ToPlayer()---@cast player EntityPlayer
+        local data = Mod.Util:GetData(player, Mod.Util.ID)
+        if data.isUsingPickup then
+            player:AddCard(data.isUsingPickup)
+        end
+    end
+end
+Mod:AddCallback(ModCallbacks.MC_PRE_GAME_EXIT, Fetch.OnRunExit)
 
 -- Returns the amount of time (seconds) needed to finish the travel
 ---@param distance number

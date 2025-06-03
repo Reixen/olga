@@ -96,7 +96,7 @@ DogBody.ANIM_FUNC = {
                     olga.Velocity = Vector.Zero
                     data.eventCD = frameCount + DogBody.EVENT_COOLDOWN
                     data.targetPos = nil
-                elseif pathfindingResult == DogBody.PathfindingResult.COLLIDING then
+                elseif pathfindingResult ~= DogBody.PathfindingResult.APPROACHING then
                     print("at frame " .. tostring(olga.FrameCount))
                 end
                 return
@@ -277,13 +277,14 @@ function DogBody:Pathfind(olga, data, target, speed, decay)
         end
 
         --TODO: Give her a split second to pathfind out, then Vector.Zero to her Velocity
-        if room:GetGridCollision(gridIdx) ~= GridCollisionClass.COLLISION_NONE then
-            pathfinder:EvadeTarget(room:GetGridPosition(gridIdx))
-            return DogBody.PathfindingResult.COLLIDING
-        end
+        -- Disabled to see how robust the ground gridCollClass is
+        --if room:GetGridCollision(gridIdx) ~= GridCollisionClass.COLLISION_NONE then
+            --pathfinder:EvadeTarget(room:GetGridPosition(gridIdx))
+            --return DogBody.PathfindingResult.COLLIDING
+        --end
 
-        -- Her last chance of escaping if it's an open position
-        olga.Velocity = (room:GetGridPosition(gridIdx) - olga.Position):Resized(speed * 5)
+        ---- Her last chance of escaping if it's an open position
+        --olga.Velocity = (room:GetGridPosition(gridIdx) - olga.Position):Resized(speed * 5)
         return DogBody.PathfindingResult.COLLIDING
     end
 
