@@ -29,8 +29,7 @@ Fetch.ARC_SHIFT = 6
 
 --#endregion
 --#region Fetch Callbacks
---@param spawnPos Vector
-function Fetch:SpawnFetchPickup(_, spawnPos)
+function Fetch:SpawnFetchPickup()
     for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
         local rng = familiar:ToFamiliar():GetDropRNG()
 
@@ -59,6 +58,8 @@ function Fetch:SpawnFetchPickup(_, spawnPos)
                 end
             end
 
+            local room = Mod.Room()
+            local spawnPos = room:FindFreePickupSpawnPosition(room:GetCenterPos())
             Isaac.Spawn( EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TAROTCARD, subType, spawnPos, Vector.Zero, nil)
             break
         end
@@ -170,7 +171,7 @@ function Fetch:OnTargetRemove(entity)
     object:GetSprite():Play(data.objName, true)
     object.Color = Color(0, 0, 0, 0)
 
-    object.Velocity = -(object.Position - entity.Position) / (objData.duration * ONE_SEC - (Fetch.ARC_SHIFT / 1.1)) -- shift closer to mark
+    object.Velocity = -(object.Position - entity.Position) / (objData.duration * ONE_SEC - (Fetch.ARC_SHIFT / 1.2)) -- shift closer to mark
 end
 Mod:AddCallback(ModCallbacks.MC_POST_ENTITY_REMOVE, Fetch.OnTargetRemove, EntityType.ENTITY_EFFECT)
 

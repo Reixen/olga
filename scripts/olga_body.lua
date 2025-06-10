@@ -97,8 +97,6 @@ DogBody.ANIM_FUNC = {
                     olga.Velocity = Vector.Zero
                     data.eventCD = frameCount + DogBody.EVENT_COOLDOWN
                     data.targetPos = nil
-                elseif pathfindingResult ~= DogBody.PathfindingResult.APPROACHING then
-                    print("at frame " .. tostring(olga.FrameCount))
                 end
                 return
             end
@@ -359,7 +357,7 @@ function DogBody:ChooseRandomPosition(olga)
     --end
     --Isaac.Spawn(EntityType.ENTITY_EFFECT, 507, 2, chosenPos, Vector.Zero, nil):ToEffect():GetSprite():Play("Quality3")
 
-    local posVariance = math.random() < 0.5 and -15 or 15
+    local posVariance = math.random() < 0.5 and -12 or 12
     return chosenPos + (RandomVector() * posVariance)
 end
 
