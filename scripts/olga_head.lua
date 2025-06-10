@@ -184,9 +184,7 @@ function DogHead:OnHeadRender(olga, offset)
     -- Water reflections
     if renderMode ~= RenderMode.RENDER_WATER_ABOVE and renderMode ~= RenderMode.RENDER_NORMAL then
         local headReflectionOffset = olga.FlipX and Vector(11, 0) or Vector(-11, 0)
-        data.headSprite:Render(
-            Isaac.WorldToRenderPosition(olga.Position + olga.PositionOffset - olga:GetNullOffset("head") + headReflectionOffset) + offset
-        )
+        data.headSprite:Render(Isaac.WorldToRenderPosition(olga.Position + olga.PositionOffset - olga:GetNullOffset("head") + headReflectionOffset) + offset)
         return
     end
 

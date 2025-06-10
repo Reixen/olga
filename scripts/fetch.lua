@@ -58,9 +58,11 @@ function Fetch:SpawnFetchPickup()
                 end
             end
 
+            if subType == nil then return end
+
             local room = Mod.Room()
             local spawnPos = room:FindFreePickupSpawnPosition(room:GetCenterPos())
-            Isaac.Spawn( EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TAROTCARD, subType, spawnPos, Vector.Zero, nil)
+            Isaac.Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TAROTCARD, subType, spawnPos, Vector.Zero, nil)
             break
         end
     end
