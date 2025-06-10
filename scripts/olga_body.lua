@@ -9,9 +9,12 @@ local sfxMan = Mod.SfxMan
 local Util = Mod.Util
 
 DogBody.SOUND_BARK_SET1 = Isaac.GetSoundIdByName("Olga Bark Set 1")
+DogBody.EXPLOSION_VARIANT = Isaac.GetEntityVariantByName("Stock Explosion")
+DogBody.EXPLOSION_SFX = Isaac.GetSoundIdByName("Stock Explosion")
 
 DogBody.SWITCH_CHANCE = 1 / 40
 DogBody.WANDER_CHANCE = 1 / 2
+DogBody.EXPLOSION_CHANCE = 1 / 100
 DogBody.WALK_SPEED = 0.4
 DogBody.DECAY_STRENGTH = 1.3
 
@@ -28,15 +31,12 @@ DogBody.PathfindingResult = {
     APPROACHING = 1,
     SUCCESSFUL = 2
 }
-
 --#endregion
 --#region Olga Body Animation Functions
 DogBody.ANIM_FUNC = {
-    [Util.BodyAnim.SIT] = function(olga)
-        local data = olga:GetData()
+    [Util.BodyAnim.SIT] = function(olga, sprite, data)
         local frameCount = olga.FrameCount
         local rng = olga:GetDropRNG()
-        local sprite = olga:GetSprite()
 
         if DogBody:CanWag(data.headSprite:GetAnimation())
         or Util:IsWithin(olga, olga.Player.Position, ONE_TILE * 2) then
@@ -49,8 +49,7 @@ DogBody.ANIM_FUNC = {
         end
     end,
 
-    [Util.BodyAnim.SIT_WAGGING] = function(olga)
-        local sprite = olga:GetSprite()
+    [Util.BodyAnim.SIT_WAGGING] = function(olga, sprite)
         if  sprite:IsEventTriggered("TransitionHook") and
         not Util:IsWithin(olga, olga.Player.Position, DogBody.HAPPY_DISTANCE) then
             sprite:Play(Util.BodyAnim.SIT, true)
@@ -58,10 +57,8 @@ DogBody.ANIM_FUNC = {
     end,
 
     -- Movement animations
-    [Util.BodyAnim.STAND] = function(olga)
-        local data = olga:GetData()
+    [Util.BodyAnim.STAND] = function(olga, sprite, data)
         local rng = olga:GetDropRNG()
-        local sprite = olga:GetSprite()
         local frameCount = olga.FrameCount
 
         -- Animations
@@ -158,9 +155,8 @@ DogBody.ANIM_FUNC = {
     end,
 
     -- Idle animations
-    [Util.BodyAnim.PLAYFUL] = function(olga)
-        local sprite = olga:GetSprite()
-        if sprite:IsFinished(sprite:GetAnimation()) then
+    [Util.BodyAnim.PLAYFUL] = function(olga, sprite, _, name)
+        if sprite:IsFinished(name) then
             sprite:Play(Util.BodyAnim.STAND, true)
             olga:GetData().headRender = true
             sprite.PlaybackSpeed = 1
@@ -174,16 +170,13 @@ DogBody.ANIM_FUNC = {
     end,
 
     -- Transitional animations
-    [Util.BodyAnim.SIT_TO_STAND] = function(olga)
-        local sprite = olga:GetSprite()
-        local animName = sprite:GetAnimation()
+    [Util.BodyAnim.SIT_TO_STAND] = function(olga, sprite, _, name)
+        if not sprite:IsFinished(name) then return end
 
-        if not sprite:IsFinished(animName) then return end
-
-        local animToPlay = Util:FindAnimSubstring(animName)
+        local animToPlay = Util:FindAnimSubstring(name)
         sprite:Play(Util.BodyAnim[animToPlay], true)
 
-        if animName == Util.BodyAnim.SIT_TO_STAND then
+        if name == Util.BodyAnim.SIT_TO_STAND then
             olga.State = Util.DogState.STANDING
         else
             olga.State = Util.DogState.SITTING
@@ -215,7 +208,8 @@ function DogBody:HandleBodyLogic(olga)
         data.headRender = false
     end
 
-    DogBody.ANIM_FUNC[sprite:GetAnimation()](olga)
+    local animName = sprite:GetAnimation()
+    DogBody.ANIM_FUNC[animName](olga, sprite, data, animName)
 
     if data.hasOwner then return end
     DogBody:FindDogOwner(olga, data)
@@ -261,28 +255,53 @@ function DogBody:HandleNewRoom()
         return
     end
 
-    Isaac.Spawn(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT, 0, room:GetCenterPos(), Vector.Zero, nil)
+    local spawnPos = room:FindFreePickupSpawnPosition(room:GetCenterPos())
+    Isaac.Spawn(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT, 0, spawnPos, Vector.Zero, nil)
 end
 Mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, DogBody.HandleNewRoom)
 
 function DogBody:GoodbyeOlga()
-    for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do ---@cast familiar EntityFamiliar
-        local data = familiar:GetData()
+    for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
+        local olga = familiar:ToFamiliar() ---@cast olga EntityFamiliar
+        local data = olga:GetData()
         data.hasStick = nil
         data.hasBall = nil
 
         if PlayerManager.AnyoneHasTrinket(Mod.Pickup.CRUDE_DRAWING_ID) then break end
 
-        local pData = Util:GetData(familiar.Player, Mod.Util.ID)
-        local room = Mod.Room()
-        local pos = room:FindFreePickupSpawnPosition(room:GetCenterPos())
+        local pData = Util:GetData(olga.Player, Util.ID)
         pData.hasDoggy = false
         familiar:Remove()
-        Isaac.Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TRINKET, Mod.Pickup.CRUDE_DRAWING_ID, pos, Vector.Zero, nil)
     end
 end
 Mod:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, DogBody.GoodbyeOlga)
 
+function DogBody:OnDogRemove(entity)
+    if entity.Variant ~= Mod.Dog.VARIANT then return end
+
+    local room = Mod.Room()
+    local pos = room:FindFreePickupSpawnPosition(entity.Position, 0, true)
+
+    if entity:GetDropRNG():RandomFloat() < DogBody.EXPLOSION_CHANCE then
+        Isaac.Spawn(EntityType.ENTITY_EFFECT, DogBody.EXPLOSION_VARIANT, 0, pos, Vector.Zero, entity)
+    end
+
+    if PlayerManager.AnyoneHasTrinket(Mod.Pickup.CRUDE_DRAWING_ID) then return end
+
+    -- For Sacrificial Altar
+    Isaac.CreateTimer(function()
+        Isaac.Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TRINKET, Mod.Pickup.CRUDE_DRAWING_ID, pos, Vector.Zero, nil)
+    end, 1, 1, true)
+end
+Mod:AddCallback(ModCallbacks.MC_POST_ENTITY_REMOVE, DogBody.OnDogRemove, EntityType.ENTITY_FAMILIAR)
+
+---@param effect EntityEffect
+function DogBody:ExplosionInit(effect)
+    sfxMan:Play(DogBody.EXPLOSION_SFX)
+    effect.Timeout = 30
+    effect.DepthOffset = 30
+end
+Mod:AddCallback(ModCallbacks.MC_POST_EFFECT_INIT, DogBody.ExplosionInit, DogBody.EXPLOSION_VARIANT)
 --#endregion
 --#region Olga Helper Functions
 ---@param anim string

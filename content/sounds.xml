@@ -25,4 +25,8 @@
         <sample weight="1" path="olga_boof.wav" />
     </sound>
 
+    <sound name ="Stock Explosion">
+        <sample weight="1" path="stock_explosion.wav" />
+    </sound>
+
 </sounds>

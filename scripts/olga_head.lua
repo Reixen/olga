@@ -177,17 +177,20 @@ Util:FillEmptyAnimFunctions(
 function DogHead:OnHeadRender(olga, offset)
     local data = olga:GetData()
 
-    if not data.headSprite or data.headRender == false then return end -- For Sac altar
+    if not data.headSprite or data.headRender == false or not olga.Visible then return end -- For Sac altar
 
     local renderMode = Mod.Room():GetRenderMode()
 
     -- Water reflections
     if renderMode ~= RenderMode.RENDER_WATER_ABOVE and renderMode ~= RenderMode.RENDER_NORMAL then
+        local headReflectionOffset = olga.FlipX and Vector(11, 0) or Vector(-11, 0)
+        data.headSprite:Render(
+            Isaac.WorldToRenderPosition(olga.Position + olga.PositionOffset - olga:GetNullOffset("head") + headReflectionOffset) + offset
+        )
         return
     end
 
     data.headSprite:Render(Isaac.WorldToRenderPosition(olga.Position + olga.PositionOffset + olga:GetNullOffset("head")) + offset)
-
 
     if not (Isaac.GetFrameCount() % 2 == 0) or game:IsPaused() then return end
 

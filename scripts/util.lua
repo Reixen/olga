@@ -57,7 +57,31 @@ Util.DogState = {
 local ONE_SEC = 30
 Util.ANIM_COOLDOWN = ONE_SEC * 5
 Util.ATTENTION_COOLDOWN = ONE_SEC * 60
+--local PriceTextFontTempesta = Font()
+--PriceTextFontTempesta:Load("font/pftempestasevencondensed.fnt")
 
+--local function effectRender(effect)
+    --local pos = Isaac.WorldToScreen(effect.Position)
+    --PriceTextFontTempesta:DrawStringScaled(
+            --effect.Type.."."..effect.Variant.."."..effect.SubType,
+            --pos.X,
+            --pos.Y,
+            --0.75, 0.75, -- scale
+            --KColor(1, 1, 1, 1)
+        --)
+--end
+
+--local function renderEffects(_, effect)
+    --if not effect then
+        --for index, value in ipairs(Isaac.GetRoomEntities()) do
+            --effectRender(value)
+        --end
+    --else
+        --effectRender(effect)
+    --end
+--end
+
+--Mod:AddCallback(ModCallbacks.MC_POST_RENDER, renderEffects)
 --#endregion
 --#region All Pickup Callbacks
 ---@param pickup EntityPickup

@@ -149,32 +149,6 @@ function Fetch:OnTargetUpdate(target)
 end
 Mod:AddCallback(ModCallbacks.MC_POST_EFFECT_UPDATE, Fetch.OnTargetUpdate, EffectVariant.TARGET)
 
----@param entity Entity
-function Fetch:OnTargetRemove(entity)
-    if entity.Variant ~= EffectVariant.TARGET or entity.SubType ~= Fetch.FETCH_TARGET_SUBTYPE then
-        return
-    end
-
-    local data = entity:GetData()
-    local player = entity.SpawnerEntity and entity.SpawnerEntity:ToPlayer() or nil ---@cast player EntityPlayer
-
-    -- This is needed in case they exit the run
-    if not player then return end
-
-    player:AnimatePickup(data.objSprite, false, "HideItem")
-    sfxMan:Play(SoundEffect.SOUND_SHELLGAME)
-
-    local object = Isaac.Spawn(EntityType.ENTITY_EFFECT, Fetch.FETCHING_OBJECT_VARIANT, 0, player.Position, Vector.Zero, player):ToEffect() ---@cast object EntityEffect
-    local objData = object:GetData()
-    objData.pickupID = data.objID
-    objData.duration = Fetch:GetThrowDuration(entity.Position:Distance(player.Position))
-    object:GetSprite():Play(data.objName, true)
-    object.Color = Color(0, 0, 0, 0)
-
-    object.Velocity = -(object.Position - entity.Position) / (objData.duration * ONE_SEC - (Fetch.ARC_SHIFT / 1.2)) -- shift closer to mark
-end
-Mod:AddCallback(ModCallbacks.MC_POST_ENTITY_REMOVE, Fetch.OnTargetRemove, EntityType.ENTITY_EFFECT)
-
 ---@param object EntityEffect
 function Fetch:OnObjectUpdate(object)
     local data = object:GetData()
@@ -196,8 +170,9 @@ end
 Mod:AddCallback(ModCallbacks.MC_POST_EFFECT_UPDATE, Fetch.OnObjectUpdate, Fetch.FETCHING_OBJECT_VARIANT)
 
 ---@param entity Entity
-function Fetch:OnObjectRemove(entity)
-    if entity.Variant ~= Fetch.FETCHING_OBJECT_VARIANT then
+function Fetch:OnEffectRemove(entity)
+    if entity.Variant ~= Fetch.FETCHING_OBJECT_VARIANT
+    and (entity.Variant ~= EffectVariant.TARGET or entity.SubType ~= Fetch.FETCH_TARGET_SUBTYPE) then
         return
     end
 
@@ -207,6 +182,22 @@ function Fetch:OnObjectRemove(entity)
     -- This is needed in case they exit the run
     if not player then return end
 
+    if entity.Variant == EffectVariant.TARGET and entity.SubType == Fetch.FETCH_TARGET_SUBTYPE then
+        player:AnimatePickup(data.objSprite, false, "HideItem")
+        sfxMan:Play(SoundEffect.SOUND_SHELLGAME)
+
+        local object = Isaac.Spawn(EntityType.ENTITY_EFFECT, Fetch.FETCHING_OBJECT_VARIANT, 0, player.Position, Vector.Zero, player):ToEffect() ---@cast object EntityEffect
+        local objData = object:GetData()
+        objData.pickupID = data.objID
+        objData.duration = Fetch:GetThrowDuration(entity.Position:Distance(player.Position))
+        object:GetSprite():Play(data.objName, true)
+        object.Color = Color(0, 0, 0, 0)
+
+        object.Velocity = -(object.Position - entity.Position) / (objData.duration * ONE_SEC - (Fetch.ARC_SHIFT / 1.2)) -- shift closer to mark
+        return
+    end
+
+    -- If it's a fetching object instead
     local pickup = Isaac.Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TAROTCARD, data.pickupID, entity.Position, Vector.Zero, player)
     local sprite = pickup:GetSprite()
     sprite:SetFrame(4)
@@ -214,7 +205,7 @@ function Fetch:OnObjectRemove(entity)
     local pData = Mod.Util:GetData(player, Mod.Util.ID)
     pData.isUsingPickup = false
 end
-Mod:AddCallback(ModCallbacks.MC_POST_ENTITY_REMOVE, Fetch.OnObjectRemove, EntityType.ENTITY_EFFECT)
+Mod:AddCallback(ModCallbacks.MC_POST_ENTITY_REMOVE, Fetch.OnEffectRemove, EntityType.ENTITY_EFFECT)
 
 -- When they exit the run mid-fetch
 function Fetch:OnRunExit()
