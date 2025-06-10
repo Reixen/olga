@@ -44,6 +44,7 @@ Util.BodyAnim = {
     -- Transitionals
     SIT_TO_STAND = "SitToStand",
     STAND_TO_SIT = "StandToSit",
+    PLAYFUL = "Playful",
 }
 
 Util.DogState = {

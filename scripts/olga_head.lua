@@ -4,10 +4,9 @@ local Mod = OlgaMod
 local DogHead = {}
 OlgaMod.Dog.Head = DogHead
 
-local Util = OlgaMod.Util
-
 local game = Mod.Game
 local sfxMan = Mod.SfxMan
+local Util = OlgaMod.Util
 
 DogHead.SOUND_YAWN = Isaac.GetSoundIdByName("Olga Yawn")
 DogHead.SOUND_BARK = Isaac.GetSoundIdByName("Olga Bark")
@@ -21,18 +20,19 @@ DogHead.HAPPY_DISTANCE = ONE_TILE * 2
 DogHead.PETTING_DISTANCE = ONE_TILE * 1.2
 
 DogHead.IdleAnim = {
-    "Yawn",
-    "Bark"
+    {Name = "Yawn",     BodyState = nil},
+    {Name = "Bark",     BodyState = nil},
+    {Name = "Playful",  BodyState = Util.DogState.STANDING},
 }
 
 DogHead.MiniIdleVariants = {
-    {"EarFlick", {"Left", "Right", "Both"}},
-    {"EarRotate", {"Left", "Right", "Both"}}
+    {Name = "EarFlick",     Variants = {"Left", "Right", "Both"}},
+    {Name = "EarRotate",    Variants = {"Left", "Right", "Both"}}
 }
 
 DogHead.MiniIdle = {}
 for i, value in ipairs(DogHead.MiniIdleVariants) do
-    DogHead.MiniIdle[value[1]] = i
+    DogHead.MiniIdle[value.Name] = i
 end
 
 --#endregion
@@ -61,7 +61,7 @@ DogHead.ANIM_FUNC = {
             if rng:RandomFloat() < DogHead.MINI_ANIM_CHANCE then
                 DogHead:DoMiniIdleAnim(data.headSprite)
             else
-                data.headSprite:Play(DogHead.IdleAnim[math.random(#DogHead.IdleAnim)], true)
+                DogHead:DoIdleAnimation(olga, data)
             end
             data.animCD = olga.FrameCount + Util.ANIM_COOLDOWN
         end
@@ -128,7 +128,7 @@ DogHead.ANIM_FUNC = {
         end
 
         if data.headSprite:IsEventTriggered("Bark") then
-            sfxMan:Play(DogHead.SOUND_BARK, 1.5, 2, false, 1)
+            sfxMan:Play(DogHead.SOUND_BARK, 2, 2, false, 1)
         end
     end,
 
@@ -177,7 +177,7 @@ Util:FillEmptyAnimFunctions(
 function DogHead:OnHeadRender(olga, offset)
     local data = olga:GetData()
 
-    if not data.headSprite then return end -- For Sac altar
+    if not data.headSprite or data.headRender == false then return end -- For Sac altar
 
     local renderMode = Mod.Room():GetRenderMode()
 
@@ -187,6 +187,7 @@ function DogHead:OnHeadRender(olga, offset)
     end
 
     data.headSprite:Render(Isaac.WorldToRenderPosition(olga.Position + olga.PositionOffset + olga:GetNullOffset("head")) + offset)
+
 
     if not (Isaac.GetFrameCount() % 2 == 0) or game:IsPaused() then return end
 
@@ -209,8 +210,7 @@ end
 ---@param anim integer?
 function DogHead:DoMiniIdleAnim(sprite, anim)
     local animGamble = not anim and DogHead.MiniIdleVariants[math.random(#DogHead.MiniIdleVariants)] or DogHead.MiniIdleVariants[anim]
-    local name, variants = table.unpack(animGamble)
-    sprite:Play(name .. "_" .. variants[math.random(#variants)], true)
+    sprite:Play(animGamble.Name .. "_" .. animGamble.Variants[math.random(#animGamble.Variants)], true)
 end
 
 ---@param olga EntityFamiliar
@@ -233,5 +233,39 @@ function DogHead:TryTurningGlad(olga, data)
     and Util:IsWithin(olga, olga.Player.Position, DogHead.HAPPY_DISTANCE) then
         data.headSprite:Play(Util.HeadAnim.IDLE_TO_GLAD, true)
     end
+end
+
+---@param olga EntityFamiliar
+---@param data table
+function DogHead:DoIdleAnimation(olga, data)
+    local chosenAnim = DogHead.IdleAnim[math.random(#DogHead.IdleAnim)]
+
+    -- If the animation does not require a certain stance, play it
+    if not chosenAnim.BodyState then
+        data.headSprite:Play(chosenAnim.Name, true)
+        return
+    end
+
+    local sprite = olga:GetSprite()
+    olga.Velocity = Vector.Zero
+    data.targetPos = nil
+
+    -- Play the animation if olga is already on that stance.
+    if chosenAnim.BodyState == olga.State then
+        sprite:Play(chosenAnim.Name, true)
+        data.headRender = false
+        return
+    end
+
+    -- Make her do the switcheroo otherwise
+    if chosenAnim.BodyState == Util.DogState.STANDING then
+        sprite:Play(Util.BodyAnim.SIT_TO_STAND, true)
+        data.headRender = chosenAnim.BodyState
+    elseif chosenAnim.BodyState == Util.DogState.SITTING then
+        sprite:Play(Util.BodyAnim.STAND_TO_SIT, true)
+        data.headRender = chosenAnim.BodyState
+    end
+
+    data.animToPlay = chosenAnim.Name
 end
 --#endregion

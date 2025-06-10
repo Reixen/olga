@@ -8,10 +8,11 @@ local Util = OlgaMod.Util
 
 --#endregion
 --#region Functions
+
 -- for loop soon
 --Console.RegisterCommand("debugOlga", "", "", true, AutocompleteType.NONE)
 Console.RegisterCommand("olgadebug switch", "Switches the stance of Olga Familiar", "Switches between standing and sitting", true, AutocompleteType.NONE)
-Console.RegisterCommand("olgadebug animate", "Plays a random head animation", "Plays a random head animation", true, AutocompleteType.NONE)
+Console.RegisterCommand("olgadebug animate", "Plays a random animation", "Plays a random animation", true, AutocompleteType.NONE)
 --Console.RegisterCommand("olgadebug fetch", "Makes all consumables throwable", "Cannot consume cards/runes", true, AutocompleteType.NONE)
 
 function Debug:Command(command, args)
@@ -19,8 +20,8 @@ function Debug:Command(command, args)
 
     if args == "switch" then
 
-        for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do ---@cast familiar EntityFamiliar
-            local olga = familiar
+        for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
+            local olga = familiar:ToFamiliar()
 
             local data = olga:GetData()
             data.targetPos = nil
@@ -34,8 +35,8 @@ function Debug:Command(command, args)
         end
 
     elseif args == "animate" then
-        for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do ---@cast familiar EntityFamiliar
-            familiar:GetData().headSprite:Play(Mod.Dog.Head.IdleAnim[math.random(#Mod.Dog.Head.IdleAnim)], true)
+        for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
+            Mod.Dog.Head:DoIdleAnimation(familiar:ToFamiliar(), familiar:GetData())
         end
 
     elseif args == "fetch" then

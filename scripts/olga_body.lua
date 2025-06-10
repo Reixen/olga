@@ -1,11 +1,14 @@
 --#region Variables
 local Mod = OlgaMod
-local Util = Mod.Util
 
 local DogBody = {}
 OlgaMod.Dog.Body = DogBody
 
 local game = Mod.Game
+local sfxMan = Mod.SfxMan
+local Util = Mod.Util
+
+DogBody.SOUND_BARK_SET1 = Isaac.GetSoundIdByName("Olga Bark Set 1")
 
 DogBody.SWITCH_CHANCE = 1 / 40
 DogBody.WANDER_CHANCE = 1 / 2
@@ -22,9 +25,8 @@ DogBody.EVENT_COOLDOWN = ONE_SEC * 3
 DogBody.PathfindingResult = {
     ERROR = -1,
     NO_PATH = 0,
-    COLLIDING = 1,
-    APPROACHING = 2,
-    SUCCESSFUL = 3
+    APPROACHING = 1,
+    SUCCESSFUL = 2
 }
 
 --#endregion
@@ -43,7 +45,6 @@ DogBody.ANIM_FUNC = {
 
         if (rng:RandomFloat() < DogBody.SWITCH_CHANCE and frameCount % 30 == 0 and data.eventCD < frameCount)
         or data.isHolding then
-            olga.State = Util.DogState.STANDING
             sprite:Play(Util.BodyAnim.SIT_TO_STAND, true)
         end
     end,
@@ -158,13 +159,36 @@ DogBody.ANIM_FUNC = {
         --end
     end,
 
+    -- Idle animations
+    [Util.BodyAnim.PLAYFUL] = function(olga)
+        local sprite = olga:GetSprite()
+        if sprite:IsFinished(sprite:GetAnimation()) then
+            sprite:Play(Util.BodyAnim.STAND, true)
+            olga:GetData().headRender = true
+            sprite.PlaybackSpeed = 1
+        end
+
+        if sprite:IsEventTriggered("BarkSet") then
+            sfxMan:Play(DogBody.SOUND_BARK_SET1, 2, 2, false)
+        end
+
+        sprite.PlaybackSpeed = 0.75
+    end,
+
     -- Transitional animations
     [Util.BodyAnim.SIT_TO_STAND] = function(olga)
         local sprite = olga:GetSprite()
         local animName = sprite:GetAnimation()
-        if sprite:IsFinished(animName) then
-            local animToPlay = Util:FindAnimSubstring(animName)
-            sprite:Play(Util.BodyAnim[animToPlay], true)
+
+        if not sprite:IsFinished(animName) then return end
+
+        local animToPlay = Util:FindAnimSubstring(animName)
+        sprite:Play(Util.BodyAnim[animToPlay], true)
+
+        if animName == Util.BodyAnim.SIT_TO_STAND then
+            olga.State = Util.DogState.STANDING
+        else
+            olga.State = Util.DogState.SITTING
         end
     end,
 }
@@ -183,18 +207,39 @@ DogBody.ANIM_FUNC[Util.BodyAnim.WALKING] = DogBody.ANIM_FUNC[Util.BodyAnim.STAND
 --#endregion
 --#region Olga Callbacks
 ---@param olga EntityFamiliar
+function DogBody:HandleBodyLogic(olga)
+    local data = olga:GetData()
+    local sprite = olga:GetSprite()
+
+    -- Play her special idle animation
+    if data.headRender == olga.State then
+        sprite:Play(data.animToPlay, true)
+        data.headRender = false
+    end
+
+    DogBody.ANIM_FUNC[sprite:GetAnimation()](olga)
+
+    if data.hasOwner then return end
+    DogBody:FindDogOwner(olga, data)
+end
+Mod:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, DogBody.HandleBodyLogic, Mod.Dog.VARIANT)
+
+---@param olga EntityFamiliar
 function DogBody:OnInit(olga)
     local data = olga:GetData()
 
-    data.heldItemSprite = Sprite()
+    -- Animation
     data.eventCD = DogBody.EVENT_COOLDOWN
     data.animCD = Util.ANIM_COOLDOWN
     data.attentionCD = 0
+    data.headRender = true
+
+    -- Movement
     data.targetPos = nil
     data.isHolding = nil
 
     data.headSprite = Sprite()
-    data.headSprite:Load("gfx/render_olga_head.anm2", true) 
+    data.headSprite:Load("gfx/render_olga_head.anm2", true)
     data.headSprite:Play(Util.HeadAnim.IDLE, true)
 
     olga:AddEntityFlags(EntityFlag.FLAG_NO_KNOCKBACK | EntityFlag.FLAG_NO_PHYSICS_KNOCKBACK)
@@ -240,16 +285,6 @@ function DogBody:GoodbyeOlga()
 end
 Mod:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, DogBody.GoodbyeOlga)
 
----@param olga EntityFamiliar
-function DogBody:HandleBodyLogic(olga)
-    local data = olga:GetData()
-
-    DogBody.ANIM_FUNC[olga:GetSprite():GetAnimation()](olga)
-
-    if data.hasOwner then return end
-    DogBody:FindDogOwner(olga, data)
-end
-Mod:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, DogBody.HandleBodyLogic, Mod.Dog.VARIANT)
 --#endregion
 --#region Olga Helper Functions
 ---@param anim string
@@ -276,7 +311,6 @@ function DogBody:Pathfind(olga, data, target, speed, decay)
             return DogBody.PathfindingResult.NO_PATH
         end
 
-        --TODO: Give her a split second to pathfind out, then Vector.Zero to her Velocity
         -- Disabled to see how robust the ground gridCollClass is
         --if room:GetGridCollision(gridIdx) ~= GridCollisionClass.COLLISION_NONE then
             --pathfinder:EvadeTarget(room:GetGridPosition(gridIdx))
@@ -285,6 +319,7 @@ function DogBody:Pathfind(olga, data, target, speed, decay)
 
         ---- Her last chance of escaping if it's an open position
         --olga.Velocity = (room:GetGridPosition(gridIdx) - olga.Position):Resized(speed * 5)
+
         return DogBody.PathfindingResult.COLLIDING
     end
 
@@ -382,7 +417,7 @@ function DogBody:FindDogOwner(olga, data)
     olga.Player = nearestPlayer
     data.hasOwner = true
 
-    local pData = Util:GetData(olga.Player, "olgaMod")
+    local pData = Util:GetData(olga.Player, Util.ID)
     pData.hasDoggy = olga
 
     Mod.PettingHand:UpdateHandColor()
