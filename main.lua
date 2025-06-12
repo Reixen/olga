@@ -56,17 +56,13 @@ end
 ---             - Curious
 ---     - Optimize
 --- 2) Fetch [DONE]
---- 3) Petting Hand
----     - Change skin color when reviving
+--- 3) Petting Hand [DONE]
 --- 4) Feeding Bowl
 ---     - Beggar (Bowl) that accepts breakfast-eque items
 ---     - Dog goes to bowl, feeds on supper and u get +1000 reputation points
 --- 5) Gameplay
----     - When you have the familiar, room clear rewards have a chance of
----       spawning either the dog bowl/stick. Cannot get duplicates
 ---     - Decide if dog should be spawned by using a consumable or just instantly
 --- 
 --- Do not make her wait for the pickup
 --- Figure out what to do when the pickup is not there
 --- Pls fix logic for the decay speed
---- Cache playertype and skin color for petting hand

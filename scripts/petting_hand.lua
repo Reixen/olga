@@ -15,14 +15,14 @@ PettingHand.ModdedHands = {
 }
 --#endregion
 --#region Petting Hand Functions
-
-function PettingHand:OnChangeFamilyMember()
+function PettingHand:OnReviveOrClicker()
     for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
         local olga = familiar:ToFamiliar() ---@cast olga EntityFamiliar
         PettingHand:UpdateHandColor(olga.Player, olga:GetData().headSprite)
     end
 end
-Mod:AddCallback(ModCallbacks.MC_USE_ITEM, PettingHand.OnChangeFamilyMember, CollectibleType.COLLECTIBLE_CLICKER)
+Mod:AddCallback(ModCallbacks.MC_USE_ITEM, PettingHand.OnReviveOrClicker, CollectibleType.COLLECTIBLE_CLICKER)
+Mod:AddCallback(ModCallbacks.MC_POST_PLAYER_REVIVE, PettingHand.OnReviveOrClicker)
 
 -- Update the petting hand color based on the player's skin
 ---@param player EntityPlayer
@@ -30,7 +30,12 @@ Mod:AddCallback(ModCallbacks.MC_USE_ITEM, PettingHand.OnChangeFamilyMember, Coll
 function PettingHand:UpdateHandColor(player, sprite)
     local playerColor = player:GetBodyColor()
     local playerType = player:GetPlayerType()
-    local EPlayer = Epiphany and Epiphany.PlayerType or nil
+    local data = Mod.Util:GetData(player, Mod.Util.ID)
+
+    if data.pColor and data.pColor == playerColor
+    or (data.pType and data.pType == playerType) then
+        return
+    end
 
     for string, value in pairs(SkinColor) do
         local colorStr = string:sub(PettingHand.SUBSTRING_START, -1)
@@ -42,6 +47,7 @@ function PettingHand:UpdateHandColor(player, sprite)
     end
 
     if Epiphany then
+        local EPlayer = Epiphany and Epiphany.PlayerType or nil
         if playerType == EPlayer.JUDAS
         or playerType == EPlayer.JUDAS4
         or playerType == EPlayer.JUDAS5 then
@@ -60,10 +66,11 @@ function PettingHand:UpdateHandColor(player, sprite)
                 break
             end
         end
-        goto finish
     end
 
     ::finish::
     sprite:LoadGraphics()
+    data.pColor = playerColor
+    data.pType = playerType
 end
 --#endregion
