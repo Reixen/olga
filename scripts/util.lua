@@ -47,11 +47,14 @@ Util.BodyAnim = {
     PLAYFUL = "Playful",
 }
 
+---@enum DogState
 Util.DogState = {
     SITTING = 0,
     STANDING = 1,
     FETCH = 2,
-    RETURN = 3
+    RETURN = 3,
+    ANTICIPATE = 4,
+    PRONE = 5,
 }
 
 local ONE_SEC = 30

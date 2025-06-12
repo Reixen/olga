@@ -14,6 +14,7 @@ OlgaMod.Debug = {}
 OlgaMod.Fetch = {}
 
 OlgaMod.Dog.VARIANT = Isaac.GetEntityVariantByName("Olga")
+
 OlgaMod.Pickup = {
     CRUDE_DRAWING_ID = Isaac.GetTrinketIdByName("Crude Drawing"),
     STICK_ID = Isaac.GetCardIdByName("Stick"),
@@ -30,6 +31,7 @@ local scriptName = {
     "fetch",
     --"feeding_bowl",
     "debug",
+    "patches"
 }
 
 for _, scripts in ipairs(scriptName) do
@@ -65,11 +67,8 @@ end
 ---       spawning either the dog bowl/stick. Cannot get duplicates
 ---     - Decide if dog should be spawned by using a consumable or just instantly
 --- 
---- Make Olga stop fetching on new room
 --- Do not make her wait for the pickup
---- Figure out what to do when the pickup is not there/picked up by player
---- Incorrect Buzzer when trying to throw on a grid/pit
+--- Figure out what to do when the pickup is not there
 --- Pls fix logic for the decay speed
 --- Cache playertype and skin color for petting hand
---- Fix earflick animation
 --- 

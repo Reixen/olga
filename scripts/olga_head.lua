@@ -66,8 +66,6 @@ DogHead.ANIM_FUNC = {
         if sprite:IsEventTriggered("TransitionHook") then
             local player = olga.Player
 
-            if not player then return end --dpower12 inspired me to place this here
-
             if Util:IsWithin(olga, player.Position, DogHead.PETTING_DISTANCE) then
                 Mod.PettingHand:UpdateHandColor(player, data.headSprite)
                 sprite:Play(Util.HeadAnim.GLAD_TO_GLAD_PETTING, true)
@@ -205,7 +203,7 @@ end
 function DogHead:TryTurningGlad(olga, sprite, data)
     local room = Mod.Room()
     if not sprite:IsEventTriggered("TransitionHook") or not room:IsClear()
-    or not data.canPet or data.isHolding then
+    or not data.canPet or olga.State == Util.DogState.RETURN then
         data.canPet = true
         return
     end

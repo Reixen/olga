@@ -35,7 +35,7 @@ function Fetch:SpawnFetchPickup()
         local rng = familiar:ToFamiliar():GetDropRNG()
 
         if rng:RandomFloat() < Fetch.PICKUP_CHANCE then
-            local data = familiar:ToFamiliar():GetData()
+            local data = familiar:ToFamiliar():GetData() ---@cast data DogData
             local subType
 
             -- el the goat
@@ -45,7 +45,7 @@ function Fetch:SpawnFetchPickup()
             end
 
             if data.hasStick == nil then
-                subType = rng:RandomFloat() > Fetch.ROTG_CHANCE and Mod.Pickup.ROD_OF_THE_GODS_ID or Mod.Pickup.STICK_ID
+                subType = rng:RandomFloat() < Fetch.ROTG_CHANCE and Mod.Pickup.ROD_OF_THE_GODS_ID or Mod.Pickup.STICK_ID
                 data.hasStick = true
             end
 
@@ -191,6 +191,14 @@ function Fetch:OnEffectRemove(entity)
 
     if entity.Variant == EffectVariant.TARGET and entity.SubType == Fetch.FETCH_TARGET_SUBTYPE then
         player:AnimatePickup(data.objSprite, false, "HideItem")
+
+        local room = Mod.Room()
+        if room:GetGridCollisionAtPos(entity.Position) ~= GridCollisionClass.COLLISION_NONE then
+            sfxMan:Play(SoundEffect.SOUND_BOSS2INTRO_ERRORBUZZ)
+            player:AddCard(data.objID)
+            return
+        end
+
         sfxMan:Play(SoundEffect.SOUND_SHELLGAME)
 
         local object = Isaac.Spawn(EntityType.ENTITY_EFFECT, Fetch.FETCHING_OBJECT_VARIANT, 0, player.Position, Vector.Zero, player):ToEffect() ---@cast object EntityEffect
@@ -204,11 +212,11 @@ function Fetch:OnEffectRemove(entity)
         local olga = Fetch:FindNearestDog(entity.Position, player) ---@cast olga EntityFamiliar
 
         if not olga then return end
-        local dogData = olga:GetData()
+        local dogData = olga:GetData() ---@cast dogData DogData
 
         if olga.State ~= Mod.Util.DogState.FETCH
         and olga.State ~= Mod.Util.DogState.RETURN then
-            dogData.fetchPosition = entity.Position
+            dogData.targetPos = entity.Position
             dogData.objectID = data.objID
             olga.State = Mod.Util.DogState.FETCH
         end
@@ -239,6 +247,18 @@ end
 Mod:AddCallback(ModCallbacks.MC_PRE_GAME_EXIT, Fetch.OnFetchInterrupt)
 Mod:AddCallback(ModCallbacks.MC_PRE_CHANGE_ROOM, Fetch.OnFetchInterrupt)
 
+function Fetch:OnDogFetchInterrupt()
+    for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
+        local olga = familiar:ToFamiliar()
+        local data = olga:GetData()
+
+        if olga.State == Mod.Util.DogState.RETURN then
+            Isaac.Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TAROTCARD, data.objectID, olga.Position, Vector.Zero, olga)
+            olga.State = Mod.Util.DogState.SITTING
+        end
+    end
+end
+Mod:AddCallback(ModCallbacks.MC_PRE_GAME_EXIT, Fetch.OnDogFetchInterrupt)
 -- Returns the amount of time (seconds) needed to finish the travel
 ---@param distance number
 function Fetch:GetThrowDuration(distance)
@@ -265,6 +285,7 @@ function Fetch:FindNearestDog(position, player)
 
         local distance = position:DistanceSquared(olga.Position)
         if GetPtrHash(player) == GetPtrHash(olga.Player)
+        and olga:GetData().hasOwner
         and (not shortestDistance or distance < shortestDistance) then
             shortestDistance = distance
             nearestDoggy = olga

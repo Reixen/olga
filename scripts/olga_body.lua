@@ -31,8 +31,24 @@ DogBody.PathfindingResult = {
     ERROR = -1,
     NO_PATH = 0,
     APPROACHING = 1,
-    SUCCESSFUL = 2
+    APPROACHING_NEAR = 2,
+    SUCCESSFUL = 3
 }
+--#endregion
+--#region Annotations
+---@class DogData
+---@field eventCD integer -- Time it takes for the next movement
+---@field animCD integer -- Time it takes for the next idle animation
+---@field attentionCD integer -- Time it takes for the dog to have a special headpat event
+---@field headSprite Sprite
+---@field headRender boolean | DogState? -- Used to stop the head for rendering when doing special idle animations
+---@field targetPos Vector? -- Target position to move towards
+---@field objectID PickupID? -- For saving the pickup ID for fetching
+---@field isPetting boolean? -- Used for making the player happy
+---@field canPet boolean? -- Used for preventing the player from petting the dog in certain scenarios
+---@field hasOwner boolean?
+---@field hasStick boolean?
+---@field hasBall boolean?
 --#endregion
 --#region Olga Body Animation Functions
 DogBody.ANIM_FUNC = {
@@ -76,67 +92,12 @@ DogBody.ANIM_FUNC = {
         end
 
         if olga.State == Util.DogState.FETCH then
-            if not data.fetchPosition then
-                olga.State = Util.DogState.STANDING
-            end
-
-            local pathfindingResult = DogBody:Pathfind(olga, data.fetchPosition, DogBody.RUN_SPEED, DogBody.FETCH_RADIUS, DogBody.DECAY_STRENGTH)
-
-            if pathfindingResult == DogBody.PathfindingResult.SUCCESSFUL then
-                olga.Velocity = Vector.Zero
-
-                for _, item in ipairs(Isaac.FindInRadius(olga.Position, ONE_TILE, EntityPartition.PICKUP)) do
-                    local pickup = item:ToPickup() ---@cast pickup EntityPickup
-
-                    if not DogBody:DoesPickupMatch(pickup, data.objectID, olga) then
-                        goto skip
-                    end
-
-                    if data.headSprite:IsEventTriggered("Pickup") then
-                        DogBody:KillPickup(pickup)
-                        data.fetchPosition = nil
-                        olga.State = Util.DogState.RETURN
-                        return
-                    end
-
-                    if not data.headSprite:IsPlaying(Util.HeadAnim.IDLE_TO_HOLD) then
-                        data.headSprite:Play(Util.HeadAnim.IDLE_TO_HOLD)
-                    end
-                    ::skip::
-                end
-
-
-            elseif pathfindingResult == DogBody.PathfindingResult.NO_PATH then
-                olga.Velocity = Vector.Zero
-                data.fetchPosition = nil
-                data.objectID = nil
-                olga.State = Util.DogState.STANDING
-            end
+            DogBody:TryFetching(olga, data)
             return
         end
 
         if olga.State == Util.DogState.RETURN then
-            local pathfindingResult = DogBody:Pathfind(olga, olga.Player.Position, DogBody.RUN_SPEED, ONE_TILE, DogBody.DECAY_STRENGTH)
-
-            if pathfindingResult == DogBody.PathfindingResult.SUCCESSFUL
-            and not data.headSprite:IsPlaying(Util.HeadAnim.HOLD_TO_IDLE) then
-                data.headSprite:Play(Util.HeadAnim.HOLD_TO_IDLE)
-                olga.Velocity = Vector.Zero
-
-            elseif pathfindingResult == DogBody.PathfindingResult.NO_PATH then
-                data.headSprite:Play(Util.HeadAnim.HOLD_TO_IDLE)
-                olga.Velocity = Vector.Zero
-            end
-
-            if data.headSprite:IsEventTriggered("Pickup") then
-                local room = Mod.Room()
-                local spawnPos = room:FindFreePickupSpawnPosition(olga.Position, 0, true)
-                Isaac.Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TAROTCARD, data.objectID, spawnPos, Vector.Zero, olga)
-
-                olga.State = Util.DogState.STANDING
-                data.objectID = nil
-            end
-            data.eventCD = frameCount + DogBody.EVENT_COOLDOWN
+            DogBody:TryReturnObject(olga, data, frameCount)
             return
         end
 
@@ -247,7 +208,6 @@ function DogBody:OnInit(olga)
 
     -- Movement
     data.targetPos = nil
-    data.isHolding = nil
 
     data.headSprite = Sprite()
     data.headSprite:Load("gfx/render_olga_head.anm2", true)
@@ -263,10 +223,20 @@ function DogBody:HandleNewRoom()
     local roomType = room:GetType()
 
     for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
-        local data = familiar:GetData()
+        local olga = familiar:ToFamiliar()
+        local data = familiar:GetData() ---@cast data DogData
         data.targetPos = nil
         data.canPet = false
         familiar.Velocity = Vector.Zero
+
+        -- If she's midfetch
+        if olga.State == Mod.Util.DogState.FETCH then
+            olga.State = Mod.Util.DogState.STANDING
+            data.objectID = nil
+        elseif olga.State == Mod.Util.DogState.RETURN
+        or data.headSprite:IsFinished(Mod.Util.HeadAnim.HOLD) then
+            data.headSprite:Play(Mod.Util.HeadAnim.HOLD_TO_IDLE)
+        end
     end
 
     if (roomType ~= RoomType.ROOM_ISAACS and roomType ~= RoomType.ROOM_BARREN)
@@ -282,7 +252,7 @@ Mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, DogBody.HandleNewRoom)
 function DogBody:GoodbyeOlga()
     for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
         local olga = familiar:ToFamiliar() ---@cast olga EntityFamiliar
-        local data = olga:GetData()
+        local data = olga:GetData() ---@cast data DogData
         data.hasStick = nil
         data.hasBall = nil
 
@@ -443,7 +413,7 @@ function DogBody:FindValidPositions(gridlength, gridIdx, room)
 end
 
 ---@param olga EntityFamiliar
----@param data table
+---@param data DogData
 function DogBody:FindDogOwner(olga, data)
     local nearestPlayer = game:GetNearestPlayer(olga.Position)
 
@@ -461,21 +431,25 @@ function DogBody:FindDogOwner(olga, data)
     Mod.PettingHand:UpdateHandColor(nearestPlayer, olga:GetData().headSprite)
 end
 
+-- From Epiphany's Epiphany:PickupKill()
 ---@param pickup EntityPickup
 function DogBody:KillPickup(pickup)
 	sfxMan:Play(SoundEffect.SOUND_SHELLGAME)
-	pickup.Velocity = Vector.Zero
-	pickup.EntityCollisionClass = 0
+
 	local effect = Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.POOF01, 0, pickup.Position, Vector.Zero, nil)
 		:ToEffect() ---@cast effect EntityEffect
 	effect.Timeout = pickup.Timeout
+
 	local sprite = effect:GetSprite()
-	sprite:Load(pickup:GetSprite():GetFilename(), false)
-	sprite:LoadGraphics()
+	sprite:Load(pickup:GetSprite():GetFilename(), true)
 	sprite:Play("Collect", true)
+
+	pickup.Velocity = Vector.Zero
+	pickup.EntityCollisionClass = 0
 	pickup:Remove()
 end
 
+-- Returns a boolean if the player object matches with the spawner entity of the pickup
 ---@param pickup EntityPickup
 ---@param objectID integer
 ---@param olga EntityFamiliar
@@ -483,5 +457,70 @@ function DogBody:DoesPickupMatch(pickup, objectID, olga)
     return pickup.Variant == PickupVariant.PICKUP_TAROTCARD and pickup.SubType == objectID
     and pickup.SpawnerEntity and pickup.SpawnerEntity:ToPlayer() and olga.Player
     and GetPtrHash(pickup.SpawnerEntity:ToPlayer()) == GetPtrHash(olga.Player)
+end
+
+---@param olga EntityFamiliar
+---@param data DogData
+function DogBody:TryFetching(olga, data)
+    if not data.targetPos then
+        olga.State = Util.DogState.STANDING
+        return
+    end
+
+    local pathfindingResult = DogBody:Pathfind(olga, data.targetPos, DogBody.RUN_SPEED, DogBody.FETCH_RADIUS, DogBody.DECAY_STRENGTH)
+
+    if pathfindingResult == DogBody.PathfindingResult.SUCCESSFUL then
+        olga.Velocity = Vector.Zero
+
+        for _, item in ipairs(Isaac.FindInRadius(olga.Position, ONE_TILE, EntityPartition.PICKUP)) do
+            local pickup = item:ToPickup() ---@cast pickup EntityPickup
+
+            if not DogBody:DoesPickupMatch(pickup, data.objectID, olga) then
+                goto skip
+            end
+
+            if data.headSprite:IsEventTriggered("Pickup") then
+                DogBody:KillPickup(pickup)
+                data.targetPos = nil
+                olga.State = Util.DogState.RETURN
+                return
+            end
+
+            if not data.headSprite:IsPlaying(Util.HeadAnim.IDLE_TO_HOLD) then
+                data.headSprite:Play(Util.HeadAnim.IDLE_TO_HOLD)
+            end
+            ::skip::
+        end
+
+
+    elseif pathfindingResult == DogBody.PathfindingResult.NO_PATH then
+        olga.Velocity = Vector.Zero
+        data.targetPos = nil
+        data.objectID = nil
+        olga.State = Util.DogState.STANDING
+    end
+end
+
+---@param olga EntityFamiliar
+---@param data DogData
+function DogBody:TryReturnObject(olga, data, frameCount)
+    local pathfindingResult = DogBody:Pathfind(olga, olga.Player.Position, DogBody.RUN_SPEED, ONE_TILE, DogBody.DECAY_STRENGTH)
+
+    if (pathfindingResult == DogBody.PathfindingResult.SUCCESSFUL or pathfindingResult == DogBody.PathfindingResult.NO_PATH)
+    and not data.headSprite:IsPlaying(Util.HeadAnim.HOLD_TO_IDLE) then
+        data.headSprite:Play(Util.HeadAnim.HOLD_TO_IDLE)
+        olga.Velocity = Vector.Zero
+    end
+
+    if data.headSprite:IsEventTriggered("Pickup") then
+        local room = Mod.Room()
+        local spawnPos = room:FindFreePickupSpawnPosition(olga.Position, 0, true)
+        Isaac.Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TAROTCARD, data.objectID, spawnPos, Vector.Zero, olga)
+
+        olga.Velocity = Vector.Zero
+        olga.State = Util.DogState.STANDING
+        data.objectID = nil
+    end
+    data.eventCD = frameCount + DogBody.EVENT_COOLDOWN
 end
 --#endregion
