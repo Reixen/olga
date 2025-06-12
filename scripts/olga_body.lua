@@ -437,6 +437,6 @@ function DogBody:FindDogOwner(olga, data)
     local pData = Util:GetData(olga.Player, Util.ID)
     pData.hasDoggy = olga
 
-    Mod.PettingHand:UpdateHandColor()
+    Mod.PettingHand:UpdateHandColor(nearestPlayer, olga:GetData().headSprite)
 end
 --#endregion

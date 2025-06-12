@@ -71,7 +71,7 @@ DogHead.ANIM_FUNC = {
         local data = olga:GetData()
         if data.headSprite:IsEventTriggered("TransitionHook") then
             if Util:IsWithin(olga, olga.Player.Position, DogHead.PETTING_DISTANCE) then
-                Mod.PettingHand:UpdateHandColor()
+                Mod.PettingHand:UpdateHandColor(olga.Player, data.headSprite)
                 data.headSprite:Play(Util.HeadAnim.GLAD_TO_GLAD_PETTING, true)
 
             elseif not Util:IsWithin(olga, olga.Player.Position, DogHead.HAPPY_DISTANCE) then
@@ -228,7 +228,7 @@ function DogHead:TryTurningGlad(olga, data)
     if data.attentionCD > olga.FrameCount
     and Util:IsWithin(olga, olga.Player.Position, DogHead.PETTING_DISTANCE) then
         data.attentionCD = olga.FrameCount + Util.ATTENTION_COOLDOWN
-        Mod.PettingHand:UpdateHandColor()
+        Mod.PettingHand:UpdateHandColor(olga.Player, data.headSprite)
         data.headSprite:Play(Util.HeadAnim.IDLE_TO_PETTING, true)
     elseif data.attentionCD < olga.FrameCount
     and Util:IsWithin(olga, olga.Player.Position, DogHead.HAPPY_DISTANCE) then

@@ -244,7 +244,7 @@ function DogBody:HandleBodyLogic(olga)
             olga.Player = nearestPlayer
             data.hasOwner = true
 
-            local pData = Util:GetData(olga.Player, "olgaMod")
+            local pData = Util:GetData(olga.Player, Util.ID)
             pData.hasDoggy = true
 
             Mod.PettingHand:UpdateHandColor()

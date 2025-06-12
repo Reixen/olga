@@ -50,15 +50,11 @@ end
 ---         - Stand
 ---             - Feed on Bowl
 ---             - Running
----             - Bark Bark Idle Animtion
 ---         - Head Specific Idle Animations
 ---             - Curious
----             - Lean
 ---     - Optimize
----     - Fix Head Reflection being wonky
 --- 2) Fetch
----     - Create Mark sprite for fetching
----         - Be able to move with more keys instead of one
+---     - Make her interact with the object
 --- 3) Petting Hand
 ---     - Change skin color when reviving
 --- 4) Feeding Bowl
@@ -67,5 +63,4 @@ end
 --- 5) Gameplay
 ---     - When you have the familiar, room clear rewards have a chance of
 ---       spawning either the dog bowl/stick. Cannot get duplicates
----     - stick can be used multiple times, bowl only once
 ---     - Decide if dog should be spawned by using a consumable or just instantly
