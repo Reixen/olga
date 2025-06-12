@@ -11,6 +11,7 @@ Fetch.FETCHING_OBJECT_VARIANT = Isaac.GetEntityVariantByName("Fetching Object")
 
 Fetch.TARGET_SPEED = 15
 Fetch.PICKUP_CHANCE = 1 / 6
+Fetch.ROTG_CHANCE = 1 / 100
 
 local ONE_SEC = 30
 Fetch.MARK_TIMEOUT = ONE_SEC * 2
@@ -44,16 +45,14 @@ function Fetch:SpawnFetchPickup()
             end
 
             if data.hasStick == nil then
-                subType = Mod.Pickup.STICK_ID
+                subType = rng:RandomFloat() > Fetch.ROTG_CHANCE and Mod.Pickup.ROD_OF_THE_GODS_ID or Mod.Pickup.STICK_ID
                 data.hasStick = true
             end
 
             if data.hasStick and data.hasBall then
                 if rng:RandomFloat() < 0.5 then
-                    subType = Mod.Pickup.TENNIS_BALL_ID
                     data.hasStick = false
                 else
-                    subType = Mod.Pickup.STICK_ID
                     data.hasBall = false
                 end
             end
@@ -78,6 +77,9 @@ function Fetch:OnUsePickup(cardId, player)
     local pickupName = Isaac.GetItemConfig():GetCard(cardId).Name
     pickupName = pickupName:gsub(" ", "_")
 
+    local data = Mod.Util:GetData(player, Mod.Util.ID)
+    data.isUsingPickup = cardId
+
     local target = Isaac.Spawn(
         EntityType.ENTITY_EFFECT, EffectVariant.TARGET, Fetch.FETCH_TARGET_SUBTYPE,
         player.Position, Vector.Zero, player):ToEffect() ---@cast target EntityEffect
@@ -90,13 +92,17 @@ function Fetch:OnUsePickup(cardId, player)
     targetData.objName = pickupName
 
     local targetSprite = target:GetSprite()
-    targetSprite:ReplaceSpritesheet(2, "gfx/items/pickups/" .. pickupName .. ".png", true)
+    if cardId == Mod.Pickup.ROD_OF_THE_GODS_ID then
+        targetSprite:PlayOverlay("ObjectROTG", true)
+        return
+    end
 
-    local data = Mod.Util:GetData(player, Mod.Util.ID)
-    data.isUsingPickup = cardId
+    targetSprite:ReplaceSpritesheet(2, "gfx/items/pickups/" .. pickupName .. ".png", true)
+    target:GetSprite():PlayOverlay("Object", true)
 end
 Mod:AddCallback(ModCallbacks.MC_USE_CARD, Fetch.OnUsePickup, Mod.Pickup.STICK_ID)
 Mod:AddCallback(ModCallbacks.MC_USE_CARD, Fetch.OnUsePickup, Mod.Pickup.TENNIS_BALL_ID)
+Mod:AddCallback(ModCallbacks.MC_USE_CARD, Fetch.OnUsePickup, Mod.Pickup.ROD_OF_THE_GODS_ID)
 
 ---@param target EntityEffect
 function Fetch:OnTargetInit(target)
@@ -104,7 +110,6 @@ function Fetch:OnTargetInit(target)
         return
     end
 
-    target:GetSprite():PlayOverlay("Object", true)
     target.Color = Color(1, 1, 1, 1, 0, 0, 0)
     target.GridCollisionClass = EntityGridCollisionClass.GRIDCOLL_WALLS
 end
@@ -194,8 +199,19 @@ function Fetch:OnEffectRemove(entity)
         objData.duration = Fetch:GetThrowDuration(entity.Position:Distance(player.Position))
         object:GetSprite():Play(data.objName, true)
         object.Color = Color(0, 0, 0, 0)
-
         object.Velocity = -(object.Position - entity.Position) / (objData.duration * ONE_SEC - (Fetch.ARC_SHIFT / 1.2)) -- shift closer to mark
+
+        local olga = Fetch:FindNearestDog(entity.Position, player) ---@cast olga EntityFamiliar
+
+        if not olga then return end
+        local dogData = olga:GetData()
+
+        if olga.State ~= Mod.Util.DogState.FETCH
+        and olga.State ~= Mod.Util.DogState.RETURN then
+            dogData.fetchPosition = entity.Position
+            dogData.objectID = data.objID
+            olga.State = Mod.Util.DogState.FETCH
+        end
         return
     end
 
@@ -210,16 +226,18 @@ end
 Mod:AddCallback(ModCallbacks.MC_POST_ENTITY_REMOVE, Fetch.OnEffectRemove, EntityType.ENTITY_EFFECT)
 
 -- When they exit the run mid-fetch
-function Fetch:OnRunExit()
+function Fetch:OnFetchInterrupt()
     for _, entity in pairs(Isaac.FindByType(EntityType.ENTITY_PLAYER, PlayerVariant.PLAYER)) do
         local player = entity:ToPlayer()---@cast player EntityPlayer
         local data = Mod.Util:GetData(player, Mod.Util.ID)
         if data.isUsingPickup then
             player:AddCard(data.isUsingPickup)
+            data.isUsingPickup = nil
         end
     end
 end
-Mod:AddCallback(ModCallbacks.MC_PRE_GAME_EXIT, Fetch.OnRunExit)
+Mod:AddCallback(ModCallbacks.MC_PRE_GAME_EXIT, Fetch.OnFetchInterrupt)
+Mod:AddCallback(ModCallbacks.MC_PRE_CHANGE_ROOM, Fetch.OnFetchInterrupt)
 
 -- Returns the amount of time (seconds) needed to finish the travel
 ---@param distance number
@@ -233,5 +251,26 @@ function Fetch:GetThrowDuration(distance)
     local tiles = (distance - Fetch.BASE_LENGTH) / ONE_TILE
     local frames = Fetch.UNITS_PER_TILE * tiles + Fetch.DURATION
     return frames / ONE_SEC
+end
+
+---@return EntityFamiliar | nil
+---@param position Vector
+---@param player EntityPlayer
+function Fetch:FindNearestDog(position, player)
+    local nearestDoggy
+    local shortestDistance
+
+    for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
+        local olga = familiar:ToFamiliar()
+
+        local distance = position:DistanceSquared(olga.Position)
+        if GetPtrHash(player) == GetPtrHash(olga.Player)
+        and (not shortestDistance or distance < shortestDistance) then
+            shortestDistance = distance
+            nearestDoggy = olga
+        end
+    end
+
+    return nearestDoggy
 end
 --endregion

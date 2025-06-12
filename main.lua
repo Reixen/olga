@@ -18,7 +18,8 @@ OlgaMod.Pickup = {
     CRUDE_DRAWING_ID = Isaac.GetTrinketIdByName("Crude Drawing"),
     STICK_ID = Isaac.GetCardIdByName("Stick"),
     FEEDING_BOWL_ID = Isaac.GetCardIdByName("Feeding Bowl"),
-    TENNIS_BALL_ID = Isaac.GetCardIdByName("Tennis Ball")
+    TENNIS_BALL_ID = Isaac.GetCardIdByName("Tennis Ball"),
+    ROD_OF_THE_GODS_ID = Isaac.GetCardIdByName("Rod of the Gods")
 }
 
 local scriptName = {
@@ -38,7 +39,6 @@ end
 ----------------------------------------------------------------
 ---                          TO DO:                          ---
 ----------------------------------------------------------------
----
 --- 1) Head + Body
 ---     - Animations bro
 ---         - Lie Down
@@ -54,7 +54,7 @@ end
 ---             - Curious
 ---     - Optimize
 --- 2) Fetch
----     - Make her interact with the object
+---     - Fetch sprites!
 --- 3) Petting Hand
 ---     - Change skin color when reviving
 --- 4) Feeding Bowl
@@ -64,3 +64,12 @@ end
 ---     - When you have the familiar, room clear rewards have a chance of
 ---       spawning either the dog bowl/stick. Cannot get duplicates
 ---     - Decide if dog should be spawned by using a consumable or just instantly
+--- 
+--- Make Olga stop fetching on new room
+--- Do not make her wait for the pickup
+--- Figure out what to do when the pickup is not there/picked up by player
+--- Incorrect Buzzer when trying to throw on a grid/pit
+--- Pls fix logic for the decay speed
+--- Cache playertype and skin color for petting hand
+--- Fix earflick animation
+--- 

@@ -1,5 +1,5 @@
 <AnimatedActor>
-	<Info CreatedBy="Reixen" CreatedOn="6/3/2025 3:09:09 PM" Version="82" Fps="30"/>
+	<Info CreatedBy="Reixen" CreatedOn="6/11/2025 9:38:33 PM" Version="85" Fps="30"/>
 	<Content>
 		<Spritesheets>
 			<Spritesheet Path="petting_hands\petting_hand_pink.png" Id="0"/>
@@ -11,13 +11,12 @@
 			<Layer Name="headpart1" Id="2" SpritesheetId="1"/>
 			<Layer Name="headpart2" Id="3" SpritesheetId="1"/>
 		</Layers>
-		<Nulls>
-			<Null Name="item" Id="0" ShowRect="false"/>
-		</Nulls>
+		<Nulls/>
 		<Events>
 			<Event Name="TransitionHook" Id="0"/>
 			<Event Name="Yawn" Id="1"/>
 			<Event Name="Bark" Id="2"/>
+			<Event Name="Pickup" Id="3"/>
 		</Events>
 	</Content>
 	<Animations DefaultAnimation="Idle">
@@ -37,9 +36,7 @@
 				<LayerAnimation LayerId="3" Visible="true"/>
 				<LayerAnimation LayerId="0" Visible="true"/>
 			</LayerAnimations>
-			<NullAnimations>
-				<NullAnimation NullId="0" Visible="true"/>
-			</NullAnimations>
+			<NullAnimations/>
 			<Triggers>
 				<Trigger EventId="0" AtFrame="10"/>
 				<Trigger EventId="0" AtFrame="19"/>
@@ -57,9 +54,7 @@
 				<LayerAnimation LayerId="3" Visible="true"/>
 				<LayerAnimation LayerId="0" Visible="true"/>
 			</LayerAnimations>
-			<NullAnimations>
-				<NullAnimation NullId="0" Visible="true"/>
-			</NullAnimations>
+			<NullAnimations/>
 			<Triggers>
 				<Trigger EventId="0" AtFrame="7"/>
 			</Triggers>
@@ -79,9 +74,7 @@
 				<LayerAnimation LayerId="3" Visible="true"/>
 				<LayerAnimation LayerId="0" Visible="true"/>
 			</LayerAnimations>
-			<NullAnimations>
-				<NullAnimation NullId="0" Visible="true"/>
-			</NullAnimations>
+			<NullAnimations/>
 			<Triggers/>
 		</Animation>
 		<Animation Name="IdleToGlad" FrameNum="6" Loop="false">
@@ -99,9 +92,7 @@
 				<LayerAnimation LayerId="3" Visible="true"/>
 				<LayerAnimation LayerId="0" Visible="true"/>
 			</LayerAnimations>
-			<NullAnimations>
-				<NullAnimation NullId="0" Visible="true"/>
-			</NullAnimations>
+			<NullAnimations/>
 			<Triggers/>
 		</Animation>
 		<Animation Name="Yawn" FrameNum="55" Loop="false">
@@ -126,9 +117,7 @@
 				<LayerAnimation LayerId="3" Visible="true"/>
 				<LayerAnimation LayerId="0" Visible="true"/>
 			</LayerAnimations>
-			<NullAnimations>
-				<NullAnimation NullId="0" Visible="true"/>
-			</NullAnimations>
+			<NullAnimations/>
 			<Triggers>
 				<Trigger EventId="1" AtFrame="7"/>
 			</Triggers>
@@ -155,9 +144,7 @@
 					<Frame XPosition="-1" YPosition="-4" XPivot="8" YPivot="11" XCrop="0" YCrop="0" Width="16" Height="16" XScale="80" YScale="120" Delay="5" Visible="true" RedTint="255" GreenTint="255" BlueTint="255" AlphaTint="255" RedOffset="0" GreenOffset="0" BlueOffset="0" Rotation="0" Interpolated="true"/>
 				</LayerAnimation>
 			</LayerAnimations>
-			<NullAnimations>
-				<NullAnimation NullId="0" Visible="true"/>
-			</NullAnimations>
+			<NullAnimations/>
 			<Triggers>
 				<Trigger EventId="0" AtFrame="12"/>
 			</Triggers>
@@ -180,9 +167,7 @@
 					<Frame XPosition="-1" YPosition="-4" XPivot="8" YPivot="11" XCrop="0" YCrop="0" Width="16" Height="16" XScale="120" YScale="80" Delay="2" Visible="true" RedTint="255" GreenTint="255" BlueTint="255" AlphaTint="255" RedOffset="0" GreenOffset="0" BlueOffset="0" Rotation="0" Interpolated="true"/>
 				</LayerAnimation>
 			</LayerAnimations>
-			<NullAnimations>
-				<NullAnimation NullId="0" Visible="true"/>
-			</NullAnimations>
+			<NullAnimations/>
 			<Triggers/>
 		</Animation>
 		<Animation Name="GladPettingToGlad" FrameNum="5" Loop="false">
@@ -203,36 +188,33 @@
 					<Frame XPosition="-1" YPosition="-15" XPivot="8" YPivot="11" XCrop="0" YCrop="0" Width="16" Height="16" XScale="80" YScale="120" Delay="6" Visible="true" RedTint="255" GreenTint="255" BlueTint="255" AlphaTint="0" RedOffset="0" GreenOffset="0" BlueOffset="0" Rotation="0" Interpolated="true"/>
 				</LayerAnimation>
 			</LayerAnimations>
-			<NullAnimations>
-				<NullAnimation NullId="0" Visible="true"/>
-			</NullAnimations>
+			<NullAnimations/>
 			<Triggers/>
 		</Animation>
-		<Animation Name="IdleToHold" FrameNum="12" Loop="false">
+		<Animation Name="IdleToHold" FrameNum="19" Loop="false">
 			<RootAnimation>
 				<Frame XPosition="0" YPosition="0" XScale="100" YScale="100" Delay="1" Visible="true" RedTint="255" GreenTint="255" BlueTint="255" AlphaTint="255" RedOffset="0" GreenOffset="0" BlueOffset="0" Rotation="0" Interpolated="false"/>
 			</RootAnimation>
 			<LayerAnimations>
 				<LayerAnimation LayerId="1" Visible="true">
-					<Frame XPosition="0" YPosition="11" XPivot="24" YPivot="35" XCrop="48" YCrop="0" Width="48" Height="48" XScale="100" YScale="100" Delay="4" Visible="true" RedTint="255" GreenTint="255" BlueTint="255" AlphaTint="255" RedOffset="0" GreenOffset="0" BlueOffset="0" Rotation="0" Interpolated="true"/>
-					<Frame XPosition="0" YPosition="11" XPivot="24" YPivot="35" XCrop="0" YCrop="0" Width="48" Height="48" XScale="80" YScale="120" Delay="3" Visible="true" RedTint="255" GreenTint="255" BlueTint="255" AlphaTint="255" RedOffset="0" GreenOffset="0" BlueOffset="0" Rotation="0" Interpolated="true"/>
-					<Frame XPosition="0" YPosition="18" XPivot="24" YPivot="35" XCrop="96" YCrop="0" Width="48" Height="48" XScale="120" YScale="80" Delay="3" Visible="true" RedTint="255" GreenTint="255" BlueTint="255" AlphaTint="255" RedOffset="0" GreenOffset="0" BlueOffset="0" Rotation="0" Interpolated="true"/>
-					<Frame XPosition="0" YPosition="11" XPivot="24" YPivot="35" XCrop="96" YCrop="0" Width="48" Height="48" XScale="90" YScale="110" Delay="2" Visible="true" RedTint="255" GreenTint="255" BlueTint="255" AlphaTint="255" RedOffset="0" GreenOffset="0" BlueOffset="0" Rotation="0" Interpolated="true"/>
-					<Frame XPosition="0" YPosition="11" XPivot="24" YPivot="35" XCrop="96" YCrop="0" Width="48" Height="48" XScale="100" YScale="100" Delay="2" Visible="true" RedTint="255" GreenTint="255" BlueTint="255" AlphaTint="255" RedOffset="0" GreenOffset="0" BlueOffset="0" Rotation="0" Interpolated="true"/>
+					<Frame XPosition="0" YPosition="11" XPivot="24" YPivot="35" XCrop="48" YCrop="0" Width="48" Height="48" XScale="100" YScale="100" Delay="2" Visible="true" RedTint="255" GreenTint="255" BlueTint="255" AlphaTint="255" RedOffset="0" GreenOffset="0" BlueOffset="0" Rotation="0" Interpolated="true"/>
+					<Frame XPosition="0" YPosition="11" XPivot="24" YPivot="35" XCrop="0" YCrop="48" Width="48" Height="48" XScale="110" YScale="90" Delay="2" Visible="true" RedTint="255" GreenTint="255" BlueTint="255" AlphaTint="255" RedOffset="0" GreenOffset="0" BlueOffset="0" Rotation="0" Interpolated="true"/>
+					<Frame XPosition="0" YPosition="11" XPivot="24" YPivot="35" XCrop="48" YCrop="48" Width="48" Height="48" XScale="90" YScale="110" Delay="2" Visible="true" RedTint="255" GreenTint="255" BlueTint="255" AlphaTint="255" RedOffset="0" GreenOffset="0" BlueOffset="0" Rotation="0" Interpolated="true"/>
+					<Frame XPosition="0" YPosition="11" XPivot="24" YPivot="35" XCrop="48" YCrop="48" Width="48" Height="48" XScale="90" YScale="120" Delay="3" Visible="true" RedTint="255" GreenTint="255" BlueTint="255" AlphaTint="255" RedOffset="0" GreenOffset="0" BlueOffset="0" Rotation="0" Interpolated="true"/>
+					<Frame XPosition="0" YPosition="18" XPivot="24" YPivot="35" XCrop="96" YCrop="144" Width="48" Height="48" XScale="80" YScale="120" Delay="2" Visible="true" RedTint="255" GreenTint="255" BlueTint="255" AlphaTint="255" RedOffset="0" GreenOffset="0" BlueOffset="0" Rotation="0" Interpolated="true"/>
+					<Frame XPosition="0" YPosition="18" XPivot="24" YPivot="35" XCrop="96" YCrop="144" Width="48" Height="48" XScale="120" YScale="80" Delay="3" Visible="true" RedTint="255" GreenTint="255" BlueTint="255" AlphaTint="255" RedOffset="0" GreenOffset="0" BlueOffset="0" Rotation="0" Interpolated="true"/>
+					<Frame XPosition="0" YPosition="11" XPivot="24" YPivot="35" XCrop="0" YCrop="144" Width="48" Height="48" XScale="80" YScale="120" Delay="2" Visible="true" RedTint="255" GreenTint="255" BlueTint="255" AlphaTint="255" RedOffset="0" GreenOffset="0" BlueOffset="0" Rotation="0" Interpolated="true"/>
+					<Frame XPosition="0" YPosition="11" XPivot="24" YPivot="35" XCrop="0" YCrop="144" Width="48" Height="48" XScale="110" YScale="90" Delay="2" Visible="true" RedTint="255" GreenTint="255" BlueTint="255" AlphaTint="255" RedOffset="0" GreenOffset="0" BlueOffset="0" Rotation="0" Interpolated="true"/>
+					<Frame XPosition="0" YPosition="11" XPivot="24" YPivot="35" XCrop="0" YCrop="144" Width="48" Height="48" XScale="100" YScale="100" Delay="2" Visible="true" RedTint="255" GreenTint="255" BlueTint="255" AlphaTint="255" RedOffset="0" GreenOffset="0" BlueOffset="0" Rotation="0" Interpolated="true"/>
 				</LayerAnimation>
 				<LayerAnimation LayerId="2" Visible="true"/>
 				<LayerAnimation LayerId="3" Visible="true"/>
 				<LayerAnimation LayerId="0" Visible="true"/>
 			</LayerAnimations>
-			<NullAnimations>
-				<NullAnimation NullId="0" Visible="true">
-					<Frame XPosition="-2" YPosition="17" XScale="100" YScale="100" Delay="7" Visible="true" RedTint="255" GreenTint="255" BlueTint="255" AlphaTint="0" RedOffset="0" GreenOffset="0" BlueOffset="0" Rotation="0" Interpolated="false"/>
-					<Frame XPosition="-2" YPosition="17" XScale="120" YScale="80" Delay="3" Visible="true" RedTint="255" GreenTint="255" BlueTint="255" AlphaTint="255" RedOffset="0" GreenOffset="0" BlueOffset="0" Rotation="0" Interpolated="true"/>
-					<Frame XPosition="-2" YPosition="10" XScale="90" YScale="110" Delay="2" Visible="true" RedTint="255" GreenTint="255" BlueTint="255" AlphaTint="255" RedOffset="0" GreenOffset="0" BlueOffset="0" Rotation="0" Interpolated="true"/>
-					<Frame XPosition="-2" YPosition="10" XScale="100" YScale="100" Delay="2" Visible="true" RedTint="255" GreenTint="255" BlueTint="255" AlphaTint="255" RedOffset="0" GreenOffset="0" BlueOffset="0" Rotation="0" Interpolated="true"/>
-				</NullAnimation>
-			</NullAnimations>
-			<Triggers/>
+			<NullAnimations/>
+			<Triggers>
+				<Trigger EventId="3" AtFrame="8"/>
+			</Triggers>
 		</Animation>
 		<Animation Name="Hold" FrameNum="2" Loop="false">
 			<RootAnimation>
@@ -240,43 +222,36 @@
 			</RootAnimation>
 			<LayerAnimations>
 				<LayerAnimation LayerId="1" Visible="true">
-					<Frame XPosition="0" YPosition="11" XPivot="24" YPivot="35" XCrop="96" YCrop="0" Width="48" Height="48" XScale="100" YScale="100" Delay="2" Visible="true" RedTint="255" GreenTint="255" BlueTint="255" AlphaTint="255" RedOffset="0" GreenOffset="0" BlueOffset="0" Rotation="0" Interpolated="true"/>
+					<Frame XPosition="0" YPosition="11" XPivot="24" YPivot="35" XCrop="0" YCrop="144" Width="48" Height="48" XScale="100" YScale="100" Delay="2" Visible="true" RedTint="255" GreenTint="255" BlueTint="255" AlphaTint="255" RedOffset="0" GreenOffset="0" BlueOffset="0" Rotation="0" Interpolated="true"/>
 				</LayerAnimation>
 				<LayerAnimation LayerId="2" Visible="true"/>
 				<LayerAnimation LayerId="3" Visible="true"/>
 				<LayerAnimation LayerId="0" Visible="true"/>
 			</LayerAnimations>
-			<NullAnimations>
-				<NullAnimation NullId="0" Visible="true">
-					<Frame XPosition="-2" YPosition="10" XScale="100" YScale="100" Delay="2" Visible="true" RedTint="255" GreenTint="255" BlueTint="255" AlphaTint="255" RedOffset="0" GreenOffset="0" BlueOffset="0" Rotation="0" Interpolated="true"/>
-				</NullAnimation>
-			</NullAnimations>
+			<NullAnimations/>
 			<Triggers/>
 		</Animation>
-		<Animation Name="HoldToIdle" FrameNum="12" Loop="false">
+		<Animation Name="HoldToIdle" FrameNum="15" Loop="false">
 			<RootAnimation>
 				<Frame XPosition="0" YPosition="0" XScale="100" YScale="100" Delay="1" Visible="true" RedTint="255" GreenTint="255" BlueTint="255" AlphaTint="255" RedOffset="0" GreenOffset="0" BlueOffset="0" Rotation="0" Interpolated="false"/>
 			</RootAnimation>
 			<LayerAnimations>
 				<LayerAnimation LayerId="1" Visible="true">
-					<Frame XPosition="0" YPosition="11" XPivot="24" YPivot="35" XCrop="96" YCrop="0" Width="48" Height="48" XScale="100" YScale="100" Delay="4" Visible="true" RedTint="255" GreenTint="255" BlueTint="255" AlphaTint="255" RedOffset="0" GreenOffset="0" BlueOffset="0" Rotation="0" Interpolated="true"/>
-					<Frame XPosition="0" YPosition="11" XPivot="24" YPivot="35" XCrop="96" YCrop="0" Width="48" Height="48" XScale="80" YScale="120" Delay="3" Visible="true" RedTint="255" GreenTint="255" BlueTint="255" AlphaTint="255" RedOffset="0" GreenOffset="0" BlueOffset="0" Rotation="0" Interpolated="true"/>
+					<Frame XPosition="0" YPosition="11" XPivot="24" YPivot="35" XCrop="0" YCrop="144" Width="48" Height="48" XScale="100" YScale="100" Delay="4" Visible="true" RedTint="255" GreenTint="255" BlueTint="255" AlphaTint="255" RedOffset="0" GreenOffset="0" BlueOffset="0" Rotation="0" Interpolated="true"/>
+					<Frame XPosition="0" YPosition="11" XPivot="24" YPivot="35" XCrop="96" YCrop="144" Width="48" Height="64" XScale="80" YScale="120" Delay="3" Visible="true" RedTint="255" GreenTint="255" BlueTint="255" AlphaTint="255" RedOffset="0" GreenOffset="0" BlueOffset="0" Rotation="0" Interpolated="true"/>
+					<Frame XPosition="0" YPosition="18" XPivot="24" YPivot="35" XCrop="48" YCrop="48" Width="48" Height="48" XScale="110" YScale="90" Delay="2" Visible="true" RedTint="255" GreenTint="255" BlueTint="255" AlphaTint="255" RedOffset="0" GreenOffset="0" BlueOffset="0" Rotation="0" Interpolated="true"/>
 					<Frame XPosition="0" YPosition="18" XPivot="24" YPivot="35" XCrop="48" YCrop="48" Width="48" Height="48" XScale="120" YScale="80" Delay="3" Visible="true" RedTint="255" GreenTint="255" BlueTint="255" AlphaTint="255" RedOffset="0" GreenOffset="0" BlueOffset="0" Rotation="0" Interpolated="true"/>
-					<Frame XPosition="0" YPosition="11" XPivot="24" YPivot="35" XCrop="48" YCrop="0" Width="48" Height="48" XScale="90" YScale="110" Delay="2" Visible="true" RedTint="255" GreenTint="255" BlueTint="255" AlphaTint="255" RedOffset="0" GreenOffset="0" BlueOffset="0" Rotation="0" Interpolated="true"/>
+					<Frame XPosition="0" YPosition="11" XPivot="24" YPivot="35" XCrop="0" YCrop="48" Width="48" Height="48" XScale="90" YScale="110" Delay="2" Visible="true" RedTint="255" GreenTint="255" BlueTint="255" AlphaTint="255" RedOffset="0" GreenOffset="0" BlueOffset="0" Rotation="0" Interpolated="true"/>
 					<Frame XPosition="0" YPosition="11" XPivot="24" YPivot="35" XCrop="48" YCrop="0" Width="48" Height="48" XScale="100" YScale="100" Delay="2" Visible="true" RedTint="255" GreenTint="255" BlueTint="255" AlphaTint="255" RedOffset="0" GreenOffset="0" BlueOffset="0" Rotation="0" Interpolated="true"/>
 				</LayerAnimation>
 				<LayerAnimation LayerId="2" Visible="true"/>
 				<LayerAnimation LayerId="3" Visible="true"/>
 				<LayerAnimation LayerId="0" Visible="true"/>
 			</LayerAnimations>
-			<NullAnimations>
-				<NullAnimation NullId="0" Visible="true">
-					<Frame XPosition="-2" YPosition="10" XScale="100" YScale="100" Delay="4" Visible="true" RedTint="255" GreenTint="255" BlueTint="255" AlphaTint="255" RedOffset="0" GreenOffset="0" BlueOffset="0" Rotation="0" Interpolated="true"/>
-					<Frame XPosition="-2" YPosition="10" XScale="80" YScale="120" Delay="3" Visible="true" RedTint="255" GreenTint="255" BlueTint="255" AlphaTint="255" RedOffset="0" GreenOffset="0" BlueOffset="0" Rotation="0" Interpolated="true"/>
-					<Frame XPosition="-2" YPosition="17" XScale="120" YScale="80" Delay="3" Visible="true" RedTint="255" GreenTint="255" BlueTint="255" AlphaTint="0" RedOffset="0" GreenOffset="0" BlueOffset="0" Rotation="0" Interpolated="true"/>
-				</NullAnimation>
-			</NullAnimations>
-			<Triggers/>
+			<NullAnimations/>
+			<Triggers>
+				<Trigger EventId="3" AtFrame="6"/>
+			</Triggers>
 		</Animation>
 		<Animation Name="EarFlick_Left" FrameNum="20" Loop="false">
 			<RootAnimation>
@@ -305,9 +280,7 @@
 				</LayerAnimation>
 				<LayerAnimation LayerId="0" Visible="true"/>
 			</LayerAnimations>
-			<NullAnimations>
-				<NullAnimation NullId="0" Visible="true"/>
-			</NullAnimations>
+			<NullAnimations/>
 			<Triggers>
 				<Trigger EventId="0" AtFrame="19"/>
 			</Triggers>
@@ -339,9 +312,7 @@
 				</LayerAnimation>
 				<LayerAnimation LayerId="0" Visible="true"/>
 			</LayerAnimations>
-			<NullAnimations>
-				<NullAnimation NullId="0" Visible="true"/>
-			</NullAnimations>
+			<NullAnimations/>
 			<Triggers>
 				<Trigger EventId="0" AtFrame="19"/>
 			</Triggers>
@@ -376,9 +347,7 @@
 				</LayerAnimation>
 				<LayerAnimation LayerId="0" Visible="true"/>
 			</LayerAnimations>
-			<NullAnimations>
-				<NullAnimation NullId="0" Visible="true"/>
-			</NullAnimations>
+			<NullAnimations/>
 			<Triggers>
 				<Trigger EventId="0" AtFrame="19"/>
 			</Triggers>
@@ -418,9 +387,7 @@
 				</LayerAnimation>
 				<LayerAnimation LayerId="0" Visible="true"/>
 			</LayerAnimations>
-			<NullAnimations>
-				<NullAnimation NullId="0" Visible="true"/>
-			</NullAnimations>
+			<NullAnimations/>
 			<Triggers>
 				<Trigger EventId="0" AtFrame="19"/>
 				<Trigger EventId="0" AtFrame="39"/>
@@ -461,9 +428,7 @@
 				</LayerAnimation>
 				<LayerAnimation LayerId="0" Visible="true"/>
 			</LayerAnimations>
-			<NullAnimations>
-				<NullAnimation NullId="0" Visible="true"/>
-			</NullAnimations>
+			<NullAnimations/>
 			<Triggers>
 				<Trigger EventId="0" AtFrame="19"/>
 				<Trigger EventId="0" AtFrame="39"/>
@@ -507,9 +472,7 @@
 				</LayerAnimation>
 				<LayerAnimation LayerId="0" Visible="true"/>
 			</LayerAnimations>
-			<NullAnimations>
-				<NullAnimation NullId="0" Visible="true"/>
-			</NullAnimations>
+			<NullAnimations/>
 			<Triggers>
 				<Trigger EventId="0" AtFrame="19"/>
 				<Trigger EventId="0" AtFrame="39"/>
@@ -533,9 +496,7 @@
 				<LayerAnimation LayerId="3" Visible="true"/>
 				<LayerAnimation LayerId="0" Visible="true"/>
 			</LayerAnimations>
-			<NullAnimations>
-				<NullAnimation NullId="0" Visible="true"/>
-			</NullAnimations>
+			<NullAnimations/>
 			<Triggers>
 				<Trigger EventId="2" AtFrame="6"/>
 			</Triggers>
@@ -558,9 +519,7 @@
 					<Frame XPosition="-1" YPosition="-4" XPivot="8" YPivot="11" XCrop="0" YCrop="0" Width="16" Height="16" XScale="120" YScale="80" Delay="2" Visible="true" RedTint="255" GreenTint="255" BlueTint="255" AlphaTint="255" RedOffset="0" GreenOffset="0" BlueOffset="0" Rotation="0" Interpolated="true"/>
 				</LayerAnimation>
 			</LayerAnimations>
-			<NullAnimations>
-				<NullAnimation NullId="0" Visible="true"/>
-			</NullAnimations>
+			<NullAnimations/>
 			<Triggers/>
 		</Animation>
 		<Animation Name="PettingToIdle" FrameNum="5" Loop="false">
@@ -581,9 +540,7 @@
 					<Frame XPosition="-1" YPosition="-15" XPivot="8" YPivot="11" XCrop="0" YCrop="0" Width="16" Height="16" XScale="80" YScale="120" Delay="6" Visible="true" RedTint="255" GreenTint="255" BlueTint="255" AlphaTint="0" RedOffset="0" GreenOffset="0" BlueOffset="0" Rotation="0" Interpolated="true"/>
 				</LayerAnimation>
 			</LayerAnimations>
-			<NullAnimations>
-				<NullAnimation NullId="0" Visible="true"/>
-			</NullAnimations>
+			<NullAnimations/>
 			<Triggers/>
 		</Animation>
 		<Animation Name="Petting" FrameNum="20" Loop="true">
@@ -612,9 +569,7 @@
 					<Frame XPosition="-1" YPosition="-4" XPivot="8" YPivot="11" XCrop="0" YCrop="0" Width="16" Height="16" XScale="80" YScale="120" Delay="5" Visible="true" RedTint="255" GreenTint="255" BlueTint="255" AlphaTint="255" RedOffset="0" GreenOffset="0" BlueOffset="0" Rotation="0" Interpolated="true"/>
 				</LayerAnimation>
 			</LayerAnimations>
-			<NullAnimations>
-				<NullAnimation NullId="0" Visible="true"/>
-			</NullAnimations>
+			<NullAnimations/>
 			<Triggers>
 				<Trigger EventId="0" AtFrame="12"/>
 			</Triggers>

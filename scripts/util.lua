@@ -50,8 +50,8 @@ Util.BodyAnim = {
 Util.DogState = {
     SITTING = 0,
     STANDING = 1,
-    OBTAIN = 2,
-    RETRIEVE = 3
+    FETCH = 2,
+    RETURN = 3
 }
 
 local ONE_SEC = 30
@@ -91,7 +91,8 @@ function Util:PrePickupMorph(pickup)
     if pickup.Variant == PickupVariant.PICKUP_TAROTCARD then
         if pickup.SubType == Mod.Pickup.STICK_ID
         or pickup.SubType == Mod.Pickup.FEEDING_BOWL_ID
-        or pickup.SubType == Mod.Pickup.TENNIS_BALL_ID then
+        or pickup.SubType == Mod.Pickup.TENNIS_BALL_ID
+        or pickup.SubType == Mod.Pickup.ROD_OF_THE_GODS_ID then
             return false
         end
     elseif pickup.Variant == PickupVariant.PICKUP_TRINKET
@@ -105,7 +106,8 @@ Mod:AddCallback(ModCallbacks.MC_PRE_PICKUP_MORPH, Util.PrePickupMorph)
 ---@param collider Entity
 function Util:OnPickupCollision(pickup, collider)
     if pickup.SubType ~= Mod.Pickup.STICK_ID and pickup.SubType ~= Mod.Pickup.TENNIS_BALL_ID
-    and pickup.SubType ~= Mod.Pickup.FEEDING_BOWL_ID or collider.Type ~= EntityType.ENTITY_PLAYER then
+    and pickup.SubType ~= Mod.Pickup.FEEDING_BOWL_ID and pickup.SubType ~= Mod.Pickup.ROD_OF_THE_GODS_ID 
+    or collider.Type ~= EntityType.ENTITY_PLAYER then
         return
     end
 

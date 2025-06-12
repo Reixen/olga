@@ -32,6 +32,15 @@ function PettingHand:UpdateHandColor(player, sprite)
     local playerType = player:GetPlayerType()
     local EPlayer = Epiphany and Epiphany.PlayerType or nil
 
+    for string, value in pairs(SkinColor) do
+        local colorStr = string:sub(PettingHand.SUBSTRING_START, -1)
+
+        if playerColor == value then
+            sprite:ReplaceSpritesheet(0, "gfx/petting_hands/petting_hand_" .. colorStr .. ".png")
+            break
+        end
+    end
+
     if Epiphany then
         if playerType == EPlayer.JUDAS
         or playerType == EPlayer.JUDAS4
@@ -52,15 +61,6 @@ function PettingHand:UpdateHandColor(player, sprite)
             end
         end
         goto finish
-    end
-
-    for string, value in pairs(SkinColor) do
-        local colorStr = string:sub(PettingHand.SUBSTRING_START, -1)
-
-        if playerColor == value then
-            sprite:ReplaceSpritesheet(0, "gfx/petting_hands/petting_hand_" .. colorStr .. ".png")
-            break
-        end
     end
 
     ::finish::

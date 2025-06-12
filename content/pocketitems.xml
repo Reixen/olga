@@ -12,4 +12,8 @@
         name="Tennis Ball" mimiccharge="4" pickup="335" achievement ="9999"
     />
 
+    <card type="object" hud="Rod of the Gods" description="The Grand Pole" 
+        name="Rod of the Gods" mimiccharge="4" pickup="336" achievement ="9999"
+    />
+
 </pocketitems>
