@@ -216,6 +216,7 @@ function Fetch:OnEffectRemove(entity)
 
         if olga.State ~= Mod.Util.DogState.FETCH
         and olga.State ~= Mod.Util.DogState.RETURN then
+            dogData.headSprite:ReplaceSpritesheet(4, "gfx/familiar/held_object_" .. data.objName .. ".png", true)
             dogData.targetPos = entity.Position
             dogData.objectID = data.objID
             olga.State = Mod.Util.DogState.FETCH

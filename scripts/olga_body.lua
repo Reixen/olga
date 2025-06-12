@@ -43,7 +43,7 @@ DogBody.PathfindingResult = {
 ---@field headSprite Sprite
 ---@field headRender boolean | DogState? -- Used to stop the head for rendering when doing special idle animations
 ---@field targetPos Vector? -- Target position to move towards
----@field objectID PickupID? -- For saving the pickup ID for fetching
+---@field objectID integer? -- For saving the pickup ID for fetching
 ---@field isPetting boolean? -- Used for making the player happy
 ---@field canPet boolean? -- Used for preventing the player from petting the dog in certain scenarios
 ---@field hasOwner boolean?

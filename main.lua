@@ -55,8 +55,7 @@ end
 ---         - Head Specific Idle Animations
 ---             - Curious
 ---     - Optimize
---- 2) Fetch
----     - Fetch sprites!
+--- 2) Fetch [DONE]
 --- 3) Petting Hand
 ---     - Change skin color when reviving
 --- 4) Feeding Bowl
@@ -71,4 +70,3 @@ end
 --- Figure out what to do when the pickup is not there
 --- Pls fix logic for the decay speed
 --- Cache playertype and skin color for petting hand
---- 
