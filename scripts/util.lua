@@ -13,6 +13,8 @@ Util.HeadAnim= {
     GLAD = "Glad",
     GLAD_PETTING = "GladPetting",
     PETTING = "Petting",
+    GRAB = "Grab",
+    HOLD = "Hold",
     -- Transition Animations
     GLAD_TO_IDLE = "GladToIdle",
     IDLE_TO_GLAD = "IdleToGlad",
@@ -20,6 +22,7 @@ Util.HeadAnim= {
     GLAD_PETTING_TO_GLAD = "GladPettingToGlad",
     IDLE_TO_PETTING = "IdleToPetting",
     PETTING_TO_IDLE = "PettingToIdle",
+    HOLD_TO_IDLE = "HoldToIdle",
     -- Mini Idle Animations
     EAR_FLICK_L = "EarFlick_Left",
     EAR_FLICK_R = "EarFlick_Right",
@@ -30,10 +33,6 @@ Util.HeadAnim= {
     -- Idle Animations
     BARK = "Bark",
     YAWN = "Yawn",
-    -- Unused
-    IDLE_TO_HOLD = "IdleToHold",
-    HOLD = "Hold",
-    HOLD_TO_IDLE = "HoldToIdle"
 }
 
 Util.BodyAnim = {
@@ -41,10 +40,10 @@ Util.BodyAnim = {
     SIT_WAGGING = "SitWagging",
     STAND = "Stand",
     WALKING = "Walking",
+    PLAYFUL = "Playful",
     -- Transitionals
     SIT_TO_STAND = "SitToStand",
     STAND_TO_SIT = "StandToSit",
-    PLAYFUL = "Playful",
 }
 
 ---@enum DogState
@@ -60,6 +59,7 @@ Util.DogState = {
 local ONE_SEC = 30
 Util.ANIM_COOLDOWN = ONE_SEC * 5
 Util.ATTENTION_COOLDOWN = ONE_SEC * 60
+
 --local PriceTextFontTempesta = Font()
 --PriceTextFontTempesta:Load("font/pftempestasevencondensed.fnt")
 
@@ -210,5 +210,10 @@ function Util:FindAnimSubstring(animName, isMiniIdle)
     local _, terminal = string.find(animName, "To")
     local subString = string.sub(animName, terminal + 1, #animName)
     return Util:ToEnumName(subString)
+end
+
+---@param olga EntityFamiliar
+function Util:IsFetching(olga)
+    return olga.State == Util.DogState.FETCH or olga.State == Util.DogState.RETURN
 end
 --endregion

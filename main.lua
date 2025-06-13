@@ -63,6 +63,4 @@ end
 --- 5) Gameplay
 ---     - Decide if dog should be spawned by using a consumable or just instantly
 --- 
---- Do not make her wait for the pickup
---- Figure out what to do when the pickup is not there
---- Pls fix logic for the decay speed
+--- Make her stop going to target pos if it stops existing after spawning

@@ -14,16 +14,15 @@ Fetch.PICKUP_CHANCE = 1 / 6
 Fetch.ROTG_CHANCE = 1 / 100
 
 local ONE_SEC = 30
-Fetch.MARK_TIMEOUT = ONE_SEC * 2
-Fetch.OBJECT_TIMEOUT = ONE_SEC * 5
+Fetch.MARK_TIMEOUT = ONE_SEC * 1.5
 -- Fetching duration if the distance equals to the base length
 Fetch.DURATION = ONE_SEC
-Fetch.TIMEOUT_INCREASE = 1.5
+Fetch.TIMEOUT_INCREASE = 1
 
 local ONE_TILE = 40
 Fetch.BASE_LENGTH = ONE_TILE * 3
 -- Amount of time to reduce/increase per tile
-Fetch.UNITS_PER_TILE = ONE_SEC / 24
+Fetch.UNITS_PER_TILE = ONE_SEC / 12
 Fetch.SPIN_STRENGTH = 8
 Fetch.ARC_HEIGHT = 46
 Fetch.ARC_SHIFT = 6
@@ -214,11 +213,11 @@ function Fetch:OnEffectRemove(entity)
         if not olga then return end
         local dogData = olga:GetData() ---@cast dogData DogData
 
-        if olga.State ~= Mod.Util.DogState.FETCH
-        and olga.State ~= Mod.Util.DogState.RETURN then
+        if not Mod.Util:IsFetching(olga) then
             dogData.headSprite:ReplaceSpritesheet(4, "gfx/familiar/held_object_" .. data.objName .. ".png", true)
             dogData.targetPos = entity.Position
             dogData.objectID = data.objID
+            dogData.eventWindow = objData.duration + ONE_SEC * 2
             olga.State = Mod.Util.DogState.FETCH
         end
         return
@@ -260,6 +259,8 @@ function Fetch:OnDogFetchInterrupt()
     end
 end
 Mod:AddCallback(ModCallbacks.MC_PRE_GAME_EXIT, Fetch.OnDogFetchInterrupt)
+--#endregion
+--#region Fetch Helper Functions
 -- Returns the amount of time (seconds) needed to finish the travel
 ---@param distance number
 function Fetch:GetThrowDuration(distance)
