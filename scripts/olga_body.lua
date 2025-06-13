@@ -210,7 +210,6 @@ Mod:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, DogBody.HandleBodyLogic, Mod.Do
 function DogBody:OnInit(olga)
     local data = olga:GetData()
 
-    -- Animation
     data.eventCD = DogBody.EVENT_COOLDOWN
     data.animCD = Util.ANIM_COOLDOWN
     data.attentionCD = 0

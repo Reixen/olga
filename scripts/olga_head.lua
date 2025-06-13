@@ -41,16 +41,15 @@ end
 DogHead.ANIM_FUNC = {
     [Util.HeadAnim.IDLE] = function(olga, sprite, data)
         local frameCount = olga.FrameCount
-        local rng = olga:GetDropRNG()
-
         DogHead:TryTurningGlad(olga, sprite, data)
 
         if not sprite:IsEventTriggered("TransitionHook")
-        or not DogHead:CanIdleAnimation(olga)
+        or Util:IsFetching(olga)
         or data.animCD > frameCount then
             return
         end
 
+        local rng = olga:GetDropRNG()
         if rng:RandomFloat() < DogHead.ANIM_CHANCE then
 
             if rng:RandomFloat() < DogHead.MINI_ANIM_CHANCE then
@@ -79,8 +78,6 @@ DogHead.ANIM_FUNC = {
 
     [Util.HeadAnim.GLAD_PETTING] = function(olga, sprite, data, animName)
         local player = olga.Player
-
-        data.attentionCD = olga.FrameCount + Util.ATTENTION_COOLDOWN
 
         if not data.isPetting then
             player:AddCostume(Isaac.GetItemConfig():GetCollectible(CollectibleType.COLLECTIBLE_NUMBER_ONE), false)
@@ -175,7 +172,6 @@ function DogHead:OnHeadRender(olga, offset)
     end
     data.headSprite:Render(Isaac.WorldToRenderPosition(olga.Position + olga.PositionOffset + olga:GetNullOffset("head")) + offset)
 
-
     if not (Isaac.GetFrameCount() % 2 == 0) or game:IsPaused() then
         return
     end
@@ -190,12 +186,6 @@ end
 Mod:AddCallback(ModCallbacks.MC_POST_FAMILIAR_RENDER, DogHead.OnHeadRender, Mod.Dog.VARIANT)
 --#endregion
 --#region Olga Helper Functions
-
----@param olga EntityFamiliar
-function DogHead:CanIdleAnimation(olga)
-    return olga.State ~= Util.DogState.FETCH and olga.State ~= Util.DogState.RETURN
-end
-
 ---@param sprite Sprite
 ---@param anim integer?
 function DogHead:DoMiniIdleAnim(sprite, anim)
@@ -217,13 +207,13 @@ function DogHead:TryTurningGlad(olga, sprite, data)
     -- If shes not due for an alternate petting animation
     if data.attentionCD > olga.FrameCount
     and Util:IsWithin(olga, olga.Player.Position, DogHead.PETTING_DISTANCE) then
-        data.attentionCD = olga.FrameCount + Util.ATTENTION_COOLDOWN
         Mod.PettingHand:UpdateHandColor(olga.Player, sprite)
         sprite:Play(Util.HeadAnim.IDLE_TO_PETTING, true)
     elseif data.attentionCD < olga.FrameCount
     and Util:IsWithin(olga, olga.Player.Position, DogHead.HAPPY_DISTANCE) then
         sprite:Play(Util.HeadAnim.IDLE_TO_GLAD, true)
     end
+    data.attentionCD = olga.FrameCount + Util.ATTENTION_COOLDOWN
 end
 
 ---@param olga EntityFamiliar
