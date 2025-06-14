@@ -8,17 +8,17 @@ OlgaMod.SfxMan = SFXManager()
 OlgaMod.Room = function() return OlgaMod.Game:GetRoom() end
 
 OlgaMod.Dog = {}
-OlgaMod.PettingHand = {}
 OlgaMod.Util = {}
-OlgaMod.Debug = {}
 OlgaMod.Fetch = {}
+OlgaMod.FeedingBowl = {}
+OlgaMod.Debug = {}
 
 OlgaMod.Dog.VARIANT = Isaac.GetEntityVariantByName("Olga")
 
 OlgaMod.Pickup = {
     CRUDE_DRAWING_ID = Isaac.GetTrinketIdByName("Crude Drawing"),
     STICK_ID = Isaac.GetCardIdByName("Stick"),
-    FEEDING_BOWL_ID = Isaac.GetCardIdByName("Feeding Bowl"),
+    FEEDING_KIT_ID = Isaac.GetCardIdByName("Feeding Kit"),
     TENNIS_BALL_ID = Isaac.GetCardIdByName("Tennis Ball"),
     ROD_OF_THE_GODS_ID = Isaac.GetCardIdByName("Rod of the Gods")
 }
@@ -27,9 +27,8 @@ local scriptName = {
     "util",
     "olga_body",
     "olga_head",
-    "petting_hand",
     "fetch",
-    --"feeding_bowl",
+    "feeding_bowl",
     "debug",
     "patches"
 }

@@ -4,4 +4,11 @@
         description="I won't forget" gfx="crude_drawing.png"
     />
 
+    <!-- Null Items -->
+
+    <null id="1" name="Consumed Dinner" persistent="true" />
+    <null id="2" name="Consumed Dessert" persistent="true" />
+    <null id="3" name="Consumed Snack" persistent="true" />
+    <null id="4" name="Generic Food" persistent="true" />
+
 </items>

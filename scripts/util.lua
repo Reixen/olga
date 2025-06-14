@@ -60,6 +60,26 @@ local ONE_SEC = 30
 Util.ANIM_COOLDOWN = ONE_SEC * 5
 Util.ATTENTION_COOLDOWN = ONE_SEC * 60
 
+Util.SPRITESHEET_SUBSTRING_IDX = 6
+
+Util.ModdedHands = {
+    "MAGDALENE",
+    "EDEN",
+    "BLUEBABY",
+    "SAMSON",
+    "KEEPER"
+}
+--#endregion
+--#region Callbacks
+function Util:OnReviveOrClicker()
+    for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
+        local olga = familiar:ToFamiliar() ---@cast olga EntityFamiliar
+        Util:UpdateHandColor(olga.Player, olga:GetData().headSprite)
+    end
+end
+Mod:AddCallback(ModCallbacks.MC_USE_ITEM, Util.OnReviveOrClicker, CollectibleType.COLLECTIBLE_CLICKER)
+Mod:AddCallback(ModCallbacks.MC_POST_PLAYER_REVIVE, Util.OnReviveOrClicker)
+
 --local PriceTextFontTempesta = Font()
 --PriceTextFontTempesta:Load("font/pftempestasevencondensed.fnt")
 
@@ -85,15 +105,13 @@ Util.ATTENTION_COOLDOWN = ONE_SEC * 60
 --end
 
 --Mod:AddCallback(ModCallbacks.MC_POST_RENDER, renderEffects)
---#endregion
---#region All Pickup Callbacks
 ---@param pickup EntityPickup
 function Util:PrePickupMorph(pickup)
     if pickup.Type ~= EntityType.ENTITY_PICKUP then return end
 
     if pickup.Variant == PickupVariant.PICKUP_TAROTCARD then
         if pickup.SubType == Mod.Pickup.STICK_ID
-        or pickup.SubType == Mod.Pickup.FEEDING_BOWL_ID
+        or pickup.SubType == Mod.Pickup.FEEDING_KIT_ID
         or pickup.SubType == Mod.Pickup.TENNIS_BALL_ID
         or pickup.SubType == Mod.Pickup.ROD_OF_THE_GODS_ID then
             return false
@@ -109,7 +127,7 @@ Mod:AddCallback(ModCallbacks.MC_PRE_PICKUP_MORPH, Util.PrePickupMorph)
 ---@param collider Entity
 function Util:OnPickupCollision(pickup, collider)
     if pickup.SubType ~= Mod.Pickup.STICK_ID and pickup.SubType ~= Mod.Pickup.TENNIS_BALL_ID
-    and pickup.SubType ~= Mod.Pickup.FEEDING_BOWL_ID and pickup.SubType ~= Mod.Pickup.ROD_OF_THE_GODS_ID 
+    and pickup.SubType ~= Mod.Pickup.FEEDING_KIT_ID and pickup.SubType ~= Mod.Pickup.ROD_OF_THE_GODS_ID
     or collider.Type ~= EntityType.ENTITY_PLAYER then
         return
     end
@@ -122,6 +140,56 @@ end
 Mod:AddCallback(ModCallbacks.MC_POST_PICKUP_COLLISION, Util.OnPickupCollision, PickupVariant.PICKUP_TAROTCARD)
 --#endregion
 --#region Helper Functions
+-- Update the petting hand color based on the player's skin
+---@param player EntityPlayer
+---@param sprite Sprite
+function Util:UpdateHandColor(player, sprite)
+    local playerColor = player:GetBodyColor()
+    local playerType = player:GetPlayerType()
+    local data = Mod.Util:GetData(player, Mod.Util.ID)
+
+    if data.pColor and data.pColor == playerColor
+    or (data.pType and data.pType == playerType) then
+        return
+    end
+
+    for string, value in pairs(SkinColor) do
+        local colorStr = string:sub(Util.SPRITESHEET_SUBSTRING_IDX, -1)
+
+        if playerColor == value then
+            sprite:ReplaceSpritesheet(0, "gfx/petting_hands/petting_hand_" .. colorStr .. ".png")
+            break
+        end
+    end
+
+    if Epiphany then
+        local EPlayer = Epiphany and Epiphany.PlayerType or nil
+        if playerType == EPlayer.JUDAS
+        or playerType == EPlayer.JUDAS4
+        or playerType == EPlayer.JUDAS5 then
+            sprite:ReplaceSpritesheet(0, "gfx/petting_hands/petting_hand_shadow.png")
+            goto finish
+        elseif playerType == EPlayer.JUDAS2 
+            or playerType == EPlayer.JUDAS1 then
+            sprite:ReplaceSpritesheet(0, "gfx/petting_hands/petting_hand_judas_angel.png")
+            goto finish
+        end
+
+        for _, moddedString in pairs(Util.ModdedHands) do
+            local fileName = moddedString:lower()
+            if playerType == EPlayer[moddedString] then
+                sprite:ReplaceSpritesheet(0, "gfx/petting_hands/petting_hand_tr_" .. fileName .. ".png")
+                break
+            end
+        end
+    end
+
+    ::finish::
+    sprite:LoadGraphics()
+    data.pColor = playerColor
+    data.pType = playerType
+end
+
 -- Returns a boolean if olga is near the target. DistanceSquared is faster I heard.
 ---@param olga EntityFamiliar
 ---@param target Vector

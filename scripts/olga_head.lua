@@ -66,7 +66,7 @@ DogHead.ANIM_FUNC = {
             local player = olga.Player
 
             if Util:IsWithin(olga, player.Position, DogHead.PETTING_DISTANCE) then
-                Mod.PettingHand:UpdateHandColor(player, data.headSprite)
+                Util:UpdateHandColor(player, data.headSprite)
                 sprite:Play(Util.HeadAnim.GLAD_TO_GLAD_PETTING, true)
 
             elseif not Util:IsWithin(olga, player.Position, DogHead.HAPPY_DISTANCE)
@@ -207,7 +207,7 @@ function DogHead:TryTurningGlad(olga, sprite, data)
     -- If shes not due for an alternate petting animation
     if data.attentionCD > olga.FrameCount
     and Util:IsWithin(olga, olga.Player.Position, DogHead.PETTING_DISTANCE) then
-        Mod.PettingHand:UpdateHandColor(olga.Player, sprite)
+        Util:UpdateHandColor(olga.Player, sprite)
         sprite:Play(Util.HeadAnim.IDLE_TO_PETTING, true)
     elseif data.attentionCD < olga.FrameCount
     and Util:IsWithin(olga, olga.Player.Position, DogHead.HAPPY_DISTANCE) then

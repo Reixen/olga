@@ -38,7 +38,6 @@ DogBody.PathfindingResult = {
 }
 --#endregion
 --#region Annotations
-
 ---@class DogData
 ---@field eventCD integer -- Time it takes for the next movement
 ---@field animCD integer -- Time it takes for the next idle animation
@@ -54,21 +53,23 @@ DogBody.PathfindingResult = {
 ---@field hasOwner boolean?
 ---@field hasStick boolean?
 ---@field hasBall boolean?
+---@field hasBowl boolean?
 ---@field isMoving boolean?
 
 --#endregion
 --#region Olga Body Animation Functions
 DogBody.ANIM_FUNC = {
     [Util.BodyAnim.SIT] = function(olga, sprite, data)
-        local frameCount = olga.FrameCount
         local rng = olga:GetDropRNG()
 
         if DogBody:CanWag(data.headSprite:GetAnimation())
         or Util:IsWithin(olga, olga.Player.Position, ONE_TILE * 2) then
             sprite:Play(Util.BodyAnim.SIT_WAGGING, true)
+            return
         end
 
-        if (rng:RandomFloat() < DogBody.SWITCH_CHANCE and frameCount % 30 == 0 and data.eventCD < frameCount)
+        local frameCount = olga.FrameCount
+        if (rng:RandomFloat() < DogBody.SWITCH_CHANCE and data.eventCD < frameCount)
         or Util:IsFetching(olga) then
             sprite:Play(Util.BodyAnim.SIT_TO_STAND, true)
         end
@@ -115,8 +116,7 @@ DogBody.ANIM_FUNC = {
 
             -- Switching
             if sprite:IsEventTriggered("TransitionHook")
-            and rng:RandomFloat() < DogBody.SWITCH_CHANCE
-            and olga.FrameCount % ONE_SEC == 0 then
+            and rng:RandomFloat() < DogBody.SWITCH_CHANCE then
                 data.targetPos = nil
                 olga.Velocity = Vector.Zero
                 data.eventCD = frameCount + DogBody.EVENT_COOLDOWN
@@ -258,15 +258,18 @@ Mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, DogBody.HandleNewRoom)
 function DogBody:GoodbyeOlga()
     for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
         local olga = familiar:ToFamiliar() ---@cast olga EntityFamiliar
+
+        if not PlayerManager.AnyoneHasTrinket(Mod.Pickup.CRUDE_DRAWING_ID) then
+            local pData = Util:GetData(olga.Player, Util.ID)
+            pData.hasDoggy = false
+            familiar:Remove()
+            return
+        end
+
         local data = olga:GetData() ---@cast data DogData
         data.hasStick = nil
         data.hasBall = nil
-
-        if PlayerManager.AnyoneHasTrinket(Mod.Pickup.CRUDE_DRAWING_ID) then break end
-
-        local pData = Util:GetData(olga.Player, Util.ID)
-        pData.hasDoggy = false
-        familiar:Remove()
+        data.hasBowl = nil
     end
 end
 Mod:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, DogBody.GoodbyeOlga)
@@ -455,7 +458,7 @@ function DogBody:FindDogOwner(olga, data)
     local pData = Util:GetData(olga.Player, Util.ID)
     pData.hasDoggy = olga
 
-    Mod.PettingHand:UpdateHandColor(nearestPlayer, olga:GetData().headSprite)
+    Util:UpdateHandColor(nearestPlayer, olga:GetData().headSprite)
 end
 
 -- From Epiphany's Epiphany:PickupKill()

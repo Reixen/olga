@@ -6,7 +6,7 @@ function Mod:LoadPatches()
     Epiphany:AddToDictionary(
         Epiphany.Character.KEEPER.DisallowedPickUpVariants[PickupVariant.PICKUP_TAROTCARD],
         {
-            [Mod.Pickup.FEEDING_BOWL_ID] = 1,
+            [Mod.Pickup.FEEDING_KIT_ID] = 1,
             [Mod.Pickup.ROD_OF_THE_GODS_ID] = 1,
             [Mod.Pickup.STICK_ID] = 1,
             [Mod.Pickup.TENNIS_BALL_ID] = 1

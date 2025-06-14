@@ -4,8 +4,8 @@
         name="Stick" mimiccharge="4" pickup="333" achievement ="9999"
     />
 
-    <card type="object" hud="Feeding Bowl" description="Feed your dog" 
-        name="Feeding Bowl" mimiccharge="4" pickup="334" achievement ="9999"
+    <card type="object" hud="Feeding Kit" description="Feed your dog" 
+        name="Feeding Kit" mimiccharge="4" pickup="334" achievement ="9999"
     />
 
     <card type="object" hud="Tennis Ball" description="Can be thrown" 
