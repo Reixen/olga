@@ -48,7 +48,6 @@ DogBody.PathfindingResult = {
 ---@field targetPos Vector? -- Target position to move towards
 ---@field lowerBound number? -- Used in caching the lower bound for speed decay
 ---@field objectID integer? -- For saving the pickup ID for fetching
----@field isPetting boolean? -- Used for making the player happy
 ---@field canPet boolean? -- Used for preventing the player from petting the dog in certain scenarios
 ---@field hasOwner boolean?
 ---@field hasStick boolean?
@@ -484,7 +483,7 @@ end
 ---@param objectID integer
 ---@param olga EntityFamiliar
 function DogBody:DoesPickupMatch(pickup, objectID, olga)
-    return pickup.Variant == PickupVariant.PICKUP_TAROTCARD and pickup.SubType == objectID
+    return pickup and pickup.Variant == PickupVariant.PICKUP_TAROTCARD and pickup.SubType == objectID
     and pickup.SpawnerEntity and pickup.SpawnerEntity:ToPlayer() and olga.Player
     and GetPtrHash(pickup.SpawnerEntity:ToPlayer()) == GetPtrHash(olga.Player)
 end

@@ -13,7 +13,7 @@ local Util = OlgaMod.Util
 --Console.RegisterCommand("debugOlga", "", "", true, AutocompleteType.NONE)
 Console.RegisterCommand("olgadebug switch", "Switches the stance of Olga Familiar", "Switches between standing and sitting", true, AutocompleteType.NONE)
 Console.RegisterCommand("olgadebug animate", "Plays a random animation", "Plays a random animation", true, AutocompleteType.NONE)
-Console.RegisterCommand("olgadebug clearnull", "Allows the food items to be reused", "", true, AutocompleteType.NONE)
+Console.RegisterCommand("olgadebug addnull", "Allows the food items to be reused", "", true, AutocompleteType.NONE)
 
 function Debug:Command(command, args)
     if command ~= "olgadebug" then return end
@@ -39,12 +39,23 @@ function Debug:Command(command, args)
             Mod.Dog.Head:DoIdleAnimation(familiar:ToFamiliar(), familiar:GetData())
         end
 
-    elseif args == "clearnull" then
+    elseif args == "addnull" then
         for _, player in ipairs(PlayerManager.GetPlayers()) do ---@cast player EntityPlayer
             local tempFX = player:GetEffects()
-            tempFX:RemoveNullEffect(Mod.FeedingBowl.CONSUMED_DINNER_ID, 99)
-            tempFX:RemoveNullEffect(Mod.FeedingBowl.CONSUMED_SNACK_ID, 99)
-            tempFX:RemoveNullEffect(Mod.FeedingBowl.CONSUMED_DESSERT_ID, 99)
+            for collType, nullFX in pairs(Mod.FeedingBowl.CollectibleToNullFX) do
+                local collAmt = 0
+                if collType == CollectibleType.COLLECTIBLE_NULL then
+                    for _, _ in ipairs(Isaac.FindByType(EntityType.ENTITY_SLOT, Mod.FeedingBowl.BOWL_VARIANT)) do
+                        collAmt = collAmt + 1
+                    end
+                else
+                    collAmt = player:GetCollectibleNum(collType, true, true)
+                end
+
+                if collAmt then
+                    tempFX:AddNullEffect(nullFX, false, collAmt)
+                end
+            end
         end
     end
 end

@@ -126,13 +126,14 @@ Mod:AddCallback(ModCallbacks.MC_PRE_PICKUP_MORPH, Util.PrePickupMorph)
 ---@param pickup EntityPickup
 ---@param collider Entity
 function Util:OnPickupCollision(pickup, collider)
-    if pickup.SubType ~= Mod.Pickup.STICK_ID and pickup.SubType ~= Mod.Pickup.TENNIS_BALL_ID
-    and pickup.SubType ~= Mod.Pickup.FEEDING_KIT_ID and pickup.SubType ~= Mod.Pickup.ROD_OF_THE_GODS_ID
+    if (pickup.SubType ~= Mod.Pickup.STICK_ID and pickup.SubType ~= Mod.Pickup.TENNIS_BALL_ID
+    and pickup.SubType ~= Mod.Pickup.FEEDING_KIT_ID and pickup.SubType ~= Mod.Pickup.ROD_OF_THE_GODS_ID)
     or collider.Type ~= EntityType.ENTITY_PLAYER then
         return
     end
 
-    if sfxMan:IsPlaying(SoundEffect.SOUND_BOOK_PAGE_TURN_12) then
+    if sfxMan:IsPlaying(SoundEffect.SOUND_BOOK_PAGE_TURN_12)
+    and collider:ToPlayer():IsHoldingItem() then
         sfxMan:Stop(SoundEffect.SOUND_BOOK_PAGE_TURN_12)
         sfxMan:Play(SoundEffect.SOUND_SHELLGAME)
     end

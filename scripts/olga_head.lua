@@ -8,6 +8,7 @@ local game = Mod.Game
 local sfxMan = Mod.SfxMan
 local Util = Mod.Util
 
+DogHead.HAPPY_COLLECTIBLE = CollectibleType.COLLECTIBLE_NUMBER_ONE
 DogHead.SOUND_YAWN = Isaac.GetSoundIdByName("Olga Yawn")
 DogHead.SOUND_BARK = Isaac.GetSoundIdByName("Olga Bark")
 
@@ -77,11 +78,12 @@ DogHead.ANIM_FUNC = {
     end,
 
     [Util.HeadAnim.GLAD_PETTING] = function(olga, sprite, data, animName)
-        local player = olga.Player
+        local player = olga.Player ---@cast player EntityPlayer
 
-        if not data.isPetting then
-            player:AddCostume(Isaac.GetItemConfig():GetCollectible(CollectibleType.COLLECTIBLE_NUMBER_ONE), false)
-            data.isPetting = true
+        if not player:HasCollectible(DogHead.HAPPY_COLLECTIBLE)
+        and not player:IsCollectibleCostumeVisible(DogHead.HAPPY_COLLECTIBLE, "head") then
+            local itemCfg = Isaac.GetItemConfig():GetCollectible(DogHead.HAPPY_COLLECTIBLE)
+            player:AddCostume(itemCfg, false)
         end
 
         if not sprite:IsEventTriggered("TransitionHook")
@@ -94,9 +96,10 @@ DogHead.ANIM_FUNC = {
         local animTransition = pettingVariant and Util.HeadAnim.GLAD_PETTING_TO_GLAD or Util.HeadAnim.PETTING_TO_IDLE
         sprite:Play(animTransition, true)
 
-        if data.isPetting and not player:HasCollectible(CollectibleType.COLLECTIBLE_NUMBER_ONE) then
-            player:RemoveCostume(Isaac.GetItemConfig():GetCollectible(CollectibleType.COLLECTIBLE_NUMBER_ONE))
-            data.isPetting = nil
+        if not player:HasCollectible(DogHead.HAPPY_COLLECTIBLE)
+        and player:IsCollectibleCostumeVisible(DogHead.HAPPY_COLLECTIBLE, "head") then
+            local itemCfg = Isaac.GetItemConfig():GetCollectible(DogHead.HAPPY_COLLECTIBLE)
+            player:RemoveCostume(itemCfg)
         end
     end,
 

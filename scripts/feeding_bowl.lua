@@ -12,16 +12,23 @@ FeedingBowl.BOWL_VARIANT = Isaac.GetEntityVariantByName("Feeding Bowl")
 FeedingBowl.BOWL_SFX = Isaac.GetSoundIdByName("Olga Bark")
 FeedingBowl.POUR_SFX = Isaac.GetSoundIdByName("Olga Bark")
 
-FeedingBowl.CONSUMED_DINNER_ID = Isaac.GetNullItemIdByName("Consumed Dinner")
-FeedingBowl.CONSUMED_DESSERT_ID = Isaac.GetNullItemIdByName("Consumed Dessert")
-FeedingBowl.CONSUMED_SNACK_ID = Isaac.GetNullItemIdByName("Consumed Snack")
-FeedingBowl.GENERIC_FOOD_ID = Isaac.GetNullItemIdByName("Generic Food")
+FeedingBowl.CONSUMABLE_DINNER_ID = Isaac.GetNullItemIdByName("Consumable Dinner")
+FeedingBowl.CONSUMABLE_DESSERT_ID = Isaac.GetNullItemIdByName("Consumable Dessert")
+FeedingBowl.CONSUMABLE_SNACK_ID = Isaac.GetNullItemIdByName("Consumable Snack")
+FeedingBowl.CONSUMABLE_GENERIC_ID = Isaac.GetNullItemIdByName("Consumable Generic")
+
+FeedingBowl.CollectibleToNullFX = {
+    [CollectibleType.COLLECTIBLE_NULL] = FeedingBowl.CONSUMABLE_GENERIC_ID,
+    [CollectibleType.COLLECTIBLE_DINNER] = FeedingBowl.CONSUMABLE_DINNER_ID,
+    [CollectibleType.COLLECTIBLE_DESSERT] = FeedingBowl.CONSUMABLE_DESSERT_ID,
+    [CollectibleType.COLLECTIBLE_SNACK] = FeedingBowl.CONSUMABLE_SNACK_ID
+}
 
 FeedingBowl.PICKUP_CHANCE = 1 / 2
 
 --#endregion
 --#region Feeding Bowl Callbacks
-function FeedingBowl:SpawnBowlPickup()
+function FeedingBowl:OnRoomClear()
     for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
         local rng = familiar:ToFamiliar():GetDropRNG()
 
@@ -38,16 +45,17 @@ function FeedingBowl:SpawnBowlPickup()
         end
     end
 end
-Mod:AddCallback(ModCallbacks.MC_PRE_SPAWN_CLEAN_AWARD, FeedingBowl.SpawnBowlPickup)
+Mod:AddCallback(ModCallbacks.MC_PRE_SPAWN_CLEAN_AWARD, FeedingBowl.OnRoomClear)
 
 ---@param player EntityPlayer
-function FeedingBowl:OnUsePickup(_, player)
-    local room = Mod.Room()
-    Isaac.Spawn(EntityType.ENTITY_SLOT, FeedingBowl.BOWL_VARIANT, 0,
-        room:FindFreePickupSpawnPosition(player.Position), Vector.Zero, player)
+function FeedingBowl:OnConsumableUse(_, player)
+    local bowl = Isaac.Spawn(EntityType.ENTITY_SLOT, FeedingBowl.BOWL_VARIANT, 0,
+        Mod.Room():FindFreePickupSpawnPosition(player.Position, 60, true), Vector.Zero, player):ToSlot()
+    bowl:GetSprite():Play("Spawn")
+    Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.POOF01, 0, bowl.Position, Vector.Zero, bowl)
     player:AddNullItemEffect(FeedingBowl.GENERIC_FOOD_ID, false)
 end
-Mod:AddCallback(ModCallbacks.MC_USE_CARD, FeedingBowl.OnUsePickup, Mod.Pickup.FEEDING_KIT_ID)
+Mod:AddCallback(ModCallbacks.MC_USE_CARD, FeedingBowl.OnConsumableUse, Mod.Pickup.FEEDING_KIT_ID)
 
 ---@param bowl EntitySlot
 function FeedingBowl:OnBowlInit(bowl)
@@ -57,15 +65,6 @@ Mod:AddCallback(ModCallbacks.MC_POST_SLOT_INIT, FeedingBowl.OnBowlInit, FeedingB
 ---@param bowl EntitySlot
 function FeedingBowl:OnBowlUpdate(bowl)
     local sprite = bowl:GetSprite()
-
-    if sprite:IsFinished("Spawn") then
-        sprite:Play("Idle")
-    end
-
-    local animName = sprite:GetAnimation()
-    if not animName:find("Fill") then
-        return
-    end
 
     if sprite:IsFinished() then
         sprite:Play("Idle")
@@ -79,59 +78,68 @@ function FeedingBowl:OnBowlCollision(bowl, collider)
     if collider.Type ~= EntityType.ENTITY_PLAYER then return end
 
     local sprite = bowl:GetSprite()
-    if not sprite:IsPlaying("Idle") then
+    if not sprite:GetAnimation() == "Idle"
+    or not sprite:IsFinished() then
         return
     end
 
     local player = collider:ToPlayer() ---@cast player EntityPlayer
-
-    if not FeedingBowl:HasFoodItems(player) then
-        return
-    end
-
     local tempFX = player:GetEffects()
-    if sprite:IsPlaying("Idle")
-    and tempFX:HasNullEffect(FeedingBowl.GENERIC_FOOD_ID) then
-        sprite:Play("FillGeneric")
-        tempFX:RemoveNullEffect(FeedingBowl.GENERIC_FOOD_ID)
+
+    local yummers = FeedingBowl:HasFoodItems(tempFX)
+    if not yummers then
         return
     end
 
-    local dinnerCount = player:GetCollectibleNum(CollectibleType.COLLECTIBLE_DINNER, true, true)
-    local dessertCount = player:GetCollectibleNum(CollectibleType.COLLECTIBLE_DESSERT, true, true)
-    local snackCount = player:GetCollectibleNum(CollectibleType.COLLECTIBLE_SNACK, true, true)
-
-    local consumedDinner = tempFX:GetNullEffectNum(FeedingBowl.CONSUMED_DINNER_ID)
-    local consumedDessert = tempFX:GetNullEffectNum(FeedingBowl.CONSUMED_DESSERT_ID)
-    local consumedSnack = tempFX:GetNullEffectNum(FeedingBowl.CONSUMED_SNACK_ID)
-
-    if dinnerCount > consumedDinner then
-        sprite:Play("FillDinner")
-        tempFX:AddNullEffect(FeedingBowl.CONSUMED_DINNER_ID)
-    elseif dessertCount > consumedDessert then
-        sprite:Play("FillDessert")
-        tempFX:AddNullEffect(FeedingBowl.CONSUMED_DESSERT_ID)
-    elseif snackCount > consumedSnack then
-        sprite:Play("FillSnack")
-        tempFX:AddNullEffect(FeedingBowl.CONSUMED_SNACK_ID)
-    end
+    FeedingBowl:PlayFillAnimation(tempFX, sprite, yummers)
 end
 Mod:AddCallback(ModCallbacks.MC_POST_SLOT_COLLISION, FeedingBowl.OnBowlCollision, FeedingBowl.BOWL_VARIANT)
 
 ---@param bowl EntitySlot
 function FeedingBowl:OnBowlDeath(bowl)
+    sfxMan:Play(SoundEffect.SOUND_POT_BREAK)
     bowl:Remove()
     return false
 end
 Mod:AddCallback(ModCallbacks.MC_PRE_SLOT_CREATE_EXPLOSION_DROPS, FeedingBowl.OnBowlDeath, FeedingBowl.BOWL_VARIANT)
+
+---@param collType CollectibleType
+---@param firstTime boolean
+---@param player EntityPlayer
+function FeedingBowl:OnCollectiblePickup(collType, _, firstTime, _, _, player)
+    if firstTime then
+        player:GetEffects():AddNullEffect(FeedingBowl.CollectibleToNullFX[collType])
+    end
+end
+Mod:AddCallback(ModCallbacks.MC_POST_ADD_COLLECTIBLE, FeedingBowl.OnCollectiblePickup, CollectibleType.COLLECTIBLE_DINNER)
+Mod:AddCallback(ModCallbacks.MC_POST_ADD_COLLECTIBLE, FeedingBowl.OnCollectiblePickup, CollectibleType.COLLECTIBLE_DESSERT)
+Mod:AddCallback(ModCallbacks.MC_POST_ADD_COLLECTIBLE, FeedingBowl.OnCollectiblePickup, CollectibleType.COLLECTIBLE_SNACK)
+
 --#endregion
 --#region Feeding Bowl Helper Functions
----@return boolean
----@param player EntityPlayer
-function FeedingBowl:HasFoodItems(player)
-    return player:HasCollectible(CollectibleType.COLLECTIBLE_DINNER)
-    or player:HasCollectible(CollectibleType.COLLECTIBLE_DESSERT)
-    or player:HasCollectible(CollectibleType.COLLECTIBLE_SNACK)
-    or player:GetEffects():HasNullEffect(FeedingBowl.GENERIC_FOOD_ID)
+---@return table[] | false
+---@param tempFX TemporaryEffects
+function FeedingBowl:HasFoodItems(tempFX)
+    local yumYumTable = {}
+    for _, nullFX in pairs(FeedingBowl.CollectibleToNullFX) do
+        if tempFX:HasNullEffect(nullFX) then
+            yumYumTable[#yumYumTable + 1] = nullFX
+        end
+    end
+    return #yumYumTable > 0 and yumYumTable or false
+end
+
+---@param tempFX TemporaryEffects
+---@param sprite Sprite
+---@param foodItems table
+function FeedingBowl:PlayFillAnimation(tempFX, sprite, foodItems)
+    for _, nullFX in pairs(foodItems) do
+        local name = Isaac.GetItemConfig():GetNullItem(nullFX).Name
+        name = name:gsub("Consumable ", "")
+
+        sprite:Play("Fill" .. name)
+        tempFX:RemoveNullEffect(nullFX)
+        return
+    end
 end
 --#endregion
