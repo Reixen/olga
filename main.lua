@@ -25,34 +25,41 @@ OlgaMod.Pickup = {
 }
 
 local fileStructure = {
-    ["utility"] = {
-        "save_manager",
-        "util",
-        "debug",
+    {FolderName = "utility",
+        Files = {
+            "util",
+            "debug",
+        }
     },
-    ["dog"] = {
-        "body",
-        "head",
+    {FolderName = "dog",
+        Files = {
+            "body",
+            "head",
+        }
     },
-    ["interactables"] = {
-        "fetch",
-        "feeding_bowl",
+    {FolderName = "interactables",
+        Files = {
+            "fetch",
+            "feeding_bowl",
+        }
     },
-    [""] = {
-        "patches",
+    {FolderName = "",
+        Files = {
+            "patches",
+        }
     }
 }
 
-for folderName, scripts in pairs(fileStructure) do
-    for _, fileName in ipairs(scripts) do
+for _, folder in ipairs(fileStructure) do
+    for _, fileName in ipairs(folder.Files) do
         if fileName == "save_manager" then
-            OlgaMod.SaveManager = include("scripts." .. folderName .. "."  .. fileName)
         else
-            include("scripts." .. folderName .. "."  .. fileName)
+            include("scripts." .. folder.FolderName .. "."  .. fileName)
         end
     end
 end
 
+OlgaMod.SaveManager = include("scripts.utility.save_manager")
 OlgaMod.SaveManager.Init(OlgaMod)
 
 ----------------------------------------------------------------
