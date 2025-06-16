@@ -259,6 +259,15 @@ function Fetch:OnDogFetchInterrupt()
     end
 end
 Mod:AddCallback(ModCallbacks.MC_PRE_GAME_EXIT, Fetch.OnDogFetchInterrupt)
+
+function Fetch:OnGlowingHourglassLoad()
+    for _, entity in pairs(Isaac.FindByType(EntityType.ENTITY_PLAYER, PlayerVariant.PLAYER)) do
+        local player = entity:ToPlayer()---@cast player EntityPlayer
+        local data = Mod.Util:GetData(player, Mod.Util.ID)
+        data.isUsingPickup = nil
+    end
+end
+Mod:AddCallback(ModCallbacks.MC_PRE_GLOWING_HOURGLASS_LOAD, Fetch.OnGlowingHourglassLoad)
 --#endregion
 --#region Fetch Helper Functions
 -- Returns the amount of time (seconds) needed to finish the travel

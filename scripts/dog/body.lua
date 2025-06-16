@@ -239,13 +239,13 @@ function DogBody:HandleNewRoom()
             olga.State = Mod.Util.DogState.STANDING
             data.objectID = nil
         elseif olga.State == Mod.Util.DogState.RETURN
-        or data.headSprite:IsFinished(Mod.Util.HeadAnim.HOLD) then
+        or (data.headSprite and data.headSprite:IsFinished(Mod.Util.HeadAnim.HOLD)) then
             data.headSprite:Play(Mod.Util.HeadAnim.HOLD_TO_IDLE)
         end
     end
 
     if (roomType ~= RoomType.ROOM_ISAACS and roomType ~= RoomType.ROOM_BARREN)
-    or not room:IsFirstVisit() then
+    or not room:IsFirstVisit() or Mod.Level():GetStage() == LevelStage.STAGE8 then
         return
     end
 
@@ -253,6 +253,7 @@ function DogBody:HandleNewRoom()
     Isaac.Spawn(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT, 0, spawnPos, Vector.Zero, nil)
 end
 Mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, DogBody.HandleNewRoom)
+Mod:AddCallback(ModCallbacks.MC_PRE_GLOWING_HOURGLASS_SAVE, DogBody.HandleNewRoom)
 
 function DogBody:GoodbyeOlga()
     for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
@@ -274,7 +275,10 @@ end
 Mod:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, DogBody.GoodbyeOlga)
 
 function DogBody:OnDogRemove(entity)
-    if entity.Variant ~= Mod.Dog.VARIANT then return end
+    if entity.Variant ~= Mod.Dog.VARIANT
+    or Util:IsInStartingRoom() then
+        return
+    end
 
     local room = Mod.Room()
     local pos = room:FindFreePickupSpawnPosition(entity.Position, 0, true)

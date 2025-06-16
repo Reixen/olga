@@ -6,6 +6,7 @@ if not REPENTOGON then return end
 OlgaMod.Game = Game()
 OlgaMod.SfxMan = SFXManager()
 OlgaMod.Room = function() return OlgaMod.Game:GetRoom() end
+OlgaMod.Level = function() return OlgaMod.Game:GetLevel() end
 
 OlgaMod.Dog = {}
 OlgaMod.Util = {}
@@ -23,19 +24,36 @@ OlgaMod.Pickup = {
     ROD_OF_THE_GODS_ID = Isaac.GetCardIdByName("Rod of the Gods")
 }
 
-local scriptName = {
-    "util",
-    "olga_body",
-    "olga_head",
-    "fetch",
-    "feeding_bowl",
-    "debug",
-    "patches"
+local fileStructure = {
+    ["utility"] = {
+        "save_manager",
+        "util",
+        "debug",
+    },
+    ["dog"] = {
+        "body",
+        "head",
+    },
+    ["interactables"] = {
+        "fetch",
+        "feeding_bowl",
+    },
+    [""] = {
+        "patches",
+    }
 }
 
-for _, scripts in ipairs(scriptName) do
-    include("scripts." .. scripts)
+for folderName, scripts in pairs(fileStructure) do
+    for _, fileName in ipairs(scripts) do
+        if fileName == "save_manager" then
+            OlgaMod.SaveManager = include("scripts." .. folderName .. "."  .. fileName)
+        else
+            include("scripts." .. folderName .. "."  .. fileName)
+        end
+    end
 end
+
+OlgaMod.SaveManager.Init(OlgaMod)
 
 ----------------------------------------------------------------
 ---                          TO DO:                          ---
@@ -53,16 +71,26 @@ end
 ---             - Running
 ---         - Head Specific Idle Animations
 ---             - Curious
----     - Optimize
---- 2) Fetch [DONE]
+--- 2) Fetch
+---     - Use Save manager
 --- 3) Petting Hand [DONE]
 --- 4) Feeding Bowl
 ---     - Animations
+---         - Snack
+---         - Dinner
+---         - Generic
+---         - Dessert
 ---     - Dog goes to bowl, feeds on supper and u get +1000 reputation points
+---     - Use Savemanager
 --- 5) Gameplay
 ---     - Decide if dog should be spawned by using a consumable or just instantly
---- 
---- Make her stop going to target pos if it stops existing after spawning
+---     - To remove Sac Altar use?
+--- 6) Bugfixes
+---     - Make her stop going to target pos if it stops existing after spawning
+---     - Glowing Hourglass
+---         - Get the pickup back when HG is used after leaving the room mid-fetch
+---         - Prevent her from duplicating
+---         - Lose Reputation points
 --- 
 --- Attribution:
 --- olga_yawn.wav: https://freesound.org/people/jinxycat49/sounds/490164/

@@ -25,6 +25,13 @@ FeedingBowl.CollectibleToNullFX = {
     [CollectibleType.COLLECTIBLE_SNACK] = FeedingBowl.CONSUMABLE_SNACK_ID
 }
 
+FeedingBowl.AnimToSfx = {
+    ["FillGeneric"] = {Land = FeedingBowl.POUR_SFX,     Drop = nil},
+    ["FillDessert"] = {Land = FeedingBowl.POUR_SFX,     Drop = nil},
+    ["FillDinner"] =  {Land = SoundEffect.SOUND_1UP,    Drop = nil},
+    ["FillSnack"] =   {Land = SoundEffect.SOUND_1UP,    Drop = nil},
+}
+
 FeedingBowl.PICKUP_CHANCE = 1 / 2
 
 FeedingBowl.PersistentData = {
@@ -56,6 +63,7 @@ function FeedingBowl:OnConsumableUse(_, player)
     local bowl = Isaac.Spawn(EntityType.ENTITY_SLOT, FeedingBowl.BOWL_VARIANT, 0,
         Mod.Room():FindFreePickupSpawnPosition(player.Position, 60, true), Vector.Zero, player):ToSlot()
     bowl:GetSprite():Play("Spawn")
+    sfxMan:Play(FeedingBowl.FALL_SFX, 0.6, 2, false, 1.4)
     Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.POOF01, 0, bowl.Position, Vector.Zero, bowl)
     player:AddNullItemEffect(FeedingBowl.CONSUMABLE_GENERIC_ID, false)
 end
@@ -63,7 +71,6 @@ Mod:AddCallback(ModCallbacks.MC_USE_CARD, FeedingBowl.OnConsumableUse, Mod.Picku
 
 ---@param bowl EntitySlot
 function FeedingBowl:OnBowlInit(bowl)
-    sfxMan:Play(FeedingBowl.FALL_SFX, 0.6, 2, false, 1.4)
 end
 Mod:AddCallback(ModCallbacks.MC_POST_SLOT_INIT, FeedingBowl.OnBowlInit, FeedingBowl.BOWL_VARIANT)
 
@@ -73,6 +80,18 @@ function FeedingBowl:OnBowlUpdate(bowl)
 
     if sprite:IsFinished() then
         sprite:Play("Idle")
+    end
+
+    local sfxPack = FeedingBowl[sprite:GetAnimation()]
+
+    if not sfxPack then
+        return
+    end
+
+    if sprite:IsEventTriggered("Drop") then
+        sfxMan:Play(sfxPack.Drop)
+    elseif sprite:IsEventTriggered("Land") then
+        sfxMan:Play(sfxPack.Land)
     end
 end
 Mod:AddCallback(ModCallbacks.MC_POST_SLOT_UPDATE, FeedingBowl.OnBowlUpdate, FeedingBowl.BOWL_VARIANT)
