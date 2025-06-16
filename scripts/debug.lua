@@ -6,20 +6,10 @@ OlgaMod.Debug = Debug
 
 local Util = OlgaMod.Util
 
---#endregion
---#region Functions
-
--- for loop soon
---Console.RegisterCommand("debugOlga", "", "", true, AutocompleteType.NONE)
-Console.RegisterCommand("olgadebug switch", "Switches the stance of Olga Familiar", "Switches between standing and sitting", true, AutocompleteType.NONE)
-Console.RegisterCommand("olgadebug animate", "Plays a random animation", "Plays a random animation", true, AutocompleteType.NONE)
-Console.RegisterCommand("olgadebug addnull", "Allows the food items to be reused", "", true, AutocompleteType.NONE)
-
-function Debug:Command(command, args)
-    if command ~= "olgadebug" then return end
-
-    if args == "switch" then
-
+Debug.COMMAND_IDENTIFIER = "olgadebug"
+Debug.Commands = {
+    ["switch"] = {Desc = "Changes the stance of the dog",
+    Function = function()
         for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
             local olga = familiar:ToFamiliar()
 
@@ -33,13 +23,17 @@ function Debug:Command(command, args)
             end
             olga.Velocity = Vector.Zero
         end
-
-    elseif args == "animate" then
+    end
+    },
+    ["animate"] = {Desc = "Plays a random animation",
+    Function = function()
         for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
             Mod.Dog.Head:DoIdleAnimation(familiar:ToFamiliar(), familiar:GetData())
         end
-
-    elseif args == "addnull" then
+    end
+    },
+    ["addnull"] = {Desc = "Grants an extra use for each valid food item you have",
+    Function = function()
         for _, player in ipairs(PlayerManager.GetPlayers()) do ---@cast player EntityPlayer
             local tempFX = player:GetEffects()
             for collType, nullFX in pairs(Mod.FeedingBowl.CollectibleToNullFX) do
@@ -58,8 +52,25 @@ function Debug:Command(command, args)
             end
         end
     end
+    },
+    ["clearpoints"] = {Desc = "Turns your Pup points to 0",
+    Function = function()
+        print("You had " .. Mod.FeedingBowl.PersistentData.PupPoints .. " Pup points.")
+        Mod.FeedingBowl.PersistentData.PupPoints = 0
+    end
+    },
+}
+
+for param, table in pairs(Debug.Commands) do
+    Console.RegisterCommand(Debug.COMMAND_IDENTIFIER .. " " .. param, table.Desc, table.Desc, true, AutocompleteType.NONE)
+end
+
+--#region Debug Callbacks
+function Debug:Command(command, parameter)
+    if command ~= Debug.COMMAND_IDENTIFIER or not Debug.Commands[parameter] then
+        return
+    end
+    Debug.Commands[parameter].Function()
 end
 Mod:AddCallback(ModCallbacks.MC_EXECUTE_CMD, Debug.Command)
 --#endregion
-
-

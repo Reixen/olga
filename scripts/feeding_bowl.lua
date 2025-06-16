@@ -7,10 +7,11 @@ OlgaMod.FeedingBowl = FeedingBowl
 local game = Mod.Game
 local sfxMan = Mod.SfxMan
 local Util = Mod.Util
+local json = require("json")
 
 FeedingBowl.BOWL_VARIANT = Isaac.GetEntityVariantByName("Feeding Bowl")
-FeedingBowl.BOWL_SFX = Isaac.GetSoundIdByName("Olga Bark")
-FeedingBowl.POUR_SFX = Isaac.GetSoundIdByName("Olga Bark")
+FeedingBowl.FALL_SFX = Isaac.GetSoundIdByName("Feeding Bowl Fall")
+FeedingBowl.POUR_SFX = Isaac.GetSoundIdByName("Feeding Bowl Pour")
 
 FeedingBowl.CONSUMABLE_DINNER_ID = Isaac.GetNullItemIdByName("Consumable Dinner")
 FeedingBowl.CONSUMABLE_DESSERT_ID = Isaac.GetNullItemIdByName("Consumable Dessert")
@@ -26,6 +27,9 @@ FeedingBowl.CollectibleToNullFX = {
 
 FeedingBowl.PICKUP_CHANCE = 1 / 2
 
+FeedingBowl.PersistentData = {
+    PupPoints = 0
+}
 --#endregion
 --#region Feeding Bowl Callbacks
 function FeedingBowl:OnRoomClear()
@@ -53,12 +57,13 @@ function FeedingBowl:OnConsumableUse(_, player)
         Mod.Room():FindFreePickupSpawnPosition(player.Position, 60, true), Vector.Zero, player):ToSlot()
     bowl:GetSprite():Play("Spawn")
     Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.POOF01, 0, bowl.Position, Vector.Zero, bowl)
-    player:AddNullItemEffect(FeedingBowl.GENERIC_FOOD_ID, false)
+    player:AddNullItemEffect(FeedingBowl.CONSUMABLE_GENERIC_ID, false)
 end
 Mod:AddCallback(ModCallbacks.MC_USE_CARD, FeedingBowl.OnConsumableUse, Mod.Pickup.FEEDING_KIT_ID)
 
 ---@param bowl EntitySlot
 function FeedingBowl:OnBowlInit(bowl)
+    sfxMan:Play(FeedingBowl.FALL_SFX, 0.6, 2, false, 1.4)
 end
 Mod:AddCallback(ModCallbacks.MC_POST_SLOT_INIT, FeedingBowl.OnBowlInit, FeedingBowl.BOWL_VARIANT)
 
@@ -99,6 +104,14 @@ Mod:AddCallback(ModCallbacks.MC_POST_SLOT_COLLISION, FeedingBowl.OnBowlCollision
 function FeedingBowl:OnBowlDeath(bowl)
     sfxMan:Play(SoundEffect.SOUND_POT_BREAK)
     bowl:Remove()
+
+    for _ = 1, (math.random(1, 3)) do
+        Isaac.Spawn(
+            EntityType.ENTITY_EFFECT, EffectVariant.CHAIN_GIB, math.random(0, 3),
+            bowl.Position, RandomVector() * math.random(1, 6), bowl
+        ):ToEffect().Rotation = math.random(0, 7) * 45 -- Degrees
+    end
+
     return false
 end
 Mod:AddCallback(ModCallbacks.MC_PRE_SLOT_CREATE_EXPLOSION_DROPS, FeedingBowl.OnBowlDeath, FeedingBowl.BOWL_VARIANT)
@@ -115,6 +128,19 @@ Mod:AddCallback(ModCallbacks.MC_POST_ADD_COLLECTIBLE, FeedingBowl.OnCollectibleP
 Mod:AddCallback(ModCallbacks.MC_POST_ADD_COLLECTIBLE, FeedingBowl.OnCollectiblePickup, CollectibleType.COLLECTIBLE_DESSERT)
 Mod:AddCallback(ModCallbacks.MC_POST_ADD_COLLECTIBLE, FeedingBowl.OnCollectiblePickup, CollectibleType.COLLECTIBLE_SNACK)
 
+-- For future use
+function FeedingBowl:LoadData()
+    if Mod:HasData() then
+        FeedingBowl.PersistentData = json.decode(Mod:LoadData())
+    end
+end
+Mod:AddCallback(ModCallbacks.MC_POST_GAME_STARTED, FeedingBowl.LoadData)
+
+function FeedingBowl:SaveData()
+    local jsonString = json.encode(FeedingBowl.PersistentData)
+    Mod:SaveData(jsonString)
+end
+Mod:AddCallback(ModCallbacks.MC_PRE_GAME_EXIT, FeedingBowl.SaveData)
 --#endregion
 --#region Feeding Bowl Helper Functions
 ---@return table[] | false
@@ -139,6 +165,8 @@ function FeedingBowl:PlayFillAnimation(tempFX, sprite, foodItems)
 
         sprite:Play("Fill" .. name)
         tempFX:RemoveNullEffect(nullFX)
+        sfxMan:Play(FeedingBowl.POUR_SFX, 0.3)
+        FeedingBowl.PersistentData.PupPoints = FeedingBowl.PersistentData.PupPoints + 1
         return
     end
 end

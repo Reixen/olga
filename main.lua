@@ -57,9 +57,14 @@ end
 --- 2) Fetch [DONE]
 --- 3) Petting Hand [DONE]
 --- 4) Feeding Bowl
----     - Beggar (Bowl) that accepts breakfast-eque items
+---     - Animations
 ---     - Dog goes to bowl, feeds on supper and u get +1000 reputation points
 --- 5) Gameplay
 ---     - Decide if dog should be spawned by using a consumable or just instantly
 --- 
 --- Make her stop going to target pos if it stops existing after spawning
+--- 
+--- Attribution:
+--- olga_yawn.wav: https://freesound.org/people/jinxycat49/sounds/490164/
+--- feeding_bowl_pour.wav: dog_food_in_bowl.wav by smokevhstapes -- https://freesound.org/s/412382/ -- License: Attribution 4.0
+--- feeding_bowl_fall.wav: Metal Dog Bowl Falling.wav by ChamoneSteyn -- https://freesound.org/s/542210/ -- License: Attribution 4.0
