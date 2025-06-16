@@ -285,4 +285,13 @@ end
 function Util:IsFetching(olga)
     return olga.State == Util.DogState.FETCH or olga.State == Util.DogState.RETURN
 end
+
+-- Special thanks to Epiphany
+function Util:IsInStartingRoom()
+    local level = Mod.Level()
+    return level:GetStage() == LevelStage.STAGE1_1
+    and level:GetCurrentRoomIndex() == level:GetStartingRoomIndex()
+    and level:GetStageType() ~= StageType.STAGETYPE_REPENTANCE
+    and level:GetStageType() ~= StageType.STAGETYPE_REPENTANCE_B
+end
 --endregion
