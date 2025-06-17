@@ -24,6 +24,9 @@ OlgaMod.Pickup = {
     ROD_OF_THE_GODS_ID = Isaac.GetCardIdByName("Rod of the Gods")
 }
 
+OlgaMod.SaveManager = include("scripts.utility.save_manager")
+OlgaMod.SaveManager.Init(OlgaMod)
+
 local fileStructure = {
     {FolderName = "utility",
         Files = {
@@ -59,8 +62,6 @@ for _, folder in ipairs(fileStructure) do
     end
 end
 
-OlgaMod.SaveManager = include("scripts.utility.save_manager")
-OlgaMod.SaveManager.Init(OlgaMod)
 
 ----------------------------------------------------------------
 ---                          TO DO:                          ---
@@ -88,7 +89,6 @@ OlgaMod.SaveManager.Init(OlgaMod)
 ---         - Generic
 ---         - Dessert
 ---     - Dog goes to bowl, feeds on supper and u get +1000 reputation points
----     - Use Savemanager
 --- 5) Gameplay
 ---     - Decide if dog should be spawned by using a consumable or just instantly
 ---     - To remove Sac Altar use?
@@ -96,8 +96,7 @@ OlgaMod.SaveManager.Init(OlgaMod)
 ---     - Make her stop going to target pos if it stops existing after spawning
 ---     - Glowing Hourglass
 ---         - Get the pickup back when HG is used after leaving the room mid-fetch
----         - Prevent her from duplicating
----         - Lose Reputation points
+---         - Retain the feedin bowl's anim when hourglassing immediately on new floor
 --- 
 --- Attribution:
 --- olga_yawn.wav: https://freesound.org/people/jinxycat49/sounds/490164/

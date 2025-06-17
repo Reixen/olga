@@ -7,7 +7,7 @@ OlgaMod.FeedingBowl = FeedingBowl
 local game = Mod.Game
 local sfxMan = Mod.SfxMan
 local Util = Mod.Util
-local json = require("json")
+local saveMan = Mod.SaveManager
 
 FeedingBowl.BOWL_VARIANT = Isaac.GetEntityVariantByName("Feeding Bowl")
 FeedingBowl.FALL_SFX = Isaac.GetSoundIdByName("Feeding Bowl Fall")
@@ -26,10 +26,10 @@ FeedingBowl.CollectibleToNullFX = {
 }
 
 FeedingBowl.AnimToSfx = {
-    ["FillGeneric"] = {Land = FeedingBowl.POUR_SFX,     Drop = nil},
-    ["FillDessert"] = {Land = FeedingBowl.POUR_SFX,     Drop = nil},
-    ["FillDinner"] =  {Land = SoundEffect.SOUND_1UP,    Drop = nil},
-    ["FillSnack"] =   {Land = SoundEffect.SOUND_1UP,    Drop = nil},
+    ["FillGeneric"] = {Land = FeedingBowl.POUR_SFX,     Drop = SoundEffect.SOUND_1UP},
+    ["FillDessert"] = {Land = FeedingBowl.POUR_SFX,     Drop = SoundEffect.SOUND_1UP},
+    ["FillDinner"] =  {Land = SoundEffect.SOUND_1UP,    Drop = SoundEffect.SOUND_1UP},
+    ["FillSnack"] =   {Land = FeedingBowl.FALL_SFX,    Drop = SoundEffect.SOUND_1UP},
 }
 
 FeedingBowl.PICKUP_CHANCE = 1 / 2
@@ -71,6 +71,15 @@ Mod:AddCallback(ModCallbacks.MC_USE_CARD, FeedingBowl.OnConsumableUse, Mod.Picku
 
 ---@param bowl EntitySlot
 function FeedingBowl:OnBowlInit(bowl)
+    local data = saveMan.TryGetRoomSave(bowl)
+
+    if not data then
+        return
+    end
+
+    local sprite = bowl:GetSprite()
+    sprite:Play(data.animName)
+    sprite:SetFrame(data.animFrame)
 end
 Mod:AddCallback(ModCallbacks.MC_POST_SLOT_INIT, FeedingBowl.OnBowlInit, FeedingBowl.BOWL_VARIANT)
 
@@ -78,13 +87,14 @@ Mod:AddCallback(ModCallbacks.MC_POST_SLOT_INIT, FeedingBowl.OnBowlInit, FeedingB
 function FeedingBowl:OnBowlUpdate(bowl)
     local sprite = bowl:GetSprite()
 
-    if sprite:IsFinished() then
-        sprite:Play("Idle")
-    end
+    local data = saveMan.GetRoomSave(bowl)
+    data.animName = sprite:GetAnimation()
+    data.animFrame = sprite:GetFrame()
 
-    local sfxPack = FeedingBowl[sprite:GetAnimation()]
+    local sfxPack = FeedingBowl.AnimToSfx[data.animName]
 
     if not sfxPack then
+        print(data.animName)
         return
     end
 
@@ -102,8 +112,8 @@ function FeedingBowl:OnBowlCollision(bowl, collider)
     if collider.Type ~= EntityType.ENTITY_PLAYER then return end
 
     local sprite = bowl:GetSprite()
-    if not sprite:GetAnimation() == "Idle"
-    or not sprite:IsFinished() then
+
+    if not sprite:IsFinished() then
         return
     end
 
@@ -148,18 +158,22 @@ Mod:AddCallback(ModCallbacks.MC_POST_ADD_COLLECTIBLE, FeedingBowl.OnCollectibleP
 Mod:AddCallback(ModCallbacks.MC_POST_ADD_COLLECTIBLE, FeedingBowl.OnCollectiblePickup, CollectibleType.COLLECTIBLE_SNACK)
 
 -- For future use
-function FeedingBowl:LoadData()
-    if Mod:HasData() then
-        FeedingBowl.PersistentData = json.decode(Mod:LoadData())
-    end
-end
-Mod:AddCallback(ModCallbacks.MC_POST_GAME_STARTED, FeedingBowl.LoadData)
+function FeedingBowl:SavePupPoints()
+    local runSave = saveMan.GetRunSave()
+    local persistentSave = saveMan.GetPersistentSave()
 
-function FeedingBowl:SaveData()
-    local jsonString = json.encode(FeedingBowl.PersistentData)
-    Mod:SaveData(jsonString)
+    persistentSave.pupPoints = runSave.pupPoints or persistentSave.pupPoints or 0
 end
-Mod:AddCallback(ModCallbacks.MC_PRE_GAME_EXIT, FeedingBowl.SaveData)
+Mod:AddCallback(ModCallbacks.MC_POST_GAME_END, FeedingBowl.SavePupPoints)
+Mod:AddCallback(ModCallbacks.MC_PRE_GAME_EXIT, FeedingBowl.SavePupPoints)
+
+function FeedingBowl:GetPupPoints()
+    local runSave = saveMan.GetRunSave()
+    local persistentSave = saveMan.GetPersistentSave()
+
+    runSave.pupPoints = persistentSave.pupPoints or runSave.pupPoints or 0
+end
+Mod:AddCallback(ModCallbacks.MC_POST_GAME_STARTED, FeedingBowl.GetPupPoints)
 --#endregion
 --#region Feeding Bowl Helper Functions
 ---@return table[] | false
@@ -167,6 +181,7 @@ Mod:AddCallback(ModCallbacks.MC_PRE_GAME_EXIT, FeedingBowl.SaveData)
 function FeedingBowl:HasFoodItems(tempFX)
     local yumYumTable = {}
     for _, nullFX in pairs(FeedingBowl.CollectibleToNullFX) do
+        print(tempFX:HasNullEffect(nullFX))
         if tempFX:HasNullEffect(nullFX) then
             yumYumTable[#yumYumTable + 1] = nullFX
         end
@@ -184,8 +199,10 @@ function FeedingBowl:PlayFillAnimation(tempFX, sprite, foodItems)
 
         sprite:Play("Fill" .. name)
         tempFX:RemoveNullEffect(nullFX)
-        sfxMan:Play(FeedingBowl.POUR_SFX, 0.3)
-        FeedingBowl.PersistentData.PupPoints = FeedingBowl.PersistentData.PupPoints + 1
+        --sfxMan:Play(FeedingBowl.POUR_SFX, 0.3)
+
+        local runSave = saveMan.GetRunSave()
+        runSave.pupPoints = runSave.pupPoints and runSave.pupPoints + 1 or 1
         return
     end
 end

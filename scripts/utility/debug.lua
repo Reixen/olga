@@ -5,6 +5,7 @@ local Debug = {}
 OlgaMod.Debug = Debug
 
 local Util = OlgaMod.Util
+local saveMan = Mod.SaveManager
 
 Debug.COMMAND_IDENTIFIER = "olgadebug"
 Debug.Commands = {
@@ -55,8 +56,13 @@ Debug.Commands = {
     },
     ["clearpoints"] = {Desc = "Turns your Pup points to 0",
     Function = function()
-        print("You had " .. Mod.FeedingBowl.PersistentData.PupPoints .. " Pup points.")
-        Mod.FeedingBowl.PersistentData.PupPoints = 0
+        local persistentSave = saveMan.GetPersistentSave()
+        local runSave = saveMan.GetRunSave()
+        local points = (runSave and runSave.pupPoints) or (persistentSave and persistentSave.pupPoints) or 0
+
+        print("You had " .. points .. " Pup points.")
+        persistentSave.pupPoints = 0
+        saveMan.GetRunSave().pupPoints = 0
     end
     },
 }
