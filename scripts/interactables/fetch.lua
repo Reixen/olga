@@ -5,11 +5,12 @@ local Fetch = {}
 OlgaMod.Fetch = Fetch
 
 local sfxMan = Mod.SfxMan
+local saveMan = Mod.SaveManager
 
 Fetch.FETCH_TARGET_SUBTYPE = Isaac.GetEntitySubTypeByName("Fetch Target")
 Fetch.FETCHING_OBJECT_VARIANT = Isaac.GetEntityVariantByName("Fetching Object")
 
-Fetch.TARGET_SPEED = 15
+Fetch.TARGET_SPEED = 10
 Fetch.PICKUP_CHANCE = 1 / 6
 Fetch.ROTG_CHANCE = 1 / 100
 
@@ -233,9 +234,9 @@ function Fetch:OnEffectRemove(entity)
 end
 Mod:AddCallback(ModCallbacks.MC_POST_ENTITY_REMOVE, Fetch.OnEffectRemove, EntityType.ENTITY_EFFECT)
 
--- When they exit the run mid-fetch
+-- When they exit mid-fetch
 function Fetch:OnFetchInterrupt()
-    for _, entity in pairs(Isaac.FindByType(EntityType.ENTITY_PLAYER, PlayerVariant.PLAYER)) do
+    for _, entity in pairs(PlayerManager.GetPlayers()) do
         local player = entity:ToPlayer()---@cast player EntityPlayer
         local data = Mod.Util:GetData(player, Mod.Util.ID)
         if data.isUsingPickup then
@@ -246,6 +247,7 @@ function Fetch:OnFetchInterrupt()
 end
 Mod:AddCallback(ModCallbacks.MC_PRE_GAME_EXIT, Fetch.OnFetchInterrupt)
 Mod:AddCallback(ModCallbacks.MC_PRE_CHANGE_ROOM, Fetch.OnFetchInterrupt)
+Mod:AddCallback(ModCallbacks.MC_PRE_LEVEL_INIT, Fetch.OnFetchInterrupt)
 
 function Fetch:OnDogFetchInterrupt()
     for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
@@ -260,14 +262,6 @@ function Fetch:OnDogFetchInterrupt()
 end
 Mod:AddCallback(ModCallbacks.MC_PRE_GAME_EXIT, Fetch.OnDogFetchInterrupt)
 
-function Fetch:OnGlowingHourglassLoad()
-    for _, entity in pairs(Isaac.FindByType(EntityType.ENTITY_PLAYER, PlayerVariant.PLAYER)) do
-        local player = entity:ToPlayer()---@cast player EntityPlayer
-        local data = Mod.Util:GetData(player, Mod.Util.ID)
-        data.isUsingPickup = nil
-    end
-end
-Mod:AddCallback(ModCallbacks.MC_PRE_GLOWING_HOURGLASS_LOAD, Fetch.OnGlowingHourglassLoad)
 --#endregion
 --#region Fetch Helper Functions
 -- Returns the amount of time (seconds) needed to finish the travel

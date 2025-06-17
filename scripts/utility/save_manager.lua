@@ -718,6 +718,7 @@ function SaveManager.QueueHourglassRestore()
 	if shouldRestoreOnUse then
 		usedHourglass = true
 		skipRoomReset = true
+		skipFloorReset = true
 		SaveManager.Utility.DebugLog("Activated glowing hourglass. Data will be reset on new room.")
 		Isaac.RunCallback(SaveManager.SaveCallbacks.PRE_GLOWING_HOURGLASS_RESET)
 	end

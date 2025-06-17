@@ -93,10 +93,10 @@ end
 ---     - Decide if dog should be spawned by using a consumable or just instantly
 ---     - To remove Sac Altar use?
 --- 6) Bugfixes
+--- 
+--- Low Priority Bugs (Too Specific)
 ---     - Make her stop going to target pos if it stops existing after spawning
----     - Glowing Hourglass
----         - Get the pickup back when HG is used after leaving the room mid-fetch
----         - Retain the feedin bowl's anim when hourglassing immediately on new floor
+---     - Get the pickup back when HG is used after leaving the room mid-fetch
 --- 
 --- Attribution:
 --- olga_yawn.wav: https://freesound.org/people/jinxycat49/sounds/490164/
