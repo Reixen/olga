@@ -79,8 +79,7 @@ end
 ---             - Running
 ---         - Head Specific Idle Animations
 ---             - Curious
---- 2) Fetch
----     - Use Save manager
+--- 2) Fetch [DONE]
 --- 3) Petting Hand [DONE]
 --- 4) Feeding Bowl
 ---     - Animations
@@ -88,7 +87,8 @@ end
 ---         - Dinner
 ---         - Generic
 ---         - Dessert
----     - Dog goes to bowl, feeds on supper and u get +1000 reputation points
+---     - Dog goes to bowl, feeds on supper
+---     - Needs better pour sfx
 --- 5) Gameplay
 ---     - Decide if dog should be spawned by using a consumable or just instantly
 ---     - To remove Sac Altar use?
