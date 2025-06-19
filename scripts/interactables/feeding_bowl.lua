@@ -101,7 +101,7 @@ function FeedingBowl:OnBowlUpdate(bowl)
     if sprite:IsEventTriggered("Drop") then
         sfxMan:Play(sfxPack.Drop)
     elseif sprite:IsEventTriggered("Land") then
-        --sfxMan:Play(sfxPack.Land)
+        sfxMan:Play(sfxPack.Land, 0.4)
     end
 end
 Mod:AddCallback(ModCallbacks.MC_POST_SLOT_UPDATE, FeedingBowl.OnBowlUpdate, FeedingBowl.BOWL_VARIANT)

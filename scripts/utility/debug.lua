@@ -47,7 +47,7 @@ Debug.Commands = {
                     collAmt = player:GetCollectibleNum(collType, true, true)
                 end
 
-                if collAmt then
+                if collAmt ~= 0 then
                     tempFX:AddNullEffect(nullFX, false, collAmt)
                 end
             end

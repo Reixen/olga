@@ -68,32 +68,28 @@ end
 ----------------------------------------------------------------
 --- 1) Head + Body
 ---     - Animations bro
----         - Lie Down
----             - When initialized, sleep
----             - Wake up and stretch if approached.
----             - Lie back to position if within range, otherwise stand.
 ---         - Sit
 ---             - Scratch
 ---         - Stand
----             - Feed on Bowl
 ---             - Running
 ---         - Head Specific Idle Animations
 ---             - Curious
 --- 2) Fetch [DONE]
 --- 3) Petting Hand [DONE]
 --- 4) Feeding Bowl
----     - Animations
----         - Snack
----         - Dinner
----         - Generic
----         - Dessert
 ---     - Dog goes to bowl, feeds on supper
 ---     - Needs better pour sfx
 --- 5) Gameplay
 ---     - Decide if dog should be spawned by using a consumable or just instantly
 ---     - To remove Sac Altar use?
---- 6) Bugfixes
+--- 6) Bugfixes [DONE]
 --- 
+--- Low Priority Animations
+---     - Lie Down
+---        - When initialized, sleep
+---        - Wake up and stretch if approached.
+---        - Lie back to position if within range, otherwise stand.
+---     
 --- Low Priority Bugs (Too Specific)
 ---     - Make her stop going to target pos if it stops existing after spawning
 ---     - Get the pickup back when HG is used after leaving the room mid-fetch
