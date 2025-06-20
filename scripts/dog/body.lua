@@ -7,6 +7,7 @@ OlgaMod.Dog.Body = DogBody
 local game = Mod.Game
 local sfxMan = Mod.SfxMan
 local Util = Mod.Util
+local saveMan = Mod.SaveManager
 
 DogBody.SOUND_BARK_SET1 = Isaac.GetSoundIdByName("Olga Bark Set 1")
 DogBody.EXPLOSION_VARIANT = Isaac.GetEntityVariantByName("Stock Explosion")
@@ -48,6 +49,7 @@ DogBody.PathfindingResult = {
 ---@field targetPos Vector? -- Target position to move towards
 ---@field lowerBound number? -- Used in caching the lower bound for speed decay
 ---@field objectID integer? -- For saving the pickup ID for fetching
+---@field feedingBowl EntitySlot?
 ---@field canPet boolean? -- Used for preventing the player from petting the dog in certain scenarios
 ---@field hasOwner boolean?
 ---@field hasStick boolean?
@@ -69,7 +71,7 @@ DogBody.ANIM_FUNC = {
 
         local frameCount = olga.FrameCount
         if (rng:RandomFloat() < DogBody.SWITCH_CHANCE and data.eventCD < frameCount)
-        or Util:IsFetching(olga) then
+        or Util:IsBusy(olga) then
             sprite:Play(Util.BodyAnim.SIT_TO_STAND, true)
         end
     end,
@@ -101,23 +103,76 @@ DogBody.ANIM_FUNC = {
             data.isMoving = true
         end
 
-        if olga.State == Util.DogState.FETCH then
+        if not data.feedingBowl
+        and not Util:IsEating(olga)
+        and saveMan.TryGetRoomSave() then
+            local roomSave = saveMan.GetRoomSave()
+            if roomSave.filledBowls and #roomSave.filledBowls > 0 then
+                local nearestBowl = DogBody:FindNearestPosition(roomSave.filledBowls, olga.Position)
+                DogBody:EndFetch(olga, data)
+
+                olga.State = Util.DogState.APPROACH_BOWL
+                data.targetPos = nearestBowl
+            end
+        end
+
+        if olga.State == Util.DogState.EATING then
+            local bowlSprite = data.feedingBowl:GetSprite()
+
+            -- If the bowl is empty
+            if bowlSprite:IsFinished("Idle") then
+                data.feedingBowl = nil
+                DogBody:ReturnToDefault(olga, data, true)
+                return
+            end
+
+            -- If the bowl finished playing the fill animation
+            if not data.headSprite:IsPlaying(Util.HeadAnim.GRAB)
+            and bowlSprite:IsFinished() then
+                data.headSprite:Play(Util.HeadAnim.GRAB)
+            end
+
+            -- Empty the bowl when she munches on it
+            if data.headSprite:IsEventTriggered("Pickup") then
+                bowlSprite:Play("Idle")
+                Util:RemoveBowlIndex(saveMan.GetRoomSave().filledBowls, data.feedingBowl)
+                data.feedingBowl = nil
+                DogBody:ReturnToDefault(olga, data, true)
+
+                local runSave = saveMan.GetRunSave()
+                runSave.pupPoints = runSave.pupPoints and runSave.pupPoints + 1 or 1
+                data.eventCD = olga.FrameCount + DogBody.EVENT_COOLDOWN
+            end
+            return
+
+        elseif olga.State == Util.DogState.APPROACH_BOWL then
+            DogBody:TryApproachBowl(olga, data)
+            return
+
+        elseif olga.State == Util.DogState.RETURN then
+            local pathfindingResult = DogBody:Pathfind(
+                olga, olga.Player.Position, DogBody.RUN_SPEED, data, ONE_TILE, ONE_TILE, DogBody.DECAY_STRENGTH
+            )
+
+            -- Drop the stick when near the owner or when she cannot pathfind
+            if (pathfindingResult == DogBody.PathfindingResult.SUCCESSFUL or pathfindingResult == DogBody.PathfindingResult.NO_PATH)
+            and not data.headSprite:IsPlaying(Util.HeadAnim.HOLD_TO_IDLE) then
+                DogBody:EndFetch(olga, data)
+                olga.State = Util.DogState.STANDING
+            end
+            return
+
+        elseif olga.State == Util.DogState.FETCH then
             DogBody:TryFetching(olga, data)
             return
         end
 
-        if olga.State == Util.DogState.RETURN then
-            DogBody:TryReturnObject(olga, data, frameCount)
-            return
-        end
-
         if data.eventCD < frameCount then
-
             -- Switching
             if sprite:IsEventTriggered("TransitionHook")
             and rng:RandomFloat() < DogBody.SWITCH_CHANCE then
-                data.targetPos = nil
                 olga.Velocity = Vector.Zero
+                data.targetPos = nil
                 data.eventCD = frameCount + DogBody.EVENT_COOLDOWN
                 sprite:Play(Util.BodyAnim.STAND_TO_SIT, true)
                 olga.State = Util.DogState.SITTING
@@ -129,8 +184,7 @@ DogBody.ANIM_FUNC = {
                 if pathfindingResult == DogBody.PathfindingResult.SUCCESSFUL
                 or pathfindingResult == DogBody.PathfindingResult.NO_PATH then
                     olga.Velocity = Vector.Zero
-                    data.eventCD = frameCount + DogBody.EVENT_COOLDOWN
-                    data.targetPos = nil
+                    DogBody:ReturnToDefault(olga, data, true)
                 end
                 return
             end
@@ -163,7 +217,7 @@ DogBody.ANIM_FUNC = {
         local animToPlay = Util:FindAnimSubstring(name)
         sprite:Play(Util.BodyAnim[animToPlay], true)
 
-        if olga.State == Util.DogState.FETCH then return end
+        if Util:IsBusy(olga) then return end
 
         if name == Util.BodyAnim.SIT_TO_STAND then
             olga.State = Util.DogState.STANDING
@@ -213,6 +267,7 @@ function DogBody:OnInit(olga)
     data.animCD = Util.ANIM_COOLDOWN
     data.attentionCD = 0
     data.headRender = true
+    data.feedingBowl = nil
 
     data.headSprite = Sprite()
     data.headSprite:Load("gfx/render_olga_head.anm2", true)
@@ -228,20 +283,18 @@ function DogBody:HandleNewRoom()
     local roomType = room:GetType()
 
     for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
-        local olga = familiar:ToFamiliar()
+        local olga = familiar:ToFamiliar() ---@cast olga EntityFamiliar
         local data = familiar:GetData() ---@cast data DogData
         data.targetPos = nil
         data.canPet = false
         familiar.Velocity = Vector.Zero
 
-        -- If she's midfetch
-        if olga.State == Mod.Util.DogState.FETCH then
-            olga.State = Mod.Util.DogState.STANDING
-            data.objectID = nil
-        elseif olga.State == Mod.Util.DogState.RETURN
-        or (data.headSprite and data.headSprite:IsFinished(Mod.Util.HeadAnim.HOLD)) then
-            data.headSprite:Play(Mod.Util.HeadAnim.HOLD_TO_IDLE)
+        if Util:IsEating(olga) then
+            data.feedingBowl = nil
+        elseif Util:IsFetching(olga) then
+            DogBody:EndFetch(olga, data)
         end
+        olga.State = Mod.Util.DogState.STANDING
     end
 
     if (roomType ~= RoomType.ROOM_ISAACS and roomType ~= RoomType.ROOM_BARREN)
@@ -252,7 +305,7 @@ function DogBody:HandleNewRoom()
     local spawnPos = room:FindFreePickupSpawnPosition(room:GetCenterPos())
     Isaac.Spawn(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT, 0, spawnPos, Vector.Zero, nil)
 end
-Mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, DogBody.HandleNewRoom)
+Mod:AddCallback(ModCallbacks.MC_PRE_NEW_ROOM, DogBody.HandleNewRoom)
 Mod:AddCallback(ModCallbacks.MC_PRE_GLOWING_HOURGLASS_SAVE, DogBody.HandleNewRoom)
 
 function DogBody:GoodbyeOlga()
@@ -507,66 +560,121 @@ function DogBody:TryFetching(olga, data)
     if pathfindingResult == DogBody.PathfindingResult.SUCCESSFUL then
         olga.Velocity = Vector.Zero
 
+        -- Used to make her stop staying at the area when the object does not exist
         if data.eventWindow <= 0 then
-            olga.State = Util.DogState.STANDING
-            data.targetPos = nil
+            DogBody:ReturnToDefault(olga, data)
         else
             data.eventWindow = data.eventWindow - 1
         end
 
+        -- If the object does exist then...
         for _, item in ipairs(Isaac.FindInRadius(olga.Position, ONE_TILE * 1.5, EntityPartition.PICKUP)) do
             local pickup = item:ToPickup() ---@cast pickup EntityPickup
 
-            if not DogBody:DoesPickupMatch(pickup, data.objectID, olga) then
-                goto skip
-            end
+            if DogBody:DoesPickupMatch(pickup, data.objectID, olga) then
+                if data.headSprite:IsEventTriggered("Pickup") then
+                    data.headSprite:Play(Util.HeadAnim.HOLD)
+                    DogBody:KillPickup(pickup)
+                    data.targetPos = nil
+                    olga.State = Util.DogState.RETURN
+                    return
+                end
 
-            if data.headSprite:IsEventTriggered("Pickup")
-            and pickup:Exists() then
-                data.headSprite:Play(Util.HeadAnim.HOLD)
-                DogBody:KillPickup(pickup)
-                data.targetPos = nil
-                olga.State = Util.DogState.RETURN
-                return
+                if not data.headSprite:IsPlaying(Util.HeadAnim.GRAB) then
+                    data.headSprite:Play(Util.HeadAnim.GRAB)
+                end
             end
-
-            if not data.headSprite:IsPlaying(Util.HeadAnim.GRAB) then
-                data.headSprite:Play(Util.HeadAnim.GRAB)
-            end
-            ::skip::
         end
 
-
     elseif pathfindingResult == DogBody.PathfindingResult.NO_PATH then
-        olga.Velocity = Vector.Zero
-        data.targetPos = nil
-        data.objectID = nil
+        DogBody:EndFetch(olga, data)
         olga.State = Util.DogState.STANDING
     end
 end
 
 ---@param olga EntityFamiliar
----@param data DogData
-function DogBody:TryReturnObject(olga, data, frameCount)
-    local pathfindingResult = DogBody:Pathfind(
-        olga, olga.Player.Position, DogBody.RUN_SPEED, data, ONE_TILE, ONE_TILE, DogBody.DECAY_STRENGTH
-    )
+function DogBody:EndFetch(olga, data)
+    olga.Velocity = Vector.Zero
+    data.targetPos = nil
+    data.eventCD = olga.FrameCount + DogBody.EVENT_COOLDOWN
 
-    if (pathfindingResult == DogBody.PathfindingResult.SUCCESSFUL or pathfindingResult == DogBody.PathfindingResult.NO_PATH)
-    and not data.headSprite:IsPlaying(Util.HeadAnim.HOLD_TO_IDLE) then
+    if olga.State == Util.DogState.RETURN then
         data.headSprite:Play(Util.HeadAnim.HOLD_TO_IDLE)
-        olga.Velocity = Vector.Zero
+        return
     end
 
-    if data.headSprite:IsEventTriggered("Pickup") then
+    data.objectID = nil
+end
+
+---@return Vector?
+---@param idxTable table
+---@param startingPos Vector
+function DogBody:FindNearestPosition(idxTable, startingPos)
+    local nearestPos
+    local shortestDistance
+
+    if not idxTable then
+        return nil
+    end
+
+    for _, gridIdx in ipairs(idxTable) do
         local room = Mod.Room()
-        local spawnPos = room:FindFreePickupSpawnPosition(olga.Position, 0, true)
-        Isaac.Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TAROTCARD, data.objectID, spawnPos, Vector.Zero, olga)
+        local position = room:GetGridPosition(gridIdx)
+        local distance = startingPos:DistanceSquared(position)
 
-        olga.Velocity = Vector.Zero
-        olga.State = Util.DogState.STANDING
-        data.objectID = nil
+        if not shortestDistance or distance < shortestDistance then
+            shortestDistance = distance
+            nearestPos = position
+        end
     end
-    data.eventCD = frameCount + DogBody.EVENT_COOLDOWN
+
+    return nearestPos
+end
+
+---@param olga EntityFamiliar
+---@param data DogData
+function DogBody:TryApproachBowl(olga, data)
+    if not data.targetPos then
+        olga.State = Util.DogState.STANDING
+        return
+    end
+
+    local pathfindingResult = DogBody:Pathfind(olga, data.targetPos, DogBody.RUN_SPEED, data, ONE_TILE * 0.5)
+
+    if pathfindingResult == DogBody.PathfindingResult.SUCCESSFUL then
+        olga.Velocity = Vector.Zero
+
+        local feedingBowl
+        for _, entity in pairs(Isaac.FindInRadius(data.targetPos, 20)) do
+            -- If it's a bowl and its not empty
+            if entity.Type == EntityType.ENTITY_SLOT
+            and entity.Variant == Mod.FeedingBowl.BOWL_VARIANT
+            and not entity:ToSlot():GetSprite():IsFinished("Idle") then
+                data.feedingBowl = entity:ToSlot()
+                data.targetPos = nil
+                olga.State = Util.DogState.EATING
+                return
+            end
+        end
+
+        if not feedingBowl then
+            DogBody:ReturnToDefault(olga, data)
+        end
+
+    elseif pathfindingResult == DogBody.PathfindingResult.NO_PATH then
+        olga.Velocity = Vector.Zero
+        DogBody:ReturnToDefault(olga, data)
+    end
+end
+
+---@param olga EntityFamiliar
+---@param data DogData
+---@param resetEventCD boolean?
+function DogBody:ReturnToDefault(olga, data, resetEventCD)
+    data.targetPos = nil
+    olga.State = Util.DogState.STANDING
+    if resetEventCD then
+        data.eventCD = olga.FrameCount + DogBody.EVENT_COOLDOWN
+    end
 end
 --#endregion

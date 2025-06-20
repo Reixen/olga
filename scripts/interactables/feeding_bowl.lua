@@ -112,7 +112,7 @@ function FeedingBowl:OnBowlCollision(bowl, collider)
     if collider.Type ~= EntityType.ENTITY_PLAYER then return end
 
     local sprite = bowl:GetSprite()
-
+    local isPlayingFill = string.find(sprite:GetAnimation(), "Fill")
     if not sprite:IsFinished() then
         return
     end
@@ -125,7 +125,7 @@ function FeedingBowl:OnBowlCollision(bowl, collider)
         return
     end
 
-    FeedingBowl:PlayFillAnimation(tempFX, sprite, yummers)
+    FeedingBowl:PlayFillAnimation(bowl, tempFX, sprite, yummers)
 end
 Mod:AddCallback(ModCallbacks.MC_POST_SLOT_COLLISION, FeedingBowl.OnBowlCollision, FeedingBowl.BOWL_VARIANT)
 
@@ -140,6 +140,11 @@ function FeedingBowl:OnBowlDeath(bowl)
             bowl.Position, RandomVector() * math.random(1, 6), bowl
         ):ToEffect().Rotation = math.random(0, 7) * 45 -- Degrees
     end
+
+    if not saveMan.TryGetRoomSave() then return false end
+    local roomSave = saveMan.GetRoomSave()
+
+    Util:RemoveBowlIndex(roomSave.filledBowls, bowl)
 
     return false
 end
@@ -188,20 +193,25 @@ function FeedingBowl:HasFoodItems(tempFX)
     return #yumYumTable > 0 and yumYumTable or false
 end
 
+---@param bowl EntitySlot
 ---@param tempFX TemporaryEffects
 ---@param sprite Sprite
 ---@param foodItems table
-function FeedingBowl:PlayFillAnimation(tempFX, sprite, foodItems)
+function FeedingBowl:PlayFillAnimation(bowl, tempFX, sprite, foodItems)
     for _, nullFX in pairs(foodItems) do
         local name = Isaac.GetItemConfig():GetNullItem(nullFX).Name
         name = name:gsub("Consumable ", "")
 
         sprite:Play("Fill" .. name)
-        tempFX:RemoveNullEffect(nullFX)
+        tempFX:RemoveNullEffect(nullFX, 1)
         --sfxMan:Play(FeedingBowl.POUR_SFX, 0.3)
 
-        local runSave = saveMan.GetRunSave()
-        runSave.pupPoints = runSave.pupPoints and runSave.pupPoints + 1 or 1
+        local roomSave = saveMan.GetRoomSave()
+        if not roomSave.filledBowls then
+            roomSave.filledBowls = {}
+        end
+
+        roomSave.filledBowls[#roomSave.filledBowls + 1] = Mod.Room():GetGridIndex(bowl.Position)
         break
     end
 end

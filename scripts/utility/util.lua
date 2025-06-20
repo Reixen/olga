@@ -54,6 +54,8 @@ Util.DogState = {
     RETURN = 3,
     ANTICIPATE = 4,
     PRONE = 5,
+    APPROACH_BOWL = 6,
+    EATING = 7,
 }
 
 local ONE_SEC = 30
@@ -293,5 +295,26 @@ function Util:IsInStartingRoom()
     and level:GetCurrentRoomIndex() == level:GetStartingRoomIndex()
     and level:GetStageType() ~= StageType.STAGETYPE_REPENTANCE
     and level:GetStageType() ~= StageType.STAGETYPE_REPENTANCE_B
+end
+
+---@param olga EntityFamiliar
+function Util:IsEating(olga)
+    return olga.State == Util.DogState.APPROACH_BOWL or olga.State == Util.DogState.EATING
+end
+
+---@param olga EntityFamiliar
+function Util:IsBusy(olga)
+    return Util:IsFetching(olga) or Util:IsEating(olga)
+end
+
+---@param idxTable table
+---@param bowl EntitySlot
+function Util:RemoveBowlIndex(idxTable, bowl)
+    for i, gridIdx in ipairs(idxTable) do
+        if Mod.Room():GetGridIndex(bowl.Position) == gridIdx then
+            table.remove(idxTable, i)
+            break
+        end
+    end
 end
 --endregion

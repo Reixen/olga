@@ -45,7 +45,7 @@ DogHead.ANIM_FUNC = {
         DogHead:TryTurningGlad(olga, sprite, data)
 
         if not sprite:IsEventTriggered("TransitionHook")
-        or Util:IsFetching(olga)
+        or Util:IsBusy(olga)
         or data.animCD > frameCount then
             return
         end
@@ -66,12 +66,12 @@ DogHead.ANIM_FUNC = {
         if sprite:IsEventTriggered("TransitionHook") then
             local player = olga.Player
 
-            if Util:IsWithin(olga, player.Position, DogHead.PETTING_DISTANCE) then
+            if Util:IsWithin(olga, player.Position, DogHead.PETTING_DISTANCE)
+            and not Util:IsBusy(olga) then
                 Util:UpdateHandColor(player, data.headSprite)
                 sprite:Play(Util.HeadAnim.GLAD_TO_GLAD_PETTING, true)
 
-            elseif not Util:IsWithin(olga, player.Position, DogHead.HAPPY_DISTANCE)
-            or Util:IsFetching(olga) then
+            elseif not Util:IsWithin(olga, player.Position, DogHead.HAPPY_DISTANCE) then
                 sprite:Play(Util.HeadAnim.GLAD_TO_IDLE, true)
             end
         end
@@ -88,7 +88,7 @@ DogHead.ANIM_FUNC = {
 
         if not sprite:IsEventTriggered("TransitionHook")
         or Util:IsWithin(olga, player.Position, DogHead.PETTING_DISTANCE)
-        and not Util:IsFetching(olga) then
+        and not Util:IsBusy(olga) then
             return
         end
 
@@ -104,10 +104,19 @@ DogHead.ANIM_FUNC = {
     end,
 
     -- Transitional animations
-    [Util.HeadAnim.GLAD_TO_IDLE] = function(olga, sprite, _, animName)
+    [Util.HeadAnim.GLAD_TO_IDLE] = function(olga, sprite, data, animName)
         if sprite:IsFinished() then
             local animToPlay = Util:FindAnimSubstring(animName)
             sprite:Play(Util.HeadAnim[animToPlay], true)
+        end
+
+        -- Returning the fetching object
+        if sprite:IsEventTriggered("Pickup") then
+            local room = Mod.Room()
+            local spawnPos = room:FindFreePickupSpawnPosition(olga.Position, 0, true)
+            Isaac.Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TAROTCARD, data.objectID, spawnPos, Vector.Zero, olga)
+
+            data.objectID = nil
         end
     end,
 

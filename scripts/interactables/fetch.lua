@@ -209,18 +209,16 @@ function Fetch:OnEffectRemove(entity)
         object.Color = Color(0, 0, 0, 0)
         object.Velocity = -(object.Position - entity.Position) / (objData.duration * ONE_SEC - (Fetch.ARC_SHIFT / 1.2)) -- shift closer to mark
 
-        local olga = Fetch:FindNearestDog(entity.Position, player) ---@cast olga EntityFamiliar
+        local olga = Fetch:FindNearestDog(entity.Position) ---@cast olga EntityFamiliar
 
         if not olga then return end
         local dogData = olga:GetData() ---@cast dogData DogData
 
-        if not Mod.Util:IsFetching(olga) then
-            dogData.headSprite:ReplaceSpritesheet(4, "gfx/familiar/held_object_" .. data.objName .. ".png", true)
-            dogData.targetPos = entity.Position
-            dogData.objectID = data.objID
-            dogData.eventWindow = objData.duration + ONE_SEC * 2
-            olga.State = Mod.Util.DogState.FETCH
-        end
+        dogData.headSprite:ReplaceSpritesheet(4, "gfx/familiar/held_object_" .. data.objName .. ".png", true)
+        dogData.targetPos = entity.Position
+        dogData.objectID = data.objID
+        dogData.eventWindow = objData.duration + ONE_SEC * 2
+        olga.State = Mod.Util.DogState.FETCH
         return
     end
 
@@ -280,17 +278,15 @@ end
 
 ---@return EntityFamiliar | nil
 ---@param position Vector
----@param player EntityPlayer
-function Fetch:FindNearestDog(position, player)
+function Fetch:FindNearestDog(position)
     local nearestDoggy
     local shortestDistance
 
     for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
         local olga = familiar:ToFamiliar()
-
         local distance = position:DistanceSquared(olga.Position)
-        if GetPtrHash(player) == GetPtrHash(olga.Player)
-        and olga:GetData().hasOwner
+
+        if not Mod.Util:IsFetching(olga)
         and (not shortestDistance or distance < shortestDistance) then
             shortestDistance = distance
             nearestDoggy = olga

@@ -73,12 +73,13 @@ end
 ---         - Stand
 ---             - Running
 ---         - Head Specific Idle Animations
+---             - Make Olga's petting animation transition smoothly (NotGlad)
 ---             - Curious
 --- 2) Fetch [DONE]
 --- 3) Petting Hand [DONE]
 --- 4) Feeding Bowl
----     - Dog goes to bowl, feeds on supper
 ---     - Needs better pour sfx
+---     - Maybe make her stand up when a feeding bowl exists?
 --- 5) Gameplay
 ---     - Decide if dog should be spawned by using a consumable or just instantly
 ---     - To remove Sac Altar use?
