@@ -5,6 +5,8 @@ local Debug = {}
 OlgaMod.Debug = Debug
 
 local Util = OlgaMod.Util
+local Head = Mod.Dog.Head
+local Body = Mod.Dog.Body
 local saveMan = Mod.SaveManager
 
 Debug.COMMAND_IDENTIFIER = "olgadebug"
@@ -29,7 +31,11 @@ Debug.Commands = {
     ["animate"] = {Desc = "Plays a random animation",
     Function = function()
         for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
-            Mod.Dog.Head:DoIdleAnimation(familiar:ToFamiliar(), familiar:GetData())
+            local olga = familiar:ToFamiliar() ---@cast olga EntityFamiliar
+            local data = olga:GetData()
+            Mod.Dog.Head:DoMiniIdleAnim(data.headSprite, Mod.Dog.Head.MiniIdle["Tilt"])
+            --Mod.Dog.Head:DoIdleAnimation(familiar:ToFamiliar(), familiar:GetData())
+            data.animCD = olga.FrameCount + 60
         end
     end
     },

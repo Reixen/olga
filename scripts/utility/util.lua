@@ -23,6 +23,8 @@ Util.HeadAnim= {
     IDLE_TO_PETTING = "IdleToPetting",
     PETTING_TO_IDLE = "PettingToIdle",
     HOLD_TO_IDLE = "HoldToIdle",
+    TILT_LEFT_TO_IDLE = "TiltLeftToIdle",
+    TILT_RIGHT_TO_IDLE = "TiltRightToIdle",
     -- Mini Idle Animations
     EAR_FLICK_L = "EarFlick_Left",
     EAR_FLICK_R = "EarFlick_Right",
@@ -30,6 +32,10 @@ Util.HeadAnim= {
     EAR_ROTATE_L = "EarRotate_Left",
     EAR_ROTATE_R = "EarRotate_Right",
     EAR_ROTATE_BOTH = "EarRotate_Both",
+    TILT_LEFT = "Tilt_Left",
+    TILT_SWITCH_LEFT = "TiltSwitch_Left",
+    TILT_RIGHT = "Tilt_Right",
+    TILT_SWITCH_RIGHT = "TiltSwitch_Right",
     -- Idle Animations
     BARK = "Bark",
     YAWN = "Yawn",
@@ -40,10 +46,11 @@ Util.BodyAnim = {
     SIT_WAGGING = "SitWagging",
     STAND = "Stand",
     WALKING = "Walking",
-    PLAYFUL = "Playful",
     -- Transitionals
     SIT_TO_STAND = "SitToStand",
     STAND_TO_SIT = "StandToSit",
+    -- Idle Animations
+    PLAYFUL = "Playful",
 }
 
 ---@enum DogState
@@ -57,10 +64,6 @@ Util.DogState = {
     APPROACH_BOWL = 6,
     EATING = 7,
 }
-
-local ONE_SEC = 30
-Util.ANIM_COOLDOWN = ONE_SEC * 5
-Util.ATTENTION_COOLDOWN = ONE_SEC * 60
 
 Util.SPRITESHEET_SUBSTRING_IDX = 6
 

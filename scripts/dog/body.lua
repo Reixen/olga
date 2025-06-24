@@ -26,7 +26,7 @@ DogBody.WANDER_RADIUS = 5
 DogBody.HAPPY_DISTANCE = ONE_TILE * 2.2
 DogBody.DECAY_STRENGTH = 1
 
-DogBody.EVENT_COOLDOWN = ONE_SEC * 3
+DogBody.EVENT_COOLDOWN = ONE_SEC * 6
 
 ---@enum PathfindingResult
 DogBody.PathfindingResult = {
@@ -70,8 +70,9 @@ DogBody.ANIM_FUNC = {
         end
 
         local frameCount = olga.FrameCount
-        if (rng:RandomFloat() < DogBody.SWITCH_CHANCE and data.eventCD < frameCount)
+        if rng:RandomFloat() < DogBody.SWITCH_CHANCE and data.eventCD < frameCount
         or Util:IsBusy(olga) then
+            data.eventCD = frameCount + DogBody.EVENT_COOLDOWN
             sprite:Play(Util.BodyAnim.SIT_TO_STAND, true)
         end
     end,
@@ -178,6 +179,14 @@ DogBody.ANIM_FUNC = {
                 olga.State = Util.DogState.SITTING
             end
 
+            -- Prevent her from moving when an animation is playing
+            -- Unsure
+            --if data.animCD > frameCount then
+                --olga.Velocity = Vector.Zero
+                --DogBody:ReturnToDefault(olga, data, true)
+                --return
+            --end
+
             if data.targetPos then
                 local pathfindingResult = DogBody:Pathfind(olga, data.targetPos, DogBody.WALK_SPEED, data)
 
@@ -189,7 +198,8 @@ DogBody.ANIM_FUNC = {
                 return
             end
 
-            if rng:RandomFloat() < DogBody.WANDER_CHANCE then
+            if rng:RandomFloat() < DogBody.WANDER_CHANCE
+            and data.animCD < frameCount then
                 data.targetPos = DogBody:ChooseRandomPosition(olga)
             end
         end
@@ -264,7 +274,7 @@ function DogBody:OnInit(olga)
     local data = olga:GetData()
 
     data.eventCD = DogBody.EVENT_COOLDOWN
-    data.animCD = Util.ANIM_COOLDOWN
+    data.animCD = DogBody.EVENT_COOLDOWN * 2
     data.attentionCD = 0
     data.headRender = true
     data.feedingBowl = nil

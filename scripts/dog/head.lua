@@ -16,19 +16,25 @@ DogHead.ANIM_CHANCE = 1 / 30
 DogHead.MINI_ANIM_CHANCE = 1 / 4
 DogHead.REPEAT_CHANCE = 1 / 6
 
+local ONE_SEC = 30
+DogHead.MINI_IDLE_COOLDOWN = ONE_SEC * 2
+DogHead.ANIM_COOLDOWN = ONE_SEC * 6
+DogHead.ATTENTION_COOLDOWN = ONE_SEC * 45
+
 local ONE_TILE = 40
 DogHead.HAPPY_DISTANCE = ONE_TILE * 2
 DogHead.PETTING_DISTANCE = ONE_TILE * 1.2
 
 DogHead.IdleAnim = {
-    {Name = "Yawn",     BodyState = nil},
-    {Name = "Bark",     BodyState = nil},
-    {Name = "Playful",  BodyState = Util.DogState.STANDING},
+    {Name = Util.HeadAnim.YAWN,             BodyState = nil},
+    {Name = Util.HeadAnim.BARK,             BodyState = nil},
+    {Name = Util.BodyAnim.PLAYFUL,          BodyState = Util.DogState.STANDING},
 }
 
 DogHead.MiniIdleVariants = {
     {Name = "EarFlick",     Variants = {"Left", "Right", "Both"}},
-    {Name = "EarRotate",    Variants = {"Left", "Right", "Both"}}
+    {Name = "EarRotate",    Variants = {"Left", "Right", "Both"}},
+    {Name = "Tilt",         Variants = {"Left", "Right"}},
 }
 
 DogHead.MiniIdle = {}
@@ -54,11 +60,12 @@ DogHead.ANIM_FUNC = {
         if rng:RandomFloat() < DogHead.ANIM_CHANCE then
 
             if rng:RandomFloat() < DogHead.MINI_ANIM_CHANCE then
+                data.animCD = olga.FrameCount + DogHead.ANIM_COOLDOWN
                 DogHead:DoMiniIdleAnim(data.headSprite)
             else
+                data.animCD = olga.FrameCount + DogHead.MINI_IDLE_COOLDOWN
                 DogHead:DoIdleAnimation(olga, data)
             end
-            data.animCD = olga.FrameCount + Util.ANIM_COOLDOWN
         end
     end,
 
@@ -122,7 +129,7 @@ DogHead.ANIM_FUNC = {
 
     -- Standard idle animations
     [Util.HeadAnim.YAWN] = function(_, sprite)
-        if sprite:IsFinished() then
+        if sprite:IsFinished() and sprite:GetAnimation() ~= Util.HeadAnim.HOLD then
             sprite:Play(Util.HeadAnim.IDLE, true)
         end
 
@@ -136,23 +143,57 @@ DogHead.ANIM_FUNC = {
     end,
 
     -- Mini idle animations
-    [Util.HeadAnim.EAR_FLICK_L] = function (olga, sprite, data, animName) ---@param olga EntityFamiliar
-        if sprite:IsFinished() then
-            local rng = olga:GetDropRNG()
-            if rng:RandomFloat() < DogHead.REPEAT_CHANCE 
-            and not Util:IsFetching(olga) then
-                local animToPlay = Util:FindAnimSubstring(animName, true)
-                DogHead:DoMiniIdleAnim(sprite, DogHead.MiniIdle[animToPlay])
-            else
-                sprite:Play(Util.HeadAnim.IDLE, true)
+    ---@param olga EntityFamiliar
+    ---@param sprite Sprite
+    ---@param data DogData
+    ---@param animName string
+    [Util.HeadAnim.EAR_FLICK_L] = function (olga, sprite, data, animName)
+        if not sprite:IsFinished() then
+            return
+        end
+
+        local rng = olga:GetDropRNG()
+        -- If the animation playing is a head tilt animation
+        if animName:match("Tilt") then
+
+            local directionStringStart = animName:find("_")
+            local tiltDirection = animName:sub(directionStringStart + 1)
+
+            if data.animCD < olga.FrameCount then
+
+                if sprite:IsFinished(Util.HeadAnim.TILT_SWITCH_LEFT) then
+                    sprite:SetFrame(Util.HeadAnim.TILT_RIGHT, 7)
+                    tiltDirection = "Right"
+                elseif sprite:IsFinished(Util.HeadAnim.TILT_SWITCH_RIGHT) then
+                    sprite:SetFrame(Util.HeadAnim.TILT_LEFT, 7)
+                    tiltDirection = "Left"
+                end
+
+                -- Repeat or nah
+                if rng:RandomFloat() < DogHead.REPEAT_CHANCE then
+                    -- Decide if it should prolong the tilt or switch
+                    if rng:RandomFloat() < 0.5 then
+                        sprite:Play("TiltSwitch_" .. tiltDirection, true)
+                        data.animCD = olga.FrameCount + DogHead.MINI_IDLE_COOLDOWN
+                    else
+                        data.animCD = olga.FrameCount + (DogHead.MINI_IDLE_COOLDOWN / 2)
+                    end
+                else
+                    sprite:Play("Tilt" .. tiltDirection .. "ToIdle", true)
+                end
             end
+            return
+        end
+
+        if rng:RandomFloat() < DogHead.REPEAT_CHANCE
+        and not Util:IsBusy(olga) then
+            local animToPlay = Util:FindAnimSubstring(animName, true)
+            DogHead:DoMiniIdleAnim(sprite, DogHead.MiniIdle[animToPlay])
+        else
+            sprite:Play(Util.HeadAnim.IDLE, true)
         end
 
         DogHead:TryTurningGlad(olga, sprite, data)
-    end,
-
-    [Util.HeadAnim.HOLD] = function()
-        -- Solace.
     end,
 }
 DogHead.ANIM_FUNC[Util.HeadAnim.PETTING] = DogHead.ANIM_FUNC[Util.HeadAnim.GLAD_PETTING]
@@ -202,7 +243,11 @@ Mod:AddCallback(ModCallbacks.MC_POST_FAMILIAR_RENDER, DogHead.OnHeadRender, Mod.
 ---@param anim integer?
 function DogHead:DoMiniIdleAnim(sprite, anim)
     local animGamble = not anim and DogHead.MiniIdleVariants[math.random(#DogHead.MiniIdleVariants)] or DogHead.MiniIdleVariants[anim]
-    sprite:Play(animGamble.Name .. "_" .. animGamble.Variants[math.random(#animGamble.Variants)], true)
+    if animGamble.Variants then
+        sprite:Play(animGamble.Name .. "_" .. animGamble.Variants[math.random(#animGamble.Variants)], true)
+    else
+        sprite:Play(animGamble.Name)
+    end
 end
 
 ---@param olga EntityFamiliar

@@ -33,11 +33,7 @@ FeedingBowl.AnimToSfx = {
     ["FillSnack"] =   {Land = FeedingBowl.FALL_SFX,                 Drop = SoundEffect.SOUND_1UP},
 }
 
-FeedingBowl.PICKUP_CHANCE = 1 / 2
-
-FeedingBowl.PersistentData = {
-    PupPoints = 0
-}
+FeedingBowl.PICKUP_CHANCE = 1 / 6
 --#endregion
 --#region Feeding Bowl Callbacks
 function FeedingBowl:OnRoomClear()

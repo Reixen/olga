@@ -72,9 +72,7 @@ end
 ---             - Scratch
 ---         - Stand
 ---             - Running
----         - Head Specific Idle Animations
----             - Make Olga's petting animation transition smoothly (NotGlad)
----             - Curious
+---             - Bork Set 2
 --- 2) Fetch [DONE]
 --- 3) Petting Hand [DONE]
 --- 4) Feeding Bowl
