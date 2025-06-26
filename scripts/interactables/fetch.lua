@@ -11,7 +11,7 @@ Fetch.FETCH_TARGET_SUBTYPE = Isaac.GetEntitySubTypeByName("Fetch Target")
 Fetch.FETCHING_OBJECT_VARIANT = Isaac.GetEntityVariantByName("Fetching Object")
 
 Fetch.TARGET_SPEED = 10
-Fetch.PICKUP_CHANCE = 1 / 6
+Fetch.PICKUP_CHANCE = 1 / 8
 Fetch.ROTG_CHANCE = 1 / 100
 
 local ONE_SEC = 30

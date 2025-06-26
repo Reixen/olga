@@ -31,9 +31,9 @@ Debug.Commands = {
         for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
             local olga = familiar:ToFamiliar() ---@cast olga EntityFamiliar
             local data = olga:GetData()
-            Mod.Dog.Head:DoMiniIdleAnim(data.headSprite, Mod.Dog.Head.MiniIdle["Tilt"])
-            --Mod.Dog.Head:DoIdleAnimation(familiar:ToFamiliar(), familiar:GetData())
-            data.animCD = olga.FrameCount + 60
+            --Mod.Dog.Head:DoMiniIdleAnim(data.headSprite, Mod.Dog.Head.MiniIdle["Tilt"])
+            Mod.Dog.Head:DoIdleAnimation(familiar:ToFamiliar(), familiar:GetData())
+            data.animCD = olga.FrameCount + 180
         end
     end
     },

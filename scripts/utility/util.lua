@@ -50,8 +50,12 @@ Util.BodyAnim = {
     -- Transitionals
     SIT_TO_STAND = "SitToStand",
     STAND_TO_SIT = "StandToSit",
+    SIT_TO_SCRATCHING = "SitToScratching",
+    SCRATCHING_TO_SIT = "ScratchingToSit",
     -- Idle Animations
-    PLAYFUL = "Playful",
+    PLAYFUL_1 = "Playful1",
+    --PLAYFUL_2 = "Playful2",
+    SCRATCHING = "Scratching",
 }
 
 ---@enum DogState
@@ -241,16 +245,15 @@ end
 ---@param enums table
 ---@param animFunc table
 ---@param transitionAnim function
----@param miniIdleAnim function?
 ---@param idleAnim function?
-function Util:FillEmptyAnimFunctions(enums, animFunc, transitionAnim, miniIdleAnim, idleAnim)
+---@param miniIdleAnim function?
+function Util:FillEmptyAnimFunctions(enums, animFunc, transitionAnim, idleAnim, miniIdleAnim)
     for _, enumName in pairs(enums) do
         if animFunc[enumName] then
             goto skip
         end
 
         local isTransition = string.find(enumName, "To")
-
         if isTransition then
             animFunc[enumName] = transitionAnim
             goto skip
@@ -261,7 +264,6 @@ function Util:FillEmptyAnimFunctions(enums, animFunc, transitionAnim, miniIdleAn
         end
 
         local isMiniIdle = string.find(enumName, "_")
-
         if isMiniIdle then
             animFunc[enumName] = miniIdleAnim
             goto skip

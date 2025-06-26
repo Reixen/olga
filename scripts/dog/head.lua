@@ -11,10 +11,12 @@ local Util = Mod.Util
 DogHead.HAPPY_COLLECTIBLE = CollectibleType.COLLECTIBLE_NUMBER_ONE
 DogHead.SOUND_YAWN = Isaac.GetSoundIdByName("Olga Yawn")
 DogHead.SOUND_BARK = Isaac.GetSoundIdByName("Olga Bark")
+DogHead.SOUND_PANT = Isaac.GetSoundIdByName("Olga Pant")
 
 DogHead.ANIM_CHANCE = 1 / 30
 DogHead.MINI_ANIM_CHANCE = 1 / 4
 DogHead.REPEAT_CHANCE = 1 / 6
+DogHead.PANT_CHANCE = 1 / 10
 
 local ONE_SEC = 30
 DogHead.MINI_IDLE_COOLDOWN = ONE_SEC * 2
@@ -26,9 +28,11 @@ DogHead.HAPPY_DISTANCE = ONE_TILE * 2
 DogHead.PETTING_DISTANCE = ONE_TILE * 1.2
 
 DogHead.IdleAnim = {
-    {Name = Util.HeadAnim.YAWN,             BodyState = nil},
-    {Name = Util.HeadAnim.BARK,             BodyState = nil},
-    {Name = Util.BodyAnim.PLAYFUL,          BodyState = Util.DogState.STANDING},
+    {Name = Util.HeadAnim.YAWN,                 BodyState = nil},
+    {Name = Util.HeadAnim.BARK,                 BodyState = nil},
+    {Name = Util.BodyAnim.PLAYFUL_1,            BodyState = Util.DogState.STANDING},
+    --{Name = Util.BodyAnim.PLAYFUL_2,          BodyState = Util.DogState.STANDING},
+    {Name = Util.BodyAnim.SIT_TO_SCRATCHING,    BodyState = Util.DogState.SITTING},
 }
 
 DogHead.MiniIdleVariants = {
@@ -177,8 +181,8 @@ Util:FillEmptyAnimFunctions(
     Util.HeadAnim,
     DogHead.ANIM_FUNC,
     DogHead.ANIM_FUNC[Util.HeadAnim.GLAD_TO_IDLE],
-    DogHead.ANIM_FUNC[Util.HeadAnim.EAR_FLICK_L],
-    DogHead.ANIM_FUNC[Util.HeadAnim.YAWN]
+    DogHead.ANIM_FUNC[Util.HeadAnim.YAWN],
+    DogHead.ANIM_FUNC[Util.HeadAnim.EAR_FLICK_L]
 )
 
 --#endregion
@@ -207,6 +211,11 @@ function DogHead:OnHeadRender(olga, offset)
     data.headSprite.FlipX = olga.FlipX
     data.headSprite.Scale = olga.Player:HasCollectible(CollectibleType.COLLECTIBLE_BFFS) and Vector(1.25, 1.25) or Vector.One
     data.headSprite:Update()
+
+    if data.headSprite:IsEventTriggered("Pant")
+    and math.random() < DogHead.PANT_CHANCE then
+        sfxMan:Play(DogHead.SOUND_PANT, 3, 2, false, math.random(10, 12)/10)
+    end
 
     local animName = data.headSprite:GetAnimation()
     DogHead.ANIM_FUNC[animName](olga, data.headSprite, data, animName)

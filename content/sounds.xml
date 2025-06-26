@@ -1,19 +1,25 @@
 <sounds root="sfx/">
 
     <sound name ="Olga Bark">
-        <sample weight="1" path="olga_bark1.wav" />
-        <sample weight="1" path="olga_bark2.wav" />
-        <sample weight="1" path="olga_bark3.wav" />
-        <sample weight="1" path="olga_bark4.wav" />
-        <sample weight="1" path="olga_bark5.wav" />
-        <sample weight="1" path="olga_bark6.wav" />
+        <sample weight="1" path="olga/bark1.wav" />
+        <sample weight="1" path="olga/bark2.wav" />
+        <sample weight="1" path="olga/bark3.wav" />
+        <sample weight="1" path="olga/bark4.wav" />
+        <sample weight="1" path="olga/bark5.wav" />
+        <sample weight="1" path="olga/bark6.wav" />
     </sound>
 
-    <sound name ="Olga Bark Set 1"> <sample weight="1" path="olga_bark_set1.wav" /> </sound>
-    <sound name ="Olga Bark Set 2"> <sample weight="1" path="olga_bark_set2.wav" /> </sound>
+    <sound name ="Olga Pant">
+        <sample weight="1" path="olga/pant1.wav" />
+        <sample weight="1" path="olga/pant2.wav" />
+    </sound>
 
-    <sound name ="Olga Boof"> <sample weight="1" path="olga_boof.wav" /> </sound>
-    <sound name ="Olga Yawn"> <sample weight="1" path="olga_yawn.wav" /> </sound>
+    <sound name ="Olga Bark Set 1"> <sample weight="1" path="olga/bark_set1.wav" /> </sound>
+    <sound name ="Olga Bark Set 2"> <sample weight="1" path="olga/bark_set2.wav" /> </sound>
+
+    <sound name ="Olga Boof"> <sample weight="1" path="olga/boof.wav" /> </sound>
+    <sound name ="Olga Yawn"> <sample weight="1" path="olga/yawn.wav" /> </sound>
+    <sound name ="Olga Scratch"> <sample weight="1" path="olga/scratch.wav" /> </sound>
 
     <sound name ="Feeding Bowl Fall"> <sample weight="1" path="feeding_bowl_fall.wav" /> </sound>
     <sound name ="Feeding Bowl Pour"> <sample weight="1" path="feeding_bowl_pour.wav" /> </sound>

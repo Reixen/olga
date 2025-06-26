@@ -10,6 +10,7 @@ local Util = Mod.Util
 local saveMan = Mod.SaveManager
 
 DogBody.SOUND_BARK_SET1 = Isaac.GetSoundIdByName("Olga Bark Set 1")
+DogBody.SOUND_SCRATCH = Isaac.GetSoundIdByName("Olga Scratch")
 DogBody.EXPLOSION_VARIANT = Isaac.GetEntityVariantByName("Stock Explosion")
 DogBody.EXPLOSION_SFX = Isaac.GetSoundIdByName("Stock Explosion")
 
@@ -198,23 +199,41 @@ DogBody.ANIM_FUNC = {
     end,
 
     -- Idle animations
-    [Util.BodyAnim.PLAYFUL] = function(_, sprite, data)
+    [Util.BodyAnim.PLAYFUL_1] = function(olga, sprite, data, name)
         if sprite:IsFinished() then
             sprite:Play(Util.BodyAnim.STAND, true)
             data.headRender = true
             sprite.PlaybackSpeed = 1
         end
 
+        if sprite:IsEventTriggered("TransitionHook")
+        and data.animCD < olga.FrameCount then
+            sprite.PlaybackSpeed = 1
+            sprite:Play(Util.BodyAnim.SCRATCHING_TO_SIT, true)
+        end
+
         if sprite:IsEventTriggered("BarkSet") then
             sfxMan:Play(DogBody.SOUND_BARK_SET1, 2, 2, false)
         end
 
-        sprite.PlaybackSpeed = 0.75
+        if sprite:IsEventTriggered("Scratch") then
+            sfxMan:Play(DogBody.SOUND_SCRATCH, 1.5, 1, false, math.random(9, 12)/10)
+        end
+        if name ~= Util.BodyAnim.SCRATCHING then
+            sprite.PlaybackSpeed = 0.74
+            return
+        end
+
+        sprite.PlaybackSpeed = 1.3
     end,
 
     -- Transitional animations
-    [Util.BodyAnim.SIT_TO_STAND] = function(olga, sprite, _, name)
+    [Util.BodyAnim.SIT_TO_STAND] = function(olga, sprite, data, name)
         if not sprite:IsFinished() then return end
+
+        if name == Util.BodyAnim.SCRATCHING_TO_SIT then
+            data.headRender = true
+        end
 
         local animToPlay = Util:FindAnimSubstring(name)
         sprite:Play(Util.BodyAnim[animToPlay], true)
@@ -228,16 +247,17 @@ DogBody.ANIM_FUNC = {
         end
     end,
 }
-DogBody.ANIM_FUNC[Util.BodyAnim.STAND_TO_SIT] = DogBody.ANIM_FUNC[Util.BodyAnim.SIT_TO_STAND]
 DogBody.ANIM_FUNC[Util.BodyAnim.WALKING] = DogBody.ANIM_FUNC[Util.BodyAnim.STAND]
 DogBody.ANIM_FUNC[Util.BodyAnim.RUNNING] = DogBody.ANIM_FUNC[Util.BodyAnim.STAND]
 
 -- Use when there's more animations
---Util:FillEmptyAnimFunctions(
-    --Util.BodyAnim,
-    --DogBody.ANIM_FUNC,
-    --DogBody.ANIM_FUNC[Util.BodyAnim.SIT_TO_STAND]
---)
+Util:FillEmptyAnimFunctions(
+    Util.BodyAnim,
+    DogBody.ANIM_FUNC,
+    DogBody.ANIM_FUNC[Util.BodyAnim.SIT_TO_STAND],
+    DogBody.ANIM_FUNC[Util.BodyAnim.PLAYFUL_1],
+    nil
+)
 
 --#endregion
 --#region Olga Head Animation Functions
@@ -506,7 +526,7 @@ function DogBody:FindDogOwner(olga, data)
     data.hasOwner = true
 
     local pData = Util:GetData(olga.Player, Util.ID)
-    pData.hasDoggy = olga
+    pData.hasDoggy = true
 
     Util:UpdateHandColor(nearestPlayer, olga:GetData().headSprite)
 end

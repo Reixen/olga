@@ -62,20 +62,18 @@ for _, folder in ipairs(fileStructure) do
     end
 end
 
-
 ----------------------------------------------------------------
 ---                          TO DO:                          ---
 ----------------------------------------------------------------
 --- 1) Head + Body
 ---     - Animations bro
----         - Sit
----             - Scratch
 ---         - Stand
 ---             - Bork Set 2
 --- 2) Fetch [DONE]
 --- 3) Petting Hand [DONE]
 --- 4) Feeding Bowl
 ---     - Needs better pour sfx
+---     - Olga eating animations
 ---     - Maybe make her stand up when a feeding bowl exists?
 --- 5) Gameplay
 ---     - Decide if dog should be spawned by using a consumable or just instantly
@@ -93,6 +91,7 @@ end
 ---     - Get the pickup back when HG is used after leaving the room mid-fetch
 --- 
 --- Attribution:
---- olga_yawn.wav: https://freesound.org/people/jinxycat49/sounds/490164/
+--- yawn: https://freesound.org/people/jinxycat49/sounds/490164/
 --- feeding_bowl_pour.wav: dog_food_in_bowl.wav by smokevhstapes -- https://freesound.org/s/412382/ -- License: Attribution 4.0
 --- feeding_bowl_fall.wav: Metal Dog Bowl Falling.wav by ChamoneSteyn -- https://freesound.org/s/542210/ -- License: Attribution 4.0
+--- pant_1 and pant_2: dog panting + half growl + whine.WAV by pogmothoin -- https://freesound.org/s/401307/ -- License: Attribution 4.0
