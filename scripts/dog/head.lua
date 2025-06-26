@@ -259,8 +259,9 @@ end
 
 ---@param olga EntityFamiliar
 ---@param data table
-function DogHead:DoIdleAnimation(olga, data)
-    local chosenAnim = DogHead.IdleAnim[math.random(#DogHead.IdleAnim)]
+---@param anim table?
+function DogHead:DoIdleAnimation(olga, data, anim)
+    local chosenAnim = anim or DogHead.IdleAnim[math.random(#DogHead.IdleAnim)]
 
     -- If the animation does not require a certain stance, play it
     if not chosenAnim.BodyState then

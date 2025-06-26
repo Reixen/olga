@@ -77,7 +77,6 @@ end
 ---     - Maybe make her stand up when a feeding bowl exists?
 --- 5) Gameplay
 ---     - Decide if dog should be spawned by using a consumable or just instantly
----     - To remove Sac Altar use?
 --- 6) Bugfixes [DONE]
 --- 
 --- Low Priority Animations

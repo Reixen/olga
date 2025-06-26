@@ -16,7 +16,6 @@ DogBody.EXPLOSION_SFX = Isaac.GetSoundIdByName("Stock Explosion")
 
 DogBody.SWITCH_CHANCE = 1 / 40
 DogBody.WANDER_CHANCE = 1 / 2
-DogBody.EXPLOSION_CHANCE = 1 / 10
 DogBody.WALK_SPEED = 0.4
 DogBody.RUN_SPEED = 0.9
 DogBody.RUN_LENGTH = 4
@@ -354,22 +353,21 @@ function DogBody:GoodbyeOlga()
 end
 Mod:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, DogBody.GoodbyeOlga)
 
-function DogBody:OnDogRemove(entity)
-    if entity.Variant ~= Mod.Dog.VARIANT
-    or Util:IsInStartingRoom() then
-        return
-    end
+function DogBody:OnSacrifice()
+    for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
+        local olga = familiar:ToFamiliar() ---@cast olga EntityFamiliar
 
-    local olga = entity:ToFamiliar()
-    if olga:GetDropRNG():RandomFloat() < DogBody.EXPLOSION_CHANCE then
-        local explosion = Isaac.Spawn(EntityType.ENTITY_EFFECT, DogBody.EXPLOSION_VARIANT, 0, olga.Position, Vector.Zero, nil):ToEffect()
-        explosion.Timeout = 30
-        explosion.DepthOffset = 30
-        sfxMan:Play(DogBody.EXPLOSION_SFX)
+        if not olga:GetSprite():IsPlaying(Util.BodyAnim.PLAYFUL_1) then
+            Mod.Dog.Head:DoIdleAnimation(olga, olga:GetData(), Mod.Dog.Head.IdleAnim[3])
+
+            local explosion = Isaac.Spawn(EntityType.ENTITY_EFFECT, DogBody.EXPLOSION_VARIANT, 0, olga.Position, Vector.Zero, nil):ToEffect()
+            explosion.Timeout = 30
+            explosion.DepthOffset = 30
+            sfxMan:Play(DogBody.EXPLOSION_SFX)
+        end
     end
 end
-Mod:AddCallback(ModCallbacks.MC_POST_ENTITY_REMOVE, DogBody.OnDogRemove, EntityType.ENTITY_FAMILIAR)
-
+Mod:AddCallback(ModCallbacks.MC_USE_ITEM, DogBody.OnSacrifice, CollectibleType.COLLECTIBLE_SACRIFICIAL_ALTAR)
 --#endregion
 --#region Olga Helper Functions
 ---@param anim string
