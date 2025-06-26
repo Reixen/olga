@@ -15,7 +15,7 @@ DogBody.EXPLOSION_SFX = Isaac.GetSoundIdByName("Stock Explosion")
 
 DogBody.SWITCH_CHANCE = 1 / 40
 DogBody.WANDER_CHANCE = 1 / 2
-DogBody.EXPLOSION_CHANCE = 1 / 100
+DogBody.EXPLOSION_CHANCE = 1 / 10
 DogBody.WALK_SPEED = 0.4
 DogBody.RUN_SPEED = 0.9
 DogBody.RUN_LENGTH = 4
@@ -318,6 +318,10 @@ function DogBody:GoodbyeOlga()
         if not PlayerManager.AnyoneHasTrinket(Mod.Pickup.CRUDE_DRAWING_ID) then
             local pData = Util:GetData(olga.Player, Util.ID)
             pData.hasDoggy = false
+
+            local pos = Mod.Room():FindFreePickupSpawnPosition(familiar.Position, 0, true)
+            Isaac.Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TRINKET, Mod.Pickup.CRUDE_DRAWING_ID, pos, Vector.Zero, nil)
+
             familiar:Remove()
             return
         end
@@ -336,29 +340,16 @@ function DogBody:OnDogRemove(entity)
         return
     end
 
-    local room = Mod.Room()
-    local pos = room:FindFreePickupSpawnPosition(entity.Position, 0, true)
-
-    if entity:GetDropRNG():RandomFloat() < DogBody.EXPLOSION_CHANCE then
-        Isaac.Spawn(EntityType.ENTITY_EFFECT, DogBody.EXPLOSION_VARIANT, 0, pos, Vector.Zero, entity)
+    local olga = entity:ToFamiliar()
+    if olga:GetDropRNG():RandomFloat() < DogBody.EXPLOSION_CHANCE then
+        local explosion = Isaac.Spawn(EntityType.ENTITY_EFFECT, DogBody.EXPLOSION_VARIANT, 0, olga.Position, Vector.Zero, nil):ToEffect()
+        explosion.Timeout = 30
+        explosion.DepthOffset = 30
+        sfxMan:Play(DogBody.EXPLOSION_SFX)
     end
-
-    if PlayerManager.AnyoneHasTrinket(Mod.Pickup.CRUDE_DRAWING_ID) then return end
-
-    -- For Sacrificial Altar
-    Isaac.CreateTimer(function()
-        Isaac.Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TRINKET, Mod.Pickup.CRUDE_DRAWING_ID, pos, Vector.Zero, nil)
-    end, 1, 1, true)
 end
 Mod:AddCallback(ModCallbacks.MC_POST_ENTITY_REMOVE, DogBody.OnDogRemove, EntityType.ENTITY_FAMILIAR)
 
----@param effect EntityEffect
-function DogBody:ExplosionInit(effect)
-    sfxMan:Play(DogBody.EXPLOSION_SFX)
-    effect.Timeout = 30
-    effect.DepthOffset = 30
-end
-Mod:AddCallback(ModCallbacks.MC_POST_EFFECT_INIT, DogBody.ExplosionInit, DogBody.EXPLOSION_VARIANT)
 --#endregion
 --#region Olga Helper Functions
 ---@param anim string

@@ -60,10 +60,10 @@ DogHead.ANIM_FUNC = {
         if rng:RandomFloat() < DogHead.ANIM_CHANCE then
 
             if rng:RandomFloat() < DogHead.MINI_ANIM_CHANCE then
-                data.animCD = olga.FrameCount + DogHead.ANIM_COOLDOWN
+                data.animCD = olga.FrameCount + DogHead.MINI_IDLE_COOLDOWN
                 DogHead:DoMiniIdleAnim(data.headSprite)
             else
-                data.animCD = olga.FrameCount + DogHead.MINI_IDLE_COOLDOWN
+                data.animCD = olga.FrameCount + DogHead.ANIM_COOLDOWN
                 DogHead:DoIdleAnimation(olga, data)
             end
         end
