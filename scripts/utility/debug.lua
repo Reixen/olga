@@ -5,8 +5,6 @@ local Debug = {}
 OlgaMod.Debug = Debug
 
 local Util = OlgaMod.Util
-local Head = Mod.Dog.Head
-local Body = Mod.Dog.Body
 local saveMan = Mod.SaveManager
 
 Debug.COMMAND_IDENTIFIER = "olgadebug"

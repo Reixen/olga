@@ -153,35 +153,10 @@ DogHead.ANIM_FUNC = {
         end
 
         local rng = olga:GetDropRNG()
+
         -- If the animation playing is a head tilt animation
         if animName:match("Tilt") then
-
-            local directionStringStart = animName:find("_")
-            local tiltDirection = animName:sub(directionStringStart + 1)
-
-            if data.animCD < olga.FrameCount then
-
-                if sprite:IsFinished(Util.HeadAnim.TILT_SWITCH_LEFT) then
-                    sprite:SetFrame(Util.HeadAnim.TILT_RIGHT, 7)
-                    tiltDirection = "Right"
-                elseif sprite:IsFinished(Util.HeadAnim.TILT_SWITCH_RIGHT) then
-                    sprite:SetFrame(Util.HeadAnim.TILT_LEFT, 7)
-                    tiltDirection = "Left"
-                end
-
-                -- Repeat or nah
-                if rng:RandomFloat() < DogHead.REPEAT_CHANCE then
-                    -- Decide if it should prolong the tilt or switch
-                    if rng:RandomFloat() < 0.5 then
-                        sprite:Play("TiltSwitch_" .. tiltDirection, true)
-                        data.animCD = olga.FrameCount + DogHead.MINI_IDLE_COOLDOWN
-                    else
-                        data.animCD = olga.FrameCount + (DogHead.MINI_IDLE_COOLDOWN / 2)
-                    end
-                else
-                    sprite:Play("Tilt" .. tiltDirection .. "ToIdle", true)
-                end
-            end
+            DogHead:TryProlongTilt(olga, data, rng, sprite, animName)
             return
         end
 
@@ -270,7 +245,7 @@ function DogHead:TryTurningGlad(olga, sprite, data)
     and Util:IsWithin(olga, olga.Player.Position, DogHead.HAPPY_DISTANCE) then
         sprite:Play(Util.HeadAnim.IDLE_TO_GLAD, true)
     end
-    data.attentionCD = olga.FrameCount + Util.ATTENTION_COOLDOWN
+    data.attentionCD = olga.FrameCount + DogHead.ATTENTION_COOLDOWN
 end
 
 ---@param olga EntityFamiliar
@@ -305,5 +280,40 @@ function DogHead:DoIdleAnimation(olga, data)
     end
 
     data.animToPlay = chosenAnim.Name
+end
+
+---@param olga EntityFamiliar
+---@param data DogData
+---@param rng RNG
+---@param sprite Sprite
+---@param animName string
+function DogHead:TryProlongTilt(olga, data, rng, sprite, animName)
+    if data.animCD > olga.FrameCount then
+        return
+    end
+
+    local directionStringStart = animName:find("_")
+    local tiltDirection = animName:sub(directionStringStart + 1)
+
+    if sprite:IsFinished(Util.HeadAnim.TILT_SWITCH_LEFT) then
+        sprite:SetFrame(Util.HeadAnim.TILT_RIGHT, 7)
+        tiltDirection = "Right"
+    elseif sprite:IsFinished(Util.HeadAnim.TILT_SWITCH_RIGHT) then
+        sprite:SetFrame(Util.HeadAnim.TILT_LEFT, 7)
+        tiltDirection = "Left"
+    end
+
+    -- Repeat or nah
+    if rng:RandomFloat() < DogHead.REPEAT_CHANCE then
+        -- Decide if it should prolong the tilt or switch
+        if rng:RandomFloat() < 0.5 then
+            sprite:Play("TiltSwitch_" .. tiltDirection, true)
+            data.animCD = olga.FrameCount + DogHead.MINI_IDLE_COOLDOWN
+        else
+            data.animCD = olga.FrameCount + (DogHead.MINI_IDLE_COOLDOWN / 4)
+        end
+    else
+        sprite:Play("Tilt" .. tiltDirection .. "ToIdle", true)
+    end
 end
 --#endregion

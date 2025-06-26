@@ -71,7 +71,6 @@ end
 ---         - Sit
 ---             - Scratch
 ---         - Stand
----             - Running
 ---             - Bork Set 2
 --- 2) Fetch [DONE]
 --- 3) Petting Hand [DONE]

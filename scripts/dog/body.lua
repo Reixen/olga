@@ -17,14 +17,15 @@ DogBody.SWITCH_CHANCE = 1 / 40
 DogBody.WANDER_CHANCE = 1 / 2
 DogBody.EXPLOSION_CHANCE = 1 / 100
 DogBody.WALK_SPEED = 0.4
-DogBody.RUN_SPEED = 0.7
+DogBody.RUN_SPEED = 0.9
+DogBody.RUN_LENGTH = 4
 
 local ONE_TILE = 40
 local ONE_SEC = 30
 DogBody.FETCH_RADIUS = ONE_TILE / 2
 DogBody.WANDER_RADIUS = 5
 DogBody.HAPPY_DISTANCE = ONE_TILE * 2.2
-DogBody.DECAY_STRENGTH = 1
+DogBody.DECAY_STRENGTH = 0.75
 
 DogBody.EVENT_COOLDOWN = ONE_SEC * 6
 
@@ -56,6 +57,7 @@ DogBody.PathfindingResult = {
 ---@field hasBall boolean?
 ---@field hasBowl boolean?
 ---@field isMoving boolean?
+---@field isRunning boolean?
 
 --#endregion
 --#region Olga Body Animation Functions
@@ -92,17 +94,7 @@ DogBody.ANIM_FUNC = {
         local rng = olga:GetDropRNG()
         local frameCount = olga.FrameCount
 
-        -- Animations
-        if olga.Velocity:Length() > 0.1
-        and data.isMoving then
-            sprite:Play(Util.BodyAnim.WALKING, true)
-            data.isMoving = false
-
-        elseif olga.Velocity:Length() <= 0.1
-        and not data.isMoving then
-            sprite:Play(Util.BodyAnim.STAND, true)
-            data.isMoving = true
-        end
+        DogBody:PlayAnimation(olga.Velocity:Length(), sprite)
 
         if not data.feedingBowl
         and not Util:IsEating(olga)
@@ -238,6 +230,7 @@ DogBody.ANIM_FUNC = {
 }
 DogBody.ANIM_FUNC[Util.BodyAnim.STAND_TO_SIT] = DogBody.ANIM_FUNC[Util.BodyAnim.SIT_TO_STAND]
 DogBody.ANIM_FUNC[Util.BodyAnim.WALKING] = DogBody.ANIM_FUNC[Util.BodyAnim.STAND]
+DogBody.ANIM_FUNC[Util.BodyAnim.RUNNING] = DogBody.ANIM_FUNC[Util.BodyAnim.STAND]
 
 -- Use when there's more animations
 --Util:FillEmptyAnimFunctions(
@@ -649,7 +642,9 @@ function DogBody:TryApproachBowl(olga, data)
         return
     end
 
-    local pathfindingResult = DogBody:Pathfind(olga, data.targetPos, DogBody.RUN_SPEED, data, ONE_TILE * 0.5)
+    local pathfindingResult = DogBody:Pathfind(
+        olga, data.targetPos, DogBody.RUN_SPEED, data, ONE_TILE * 0.5, ONE_TILE, DogBody.DECAY_STRENGTH
+    )
 
     if pathfindingResult == DogBody.PathfindingResult.SUCCESSFUL then
         olga.Velocity = Vector.Zero
@@ -685,6 +680,21 @@ function DogBody:ReturnToDefault(olga, data, resetEventCD)
     olga.State = Util.DogState.STANDING
     if resetEventCD then
         data.eventCD = olga.FrameCount + DogBody.EVENT_COOLDOWN
+    end
+end
+
+---@param length number
+---@param sprite Sprite
+function DogBody:PlayAnimation(length, sprite)
+    if length > DogBody.RUN_LENGTH then
+        sprite:Play(Util.BodyAnim.RUNNING)
+
+    elseif length <= DogBody.RUN_LENGTH
+    and length > 0.1 then
+        sprite:Play(Util.BodyAnim.WALKING)
+
+    elseif length <= 0.1 then
+        sprite:Play(Util.BodyAnim.STAND)
     end
 end
 --#endregion

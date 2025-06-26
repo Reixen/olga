@@ -46,6 +46,7 @@ Util.BodyAnim = {
     SIT_WAGGING = "SitWagging",
     STAND = "Stand",
     WALKING = "Walking",
+    RUNNING = "Running",
     -- Transitionals
     SIT_TO_STAND = "SitToStand",
     STAND_TO_SIT = "StandToSit",
