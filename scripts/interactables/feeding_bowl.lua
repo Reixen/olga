@@ -88,7 +88,8 @@ function FeedingBowl:OnBowlUpdate(bowl)
     data.animName = sprite:GetAnimation()
 
     if sprite:IsFinished()
-    and data.animName:find("ToIdle") then
+    and data.animName:find("ToIdle")
+    or sprite:IsFinished("Spawn") then
         sprite:Play("Idle")
     end
 
@@ -112,7 +113,7 @@ function FeedingBowl:OnBowlCollision(bowl, collider)
     if collider.Type ~= EntityType.ENTITY_PLAYER then return end
 
     local sprite = bowl:GetSprite()
-    if not sprite:IsFinished() then
+    if not sprite:IsFinished("Idle") then
         return
     end
 

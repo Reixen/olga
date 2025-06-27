@@ -634,6 +634,7 @@ function DogBody:TryApproachBowl(olga, data)
         end
 
         if not feedingBowl then
+            Util:RemoveBowlIndex(saveMan.GetRoomSave().filledBowls, data.targetPos)
             DogBody:ReturnToDefault(olga, data)
         end
 

@@ -314,10 +314,10 @@ function Util:IsBusy(olga)
 end
 
 ---@param idxTable table
----@param bowl EntitySlot
+---@param bowl EntitySlot | Vector
 function Util:RemoveBowlIndex(idxTable, bowl)
     for i, gridIdx in ipairs(idxTable) do
-        if Mod.Room():GetGridIndex(bowl.Position) == gridIdx then
+        if Mod.Room():GetGridIndex(bowl.Position or bowl) == gridIdx then
             table.remove(idxTable, i)
             break
         end
