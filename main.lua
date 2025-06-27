@@ -66,15 +66,14 @@ end
 ---                          TO DO:                          ---
 ----------------------------------------------------------------
 --- 1) Head + Body
----     - Animations bro
----         - Stand
----             - Bork Set 2
+---     - Snack Eating anim
+---     - Dinner Eating anim
+---     - Dessert/Generic Eating anim
+---     - Bork Set 2
 --- 2) Fetch [DONE]
 --- 3) Petting Hand [DONE]
 --- 4) Feeding Bowl
 ---     - Needs better pour sfx
----     - Olga eating animations
----     - Maybe make her stand up when a feeding bowl exists?
 --- 5) Gameplay
 ---     - Decide if dog should be spawned by using a consumable or just instantly
 --- 6) Bugfixes [DONE]

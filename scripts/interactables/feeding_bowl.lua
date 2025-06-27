@@ -76,7 +76,7 @@ function FeedingBowl:OnBowlInit(bowl)
 
     local sprite = bowl:GetSprite()
     sprite:Play(data.animName)
-    sprite:SetFrame(data.animFrame)
+    sprite:SetLastFrame()
 end
 Mod:AddCallback(ModCallbacks.MC_POST_SLOT_INIT, FeedingBowl.OnBowlInit, FeedingBowl.BOWL_VARIANT)
 
@@ -86,7 +86,11 @@ function FeedingBowl:OnBowlUpdate(bowl)
 
     local data = saveMan.GetRoomSave(bowl)
     data.animName = sprite:GetAnimation()
-    data.animFrame = sprite:GetFrame()
+
+    if sprite:IsFinished()
+    and data.animName:find("ToIdle") then
+        sprite:Play("Idle")
+    end
 
     local sfxPack = FeedingBowl.AnimToSfx[data.animName]
 
@@ -108,7 +112,6 @@ function FeedingBowl:OnBowlCollision(bowl, collider)
     if collider.Type ~= EntityType.ENTITY_PLAYER then return end
 
     local sprite = bowl:GetSprite()
-    local isPlayingFill = string.find(sprite:GetAnimation(), "Fill")
     if not sprite:IsFinished() then
         return
     end

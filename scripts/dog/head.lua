@@ -7,6 +7,7 @@ OlgaMod.Dog.Head = DogHead
 local game = Mod.Game
 local sfxMan = Mod.SfxMan
 local Util = Mod.Util
+local saveMan = Mod.SaveManager
 
 DogHead.HAPPY_COLLECTIBLE = CollectibleType.COLLECTIBLE_NUMBER_ONE
 DogHead.SOUND_YAWN = Isaac.GetSoundIdByName("Olga Yawn")
@@ -52,7 +53,9 @@ end
 DogHead.ANIM_FUNC = {
     [Util.HeadAnim.IDLE] = function(olga, sprite, data)
         local frameCount = olga.FrameCount
+
         DogHead:TryTurningGlad(olga, sprite, data)
+        DogHead:TryFindingFood(olga, data) -- Line 335
 
         if not sprite:IsEventTriggered("TransitionHook")
         or Util:IsBusy(olga)
@@ -240,7 +243,7 @@ end
 function DogHead:TryTurningGlad(olga, sprite, data)
     local room = Mod.Room()
     if not sprite:IsEventTriggered("TransitionHook") or not room:IsClear()
-    or not data.canPet or Util:IsFetching(olga) then
+    or not data.canPet or Util:IsBusy(olga) then
         data.canPet = true
         return
     end
@@ -324,6 +327,24 @@ function DogHead:TryProlongTilt(olga, data, rng, sprite, animName)
         end
     else
         sprite:Play("Tilt" .. tiltDirection .. "ToIdle", true)
+    end
+end
+
+---@param olga EntityFamiliar
+---@param data DogData
+function DogHead:TryFindingFood(olga, data)
+    if data.feedingBowl
+    or Util:IsEating(olga)
+    or not saveMan.TryGetRoomSave() then
+        return
+    end
+    local roomSave = saveMan.GetRoomSave()
+    if roomSave.filledBowls and #roomSave.filledBowls > 0 then
+        local nearestBowl = Mod.Dog.Body:FindNearestPosition(roomSave.filledBowls, olga.Position)
+        Mod.Dog.Body:EndFetch(olga, data)
+
+        olga.State = Util.DogState.APPROACH_BOWL
+        data.targetPos = nearestBowl
     end
 end
 --#endregion

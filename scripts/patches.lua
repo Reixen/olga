@@ -22,7 +22,7 @@ if EID then
         "#{{Generic Food}} Feed {{Olga}} Olga to get Pup points!" ..
         "#Can be fed with {{Collectible" .. CollectibleType.COLLECTIBLE_DESSERT .. "}}, " ..
         "{{Collectible" .. CollectibleType.COLLECTIBLE_DINNER .. "}}, or {{Collectible" .. CollectibleType.COLLECTIBLE_SNACK.. "}} "..
-        "and will not be removed from inventory"
+        "and will not be removed from Isaac's inventory"
     )
     EID:addCard(Mod.Pickup.STICK_ID,
         "Spawns a movable target that lasts longer when moved" ..

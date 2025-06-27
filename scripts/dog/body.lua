@@ -96,50 +96,12 @@ DogBody.ANIM_FUNC = {
 
         DogBody:PlayAnimation(olga.Velocity:Length(), sprite)
 
-        if not data.feedingBowl
-        and not Util:IsEating(olga)
-        and saveMan.TryGetRoomSave() then
-            local roomSave = saveMan.GetRoomSave()
-            if roomSave.filledBowls and #roomSave.filledBowls > 0 then
-                local nearestBowl = DogBody:FindNearestPosition(roomSave.filledBowls, olga.Position)
-                DogBody:EndFetch(olga, data)
-
-                olga.State = Util.DogState.APPROACH_BOWL
-                data.targetPos = nearestBowl
-            end
-        end
-
         if olga.State == Util.DogState.EATING then
-            local bowlSprite = data.feedingBowl:GetSprite()
-
-            -- If the bowl is empty
-            if bowlSprite:IsFinished("Idle") then
-                data.feedingBowl = nil
-                DogBody:ReturnToDefault(olga, data, true)
-                return
-            end
-
-            -- If the bowl finished playing the fill animation
-            if not data.headSprite:IsPlaying(Util.HeadAnim.GRAB)
-            and bowlSprite:IsFinished() then
-                data.headSprite:Play(Util.HeadAnim.GRAB)
-            end
-
-            -- Empty the bowl when she munches on it
-            if data.headSprite:IsEventTriggered("Pickup") then
-                bowlSprite:Play("Idle")
-                Util:RemoveBowlIndex(saveMan.GetRoomSave().filledBowls, data.feedingBowl)
-                data.feedingBowl = nil
-                DogBody:ReturnToDefault(olga, data, true)
-
-                local runSave = saveMan.GetRunSave()
-                runSave.pupPoints = runSave.pupPoints and runSave.pupPoints + 1 or 1
-                data.eventCD = olga.FrameCount + DogBody.EVENT_COOLDOWN
-            end
+            DogBody:TryEating(olga, data) -- Line 687
             return
 
         elseif olga.State == Util.DogState.APPROACH_BOWL then
-            DogBody:TryApproachBowl(olga, data)
+            DogBody:TryApproachBowl(olga, data) -- Line 623
             return
 
         elseif olga.State == Util.DogState.RETURN then
@@ -156,7 +118,7 @@ DogBody.ANIM_FUNC = {
             return
 
         elseif olga.State == Util.DogState.FETCH then
-            DogBody:TryFetching(olga, data)
+            DogBody:TryFetching(olga, data) -- Line 537
             return
         end
 
@@ -705,5 +667,73 @@ function DogBody:PlayAnimation(length, sprite)
     elseif length <= 0.1 then
         sprite:Play(Util.BodyAnim.STAND)
     end
+end
+
+---@param olga EntityFamiliar
+---@param data DogData
+function DogBody:TryEating(olga, data)
+    local bowlSprite = data.feedingBowl:GetSprite()
+    local bowlAnimName = bowlSprite:GetAnimation()
+
+    -- If the bowl is empty
+    if bowlSprite:IsFinished("Idle")
+    or bowlAnimName:find("ToIdle") then
+        data.feedingBowl = nil
+        DogBody:ReturnToDefault(olga, data, true)
+        return
+    end
+
+    -- If the fill animation is finished
+    if not data.headSprite:IsPlaying(Util.HeadAnim.GRAB)
+    and bowlSprite:IsFinished() then
+        data.headSprite:Play(Util.HeadAnim.GRAB)
+    end
+
+    -- Empty/Progress to the next capacity when she munches
+    if not data.headSprite:IsEventTriggered("Pickup")
+    or not bowlSprite:IsFinished() then
+        return
+    end
+
+    local foodString
+    if bowlAnimName:find("Capacity") then
+        local capacityStart, capacityEnd = bowlAnimName:find("Capacity")
+        foodString = bowlAnimName:sub(1, capacityStart - 1)
+
+        -- If it's the last animation before it empties
+        if bowlSprite:WasEventTriggered("Empty") then
+            bowlSprite:Play(foodString .. "ToIdle")
+            DogBody:EmptyBowl(olga, data)
+            return
+        end
+
+        -- Otherwise, progress to the next capacity animation
+        local capacityNumber = tonumber(bowlAnimName:sub(capacityEnd + 1))
+        bowlSprite:Play(foodString .. "Capacity" .. tostring(capacityNumber + 1))
+        local runSave = saveMan.GetRunSave()
+        runSave.pupPoints = runSave.pupPoints and runSave.pupPoints + 1 or 1
+        return
+    end
+
+    -- If it's the last animation before it empties
+    if bowlSprite:WasEventTriggered("Empty") then
+        bowlSprite:Play("Idle")
+        DogBody:EmptyBowl(olga, data)
+        return
+    end
+
+    foodString = bowlAnimName:sub(5)
+    bowlSprite:Play(foodString .. "Capacity1")
+end
+
+---@param olga EntityFamiliar
+---@param data DogData
+function DogBody:EmptyBowl(olga, data)
+    Util:RemoveBowlIndex(saveMan.GetRoomSave().filledBowls, data.feedingBowl)
+    DogBody:ReturnToDefault(olga, data, true)
+    data.feedingBowl = nil
+
+    local runSave = saveMan.GetRunSave()
+    runSave.pupPoints = runSave.pupPoints and runSave.pupPoints + 1 or 1
 end
 --#endregion
