@@ -28,6 +28,7 @@ DogBody.HAPPY_DISTANCE = ONE_TILE * 2.2
 DogBody.DECAY_STRENGTH = 0.75
 
 DogBody.EVENT_COOLDOWN = ONE_SEC * 6
+DogBody.FIRE_PLACE_GRID_VALUE = 950 -- Used to stop invalidate fireplaces as something she can reach
 
 ---@enum PathfindingResult
 DogBody.PathfindingResult = {
@@ -320,7 +321,7 @@ function DogBody:OnSacrifice()
         local olga = familiar:ToFamiliar() ---@cast olga EntityFamiliar
 
         if not olga:GetSprite():IsPlaying(Util.BodyAnim.PLAYFUL_1) then
-            Mod.Dog.Head:DoIdleAnimation(olga, olga:GetData(), Mod.Dog.Head.IdleAnim[3])
+            Mod.Dog.Head:DoIdleAnimation(olga, olga:GetData(), Mod.Dog.Head.IdleAnim[4])
 
             local explosion = Isaac.Spawn(EntityType.ENTITY_EFFECT, DogBody.EXPLOSION_VARIANT, 0, olga.Position, Vector.Zero, nil):ToEffect()
             explosion.Timeout = 30
@@ -358,9 +359,9 @@ function DogBody:Pathfind(olga, target, speed, data, endRadius, decayRadius, dec
         olga.FlipX = math.abs((olga.Position - target):GetAngleDegrees()) > 90
     end
 
+    local room = Mod.Room()
+    local gridIdx = room:GetGridIndex(olga.Position)
     if not pathfinder:HasPathToPos(target, true) then
-        local room = Mod.Room()
-        local gridIdx = room:GetGridIndex(olga.Position)
         if not olga:CollidesWithGrid() and room:GetGridCollision(gridIdx) == GridCollisionClass.COLLISION_NONE then
             return DogBody.PathfindingResult.NO_PATH
         end

@@ -72,11 +72,14 @@ end
 ---     - Bork Set 2
 --- 2) Fetch [DONE]
 --- 3) Petting Hand [DONE]
---- 4) Feeding Bowl
----     - Needs better pour sfx
---- 5) Gameplay
----     - Decide if dog should be spawned by using a consumable or just instantly
+--- 4) Feeding Bowl [DONE]
+--- 5) Gameplay [DONE]
 --- 6) Bugfixes [DONE]
+--- 7) Sfx
+---     - Sniff
+---     - Pour
+---     - Crunchy
+---     - GrabPellets
 --- 
 --- Low Priority Animations
 ---     - Lie Down

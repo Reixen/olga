@@ -32,7 +32,7 @@ Debug.Commands = {
             local olga = familiar:ToFamiliar() ---@cast olga EntityFamiliar
             local data = olga:GetData()
             --Mod.Dog.Head:DoMiniIdleAnim(data.headSprite, Mod.Dog.Head.MiniIdle["Tilt"])
-            Mod.Dog.Head:DoIdleAnimation(familiar:ToFamiliar(), familiar:GetData())
+            Mod.Dog.Head:DoIdleAnimation(familiar:ToFamiliar(), familiar:GetData(), Mod.Dog.Head.IdleAnim[3])
             data.animCD = olga.FrameCount + 180
         end
     end

@@ -39,6 +39,7 @@ Util.HeadAnim= {
     -- Idle Animations
     BARK = "Bark",
     YAWN = "Yawn",
+    SNIFF = "Sniff",
 }
 
 Util.BodyAnim = {

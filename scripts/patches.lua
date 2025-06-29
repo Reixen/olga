@@ -13,12 +13,17 @@ if EID then
     EID:addIcon("Feeding Bowl", "Feeding Bowl", 0, 9, 9, 5, 6, sprite)
     EID:addIcon("Generic Food", "Generic Food", 0, 9, 9, 5, 6, sprite)
 
+    --EID:addEntity(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT, 0, "{{Olga}} Olga",
+        --"Your very own canine companion!"..
+        --"#Special consumables may spawn in addition "..
+        --"to room clear rewards"
+    --)
     EID:addTrinket(Mod.Pickup.CRUDE_DRAWING_ID,
         "Prevents {{Olga}} Olga from disappearing next floor"
     )
     EID:addCard(Mod.Pickup.FEEDING_KIT_ID,
         "{{Feeding Bowl}} Spawns a" ..
-        "#{{Blank}} Feeding Bowl and grants Isaac a Generic Food" ..
+        "#{{Blank}} Feeding Bowl and grants Isaac 1 {{Generic Food}} Generic Food" ..
         "#{{Generic Food}} Feed {{Olga}} Olga to get Pup points!" ..
         "#Can be fed with {{Collectible" .. CollectibleType.COLLECTIBLE_DESSERT .. "}}, " ..
         "{{Collectible" .. CollectibleType.COLLECTIBLE_DINNER .. "}}, or {{Collectible" .. CollectibleType.COLLECTIBLE_SNACK.. "}} "..
