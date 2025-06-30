@@ -267,6 +267,7 @@ function DogBody:HandleNewRoom()
     local room = Mod.Room()
     local roomType = room:GetType()
 
+    --local olgacont = 0
     for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
         local olga = familiar:ToFamiliar() ---@cast olga EntityFamiliar
         local data = familiar:GetData() ---@cast data DogData
@@ -280,18 +281,24 @@ function DogBody:HandleNewRoom()
             DogBody:EndFetch(olga, data)
         end
         olga.State = Mod.Util.DogState.STANDING
+        --olgacont = olgacont + 1
     end
+
+    --print(olgacont)
 
     if (roomType ~= RoomType.ROOM_ISAACS and roomType ~= RoomType.ROOM_BARREN)
     or not room:IsFirstVisit() or Mod.Level():GetStage() == LevelStage.STAGE8 then
         return
     end
 
+    --print(roomType ~= RoomType.ROOM_ISAACS)
+    --print(roomType ~= RoomType.ROOM_BARREN)
+    --print(room:IsFirstVisit())
+
     local spawnPos = room:FindFreePickupSpawnPosition(room:GetCenterPos())
     Isaac.Spawn(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT, 0, spawnPos, Vector.Zero, nil)
 end
-Mod:AddCallback(ModCallbacks.MC_PRE_NEW_ROOM, DogBody.HandleNewRoom)
-Mod:AddCallback(ModCallbacks.MC_PRE_GLOWING_HOURGLASS_SAVE, DogBody.HandleNewRoom)
+Mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, DogBody.HandleNewRoom)
 
 function DogBody:GoodbyeOlga()
     for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
@@ -573,7 +580,8 @@ function DogBody:EndFetch(olga, data)
     data.targetPos = nil
     data.eventCD = olga.FrameCount + DogBody.EVENT_COOLDOWN
 
-    if olga.State == Util.DogState.RETURN then
+    if olga.State == Util.DogState.RETURN
+    and data.headSprite then
         data.headSprite:Play(Util.HeadAnim.HOLD_TO_IDLE)
         return
     end
