@@ -65,15 +65,10 @@ end
 ----------------------------------------------------------------
 ---                          TO DO:                          ---
 ----------------------------------------------------------------
---- 1) Head + Body [DONE]
---- 2) Fetch [DONE]
---- 3) Petting Hand [DONE]
---- 4) Feeding Bowl [DONE]
---- 5) Gameplay [DONE]
---- 6) Bugfixes [DONE]
---- 7) Sfx [DONE]
+--- 1) Bugfixes - In progress!
+--- 2) Sfx - Currently under review!
 --- 
---- Low Priority Animations
+--- Future TODO:
 ---     - Lie Down
 ---        - When initialized, sleep
 ---        - Wake up and stretch if approached.
@@ -81,7 +76,6 @@ end
 ---     - Bork Set 2
 ---     
 --- Low Priority Bugs
----     - fetch pickup dies when 
 ---     - Make her stop going to target pos if it stops existing after spawning
 ---     - Get the pickup back when HG is used after leaving the room mid-fetch
 ---     - Make her stop going to the fetching object when the campfire is at that position

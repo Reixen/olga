@@ -41,23 +41,45 @@ PickupHandler.UnlockableDrops = {
 }
 
 PickupHandler.PICKUP_CHANCE = 2 / 5
-PickupHandler.ROTG_CHANCE = 1 / 20
+PickupHandler.ROTG_CHANCE = 1 / 25
 
 --#endregion
 --#region Pickup Handler Anti-Gameplay Callbacks
 ---@param pickup EntityPickup
 function PickupHandler:PrePickupMorph(pickup)
+    if not PickupHandler:IsOlgaModPickup(pickup) then
+        return
+    end
+
+    local rng = pickup:GetDropRNG()
+    local potentialDrops = PickupHandler:EvaluatePotentialDrops()
+    local validDrops = {}
+    for dropType, _ in pairs(potentialDrops) do
+        validDrops[#validDrops+1] = dropType
+    end
+
+    local dropType = validDrops[rng:RandomInt(#validDrops) + 1]
+    local subtype = potentialDrops[dropType][rng:RandomInt(#potentialDrops[dropType]) + 1]
+
+    if subtype == Consumables.STICK_ID then
+        subtype = rng:RandomFloat() < PickupHandler.ROTG_CHANCE and Consumables.ROD_OF_THE_GODS_ID or Consumables.STICK_ID
+    end
+
+    return {EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TAROTCARD, subtype}
+end
+Mod:AddCallback(ModCallbacks.MC_PRE_PICKUP_MORPH, PickupHandler.PrePickupMorph)
+
+---@param pickup EntityPickup
+function PickupHandler:PrePickupConsumed(pickup)
     if PickupHandler:IsOlgaModPickup(pickup) then
         return false
     end
 end
-Mod:AddCallback(ModCallbacks.MC_PRE_PICKUP_MORPH, PickupHandler.PrePickupMorph)
+Mod:AddCallback(ModCallbacks.MC_PRE_PICKUP_COMPOSTED, PickupHandler.PrePickupConsumed, PickupVariant.PICKUP_TAROTCARD)
+Mod:AddCallback(ModCallbacks.MC_PRE_PICKUP_COMPOSTED, PickupHandler.PrePickupConsumed, PickupVariant.PICKUP_TRINKET)
 
-Mod:AddCallback(ModCallbacks.MC_PRE_PICKUP_COMPOSTED, PickupHandler.PrePickupMorph, PickupVariant.PICKUP_TAROTCARD)
-Mod:AddCallback(ModCallbacks.MC_PRE_PICKUP_COMPOSTED, PickupHandler.PrePickupMorph, PickupVariant.PICKUP_TRINKET)
-
-Mod:AddCallback(ModCallbacks.MC_PRE_PICKUP_VOIDED, PickupHandler.PrePickupMorph, PickupVariant.PICKUP_TAROTCARD)
-Mod:AddCallback(ModCallbacks.MC_PRE_PICKUP_VOIDED, PickupHandler.PrePickupMorph, PickupVariant.PICKUP_TRINKET)
+Mod:AddCallback(ModCallbacks.MC_PRE_PICKUP_VOIDED, PickupHandler.PrePickupConsumed, PickupVariant.PICKUP_TAROTCARD)
+Mod:AddCallback(ModCallbacks.MC_PRE_PICKUP_VOIDED, PickupHandler.PrePickupConsumed, PickupVariant.PICKUP_TRINKET)
 
 ---@param cardID Card
 ---@param player EntityPlayer
@@ -187,24 +209,30 @@ end
 function PickupHandler:EvaluatePotentialDrops()
     local potentialDrops = {}
     local dropTypeAmount = 0
+    -- Copy the table
     for k, v in pairs(PickupHandler.BaseDrops) do
-        potentialDrops[k] = v
+        for _, tableVal in ipairs(v) do
+            if not potentialDrops[k] then
+                potentialDrops[k] = {}
+            end
+            potentialDrops[k][#potentialDrops[k]+1] = tableVal
+        end
         dropTypeAmount = dropTypeAmount + 1
     end
 
+    -- Add drops that were unlocked by the player
     for string, unlockableDrops in pairs(PickupHandler.UnlockableDrops) do
-        local gameData = Isaac.GetPersistentGameData()
-        if not potentialDrops[string] then
-            potentialDrops[string] = {}
-            dropTypeAmount = dropTypeAmount + 1
-        end
         for _, table in ipairs(unlockableDrops) do
+            local gameData = Isaac.GetPersistentGameData()
             if gameData:Unlocked(table.AchievementRequirement) then
+                if not potentialDrops[string] then
+                    potentialDrops[string] = {}
+                    dropTypeAmount = dropTypeAmount + 1
+                end
                 potentialDrops[string][#potentialDrops[string]+1] = table.Drop
             end
         end
     end
-
     return potentialDrops, dropTypeAmount
 end
 --#endregion

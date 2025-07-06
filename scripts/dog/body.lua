@@ -362,7 +362,7 @@ function DogBody:OnSacrifice()
             if Util:IsEating(olga) then
                 data.feedingBowl = nil
             elseif Util:IsFetching(olga) then
-                DogBody:EndFetch(olga, data)
+                DogBody:EndFetch(olga, data, true)
             end
             DogBody:ReturnToDefault(olga, data, true)
 
@@ -615,14 +615,19 @@ function DogBody:TryFetching(olga, data)
 end
 
 ---@param olga EntityFamiliar
-function DogBody:EndFetch(olga, data)
+---@param forceDrop boolean?
+function DogBody:EndFetch(olga, data, forceDrop)
     olga.Velocity = Vector.Zero
     data.targetPos = nil
     data.eventCD = olga.FrameCount + DogBody.EVENT_COOLDOWN
 
     if olga.State == Util.DogState.RETURN
     and data.headSprite then -- Because her headSprite isnt initialized on glowing hour glass
-        data.headSprite:Play(Util.HeadAnim.HOLD_TO_IDLE)
+        if forceDrop then
+            local pos = Mod.Room():FindFreePickupSpawnPosition(olga.Position, 0, true)
+            Isaac.Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TAROTCARD, data.objectID, pos, Vector.Zero, nil)
+        end
+        data.headSprite:Play(forceDrop and Util.HeadAnim.IDLE or Util.HeadAnim.HOLD_TO_IDLE)
         return
     end
 
