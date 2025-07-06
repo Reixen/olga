@@ -1,0 +1,70 @@
+<entities anm2root="gfx/" version="5">
+
+    <entity name="Olga" baseHP = "-1"
+		id="3" variant="333" anm2path="familiar_olga_body.anm2" friction="1" 
+		numGridCollisionPoints="6" collisionMass="7" collisionRadius="6" 
+		shadowSize="15">
+	</entity>
+
+	<!-- Pickups -->
+
+	<entity name="Stick"
+		id ="5" variant="300" subtype="333" anm2path="object_stick.anm2" friction="1"
+		baseHP="0" boss="0" champion="0" collisionDamage="0" collisionMass="3" 
+		collisionRadius="12" numGridCollisionPoints="24" shadowSize="16" stageHP="0">
+    </entity>
+
+	<entity name="Feeding Kit"
+		id ="5" variant="300" subtype="334" anm2path="object_feeding_kit.anm2" friction="1"
+		baseHP="0" boss="0" champion="0" collisionDamage="0" collisionMass="3" 
+		collisionRadius="12" numGridCollisionPoints="24" shadowSize="16" stageHP="0">
+    </entity>
+
+	<entity name="Tennis Ball"
+		id ="5" variant="300" subtype="335" anm2path="object_tennis_ball.anm2" friction="1"
+		baseHP="0" boss="0" champion="0" collisionDamage="0" collisionMass="3" 
+		collisionRadius="12" numGridCollisionPoints="24" shadowSize="16" stageHP="0">
+    </entity>
+
+	<entity name="Rod of the Gods"
+		id ="5" variant="300" subtype="336" anm2path="object_rod_of_the_gods.anm2" friction="1"
+		baseHP="0" boss="0" champion="0" collisionDamage="0" collisionMass="3" 
+		collisionRadius="12" numGridCollisionPoints="24" shadowSize="16" stageHP="0">
+    </entity>
+	
+	<entity name="Whistle"
+		id ="5" variant="300" subtype="337" anm2path="object_whistle.anm2" friction="1"
+		baseHP="0" boss="0" champion="0" collisionDamage="0" collisionMass="3" 
+		collisionRadius="12" numGridCollisionPoints="24" shadowSize="16" stageHP="0">
+    </entity>
+
+	<!-- Others -->
+
+	<entity name="Fetching Object"
+		id="1000" variant="333" anm2path="effect_fetching_object.anm2"
+		baseHP="0" boss="0" champion="0" collisionDamage="0" collisionMass="0"
+		collisionRadius="1" friction="1" numGridCollisionPoints="0" shadowSize="16" stageHP="0">
+        <gibs amount="4" blood="0" bone="0" eye="0" gut="0" large="1" small="1" chain="1"/>
+	</entity>
+	
+	<entity name="Fetch Target"
+		id="1000" variant="30" subtype="333" anm2path="effect_fetch_target.anm2"
+		baseHP="0" boss="0" champion="0" collisionDamage="0" collisionMass="0"
+		collisionRadius="12" friction="1" numGridCollisionPoints="8" shadowSize="8" stageHP="0">
+        <gibs amount="0" blood="0" bone="0" eye="0" gut="0" large="0" />
+	</entity>
+
+	<entity name="Feeding Bowl"
+		id="6" variant="333" anm2path="slot_feeding_bowl.anm2" 
+		baseHP="0" boss="0" champion="0" collisionDamage="0" collisionMass="3" 
+		collisionRadius="8" friction="1" numGridCollisionPoints="16" shadowSize="15" stageHP="0">
+    </entity>
+
+	<entity name="Stock Explosion"
+		id="1000" variant="334" anm2path="effect_stock_explosion.anm2"
+		baseHP="0" boss="0" champion="0" collisionDamage="0" collisionMass="0"
+		collisionRadius="8" friction="1" numGridCollisionPoints="0" shadowSize="8" stageHP="0">
+        <gibs amount="0" blood="0" bone="0" eye="0" gut="0" large="0" />
+	</entity>
+	
+</entities>

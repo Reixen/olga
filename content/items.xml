@@ -1,0 +1,14 @@
+<items gfxroot="gfx/items/" version="1" deathanm2="">
+
+    <trinket id="1" name="Crude Drawing" tags="noeden" hidden="true" achievement ="9999"
+        description="I won't forget" gfx="crude_drawing.png"
+    />
+
+    <!-- Null Items -->
+
+    <null id="1" name="Consumable Dinner" persistent="true" />
+    <null id="2" name="Consumable Dessert" persistent="true" />
+    <null id="3" name="Consumable Snack" persistent="true" />
+    <null id="4" name="Consumable Generic" persistent="true" />
+
+</items>

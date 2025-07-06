@@ -1,0 +1,53 @@
+<sounds root="sfx/">
+
+    <sound name ="Olga Bark">
+        <sample weight="1" path="olga/bark1.wav" />
+        <sample weight="1" path="olga/bark2.wav" />
+        <sample weight="1" path="olga/bark3.wav" />
+        <sample weight="1" path="olga/bark4.wav" />
+        <sample weight="1" path="olga/bark5.wav" />
+        <sample weight="1" path="olga/bark6.wav" />
+    </sound>
+
+    <sound name ="Olga Pant">
+        <sample weight="1" path="olga/pant1.wav" />
+        <sample weight="1" path="olga/pant2.wav" />
+    </sound>
+
+    <sound name ="Olga Crunch">
+        <sample weight="1" path="olga/crunch1.wav" />
+        <sample weight="1" path="olga/crunch2.wav" />
+        <sample weight="1" path="olga/crunch3.wav" />
+    </sound>
+
+    <sound name ="Olga Mini Crunch">
+        <sample weight="1" path="olga/mini_crunch1.wav" />
+        <sample weight="1" path="olga/mini_crunch2.wav" />
+    </sound>
+
+    <sound name ="Olga Sniff">
+        <sample weight="1" path="olga/sniff1.wav" />
+        <sample weight="1" path="olga/sniff2.wav" />
+        <sample weight="1" path="olga/sniff3.wav" />
+    </sound>
+    
+    <sound name ="Olga Gulp">
+        <sample weight="1" path="olga/gulp1.wav" />
+        <sample weight="1" path="olga/gulp2.wav" />
+    </sound>
+
+    <sound name ="Olga Bark Set 1"> <sample weight="1" path="olga/bark_set1.wav" /> </sound>
+    <sound name ="Olga Bark Set 2"> <sample weight="1" path="olga/bark_set2.wav" /> </sound>
+
+    <sound name ="Olga Boof"> <sample weight="1" path="olga/boof.wav" /> </sound>
+    <sound name ="Olga Yawn"> <sample weight="1" path="olga/yawn.wav" /> </sound>
+    <sound name ="Olga Scratch"> <sample weight="1" path="olga/scratch.wav" /> </sound>
+
+    <sound name ="Feeding Bowl Fall"> <sample weight="1" path="feeding_bowl_fall.wav" /> </sound>
+    <sound name ="Feeding Bowl Pour"> <sample weight="1" path="feeding_bowl_pour.wav" /> </sound>
+    <sound name ="Grab Pellets"> <sample weight="1" path="grab_pellets.wav" /> </sound>
+    <sound name ="Dog Whistle"> <sample weight="1" path="dog_whistle.wav" /> </sound>
+
+    <sound name ="Stock Explosion"> <sample weight="1" path="stock_explosion.wav" /> </sound>
+
+</sounds>

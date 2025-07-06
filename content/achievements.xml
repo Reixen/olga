@@ -1,0 +1,7 @@
+<achievements gfxroot="gfx/ui/achievement/">
+
+    <achievement name="Tennis Ball" text='"Tennis Ball" can now be obtained with Olga' gfx="olga_achievement_tennis_ball.png" hidden="false"/>
+    <achievement name="Whistle" text='"Whistle" can now be obtained with Olga' gfx="olga_achievement_whistle.png" hidden="false"/>
+    <achievement name="Fur Colors" text='"Fur Colors" cosmetic is now available' gfx="olga_achievement_fur_colors.png" hidden="false"/>
+
+</achievements>

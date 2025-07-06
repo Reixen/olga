@@ -1,0 +1,23 @@
+<pocketitems>
+
+    <card type="object" hud="Stick" description="Can be thrown" 
+        name="Stick" pickup="333" achievement ="9999"
+    />
+
+    <card type="object" hud="Feeding Kit" description="Feed your dog" 
+        name="Feeding Kit" pickup="334" achievement ="9999"
+    />
+
+    <card type="object" hud="Tennis Ball" description="Can be thrown" 
+        name="Tennis Ball" pickup="335" achievement ="9999"
+    />
+
+    <card type="object" hud="Rod of the Gods" description="The Grand Pole" 
+        name="Rod of the Gods" pickup="336" achievement ="9999"
+    />
+
+    <card type="object" hud="Whistle" description="Come here!" 
+        name="Whistle" pickup="337" achievement ="9999"
+    />
+
+</pocketitems>
