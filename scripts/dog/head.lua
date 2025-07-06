@@ -87,7 +87,7 @@ DogHead.ANIM_FUNC = {
 
             if Util:IsWithin(olga, player.Position, DogHead.PETTING_DISTANCE)
             and not Util:IsBusy(olga) then
-                Util:UpdateHandColor(player, data.headSprite, olga)
+                Util:UpdateHandColor(player, data.headSprite, GetPtrHash(olga))
                 sprite:Play(Util.HeadAnim.GLAD_TO_GLAD_PETTING, true)
 
             elseif not Util:IsWithin(olga, player.Position, DogHead.HAPPY_DISTANCE) then
@@ -277,7 +277,7 @@ function DogHead:TryTurningGlad(olga, sprite, data)
     -- If shes not due for an alternate petting animation
     if data.attentionCD > olga.FrameCount
     and Util:IsWithin(olga, olga.Player.Position, DogHead.PETTING_DISTANCE) then
-        Util:UpdateHandColor(olga.Player, sprite, olga)
+        Util:UpdateHandColor(olga.Player, sprite, GetPtrHash(olga))
         sprite:Play(Util.HeadAnim.IDLE_TO_PETTING, true)
     elseif data.attentionCD < olga.FrameCount
     and Util:IsWithin(olga, olga.Player.Position, DogHead.HAPPY_DISTANCE) then

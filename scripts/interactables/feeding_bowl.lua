@@ -42,7 +42,7 @@ if EID then
     EID:addCard(FeedingBowl.FEEDING_KIT_ID,
         "{{Feeding Bowl}} Spawns a" ..
         "#{{Blank}} Feeding Bowl and grants Isaac 1 {{Generic Food}} Generic Food" ..
-        "#{{Generic Food}} Feed {{Olga}} Olga to get Pup points!" ..
+        "#{{Generic Food}} Feed {{Olga}} Olga to get Pup Points and unlock achievements"..
         "#Can be fed with {{Collectible" .. CollectibleType.COLLECTIBLE_DESSERT .. "}}, " ..
         "{{Collectible" .. CollectibleType.COLLECTIBLE_DINNER .. "}}, or {{Collectible" .. CollectibleType.COLLECTIBLE_SNACK.. "}} "..
         "and will not be removed from Isaac's inventory"

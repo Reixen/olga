@@ -122,7 +122,7 @@ Util.Achievements = {
 function Util:OnReviveOrClicker()
     for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
         local olga = familiar:ToFamiliar() ---@cast olga EntityFamiliar
-        Util:UpdateHandColor(olga.Player, olga:GetData().headSprite, olga)
+        Util:UpdateHandColor(olga.Player, olga:GetData().headSprite, GetPtrHash(olga))
     end
 end
 Mod:AddCallback(ModCallbacks.MC_USE_ITEM, Util.OnReviveOrClicker, CollectibleType.COLLECTIBLE_CLICKER)
@@ -182,17 +182,16 @@ Mod:AddCallback(ModCallbacks.MC_POST_SLOT_COLLISION, Util.OnDressingTable, SlotV
 -- Update the petting hand color based on the player's skin
 ---@param player EntityPlayer
 ---@param sprite Sprite
----@param olga EntityFamiliar
-function Util:UpdateHandColor(player, sprite, olga)
+---@param ptrHash integer
+function Util:UpdateHandColor(player, sprite, ptrHash)
     local playerColor = player:GetBodyColor()
     local playerType = player:GetPlayerType()
     local data = Mod.Util:GetData(player, Mod.Util.DATA_IDENTIFIER)
-    local ptrHash = GetPtrHash(olga)
     data[ptrHash] = data[ptrHash] or {}
     local handData = data[ptrHash]
 
-    if handData and handData.pColor == playerColor
-    and handData.pType == playerType then
+    if handData.pColor and handData.pColor == playerColor
+    and handData.pType and handData.pType == playerType then
         return
     end
 

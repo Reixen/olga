@@ -536,7 +536,7 @@ function DogBody:FindDogOwner(olga, data)
     local pData = Util:GetData(olga.Player, Util.DATA_IDENTIFIER)
     pData.hasDoggy = true
 
-    Util:UpdateHandColor(nearestPlayer, olga:GetData().headSprite, olga)
+    Util:UpdateHandColor(nearestPlayer, olga:GetData().headSprite, GetPtrHash(olga))
 end
 
 -- From Epiphany's Epiphany:PickupKill()
