@@ -364,6 +364,9 @@ end
 ---@param idxTable table
 ---@param bowl EntitySlot | Vector
 function Util:RemoveBowlIndex(idxTable, bowl)
+    if not bowl then
+        return
+    end
     for i, gridIdx in ipairs(idxTable) do
         if Mod.Room():GetGridIndex(bowl.Position or bowl) == gridIdx then
             table.remove(idxTable, i)
