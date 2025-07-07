@@ -45,7 +45,6 @@
 
     <sound name ="Feeding Bowl Fall"> <sample weight="1" path="feeding_bowl_fall.wav" /> </sound>
     <sound name ="Feeding Bowl Pour"> <sample weight="1" path="feeding_bowl_pour.wav" /> </sound>
-    <sound name ="Grab Pellets"> <sample weight="1" path="grab_pellets.wav" /> </sound>
     <sound name ="Dog Whistle"> <sample weight="1" path="dog_whistle.wav" /> </sound>
 
     <sound name ="Stock Explosion"> <sample weight="1" path="stock_explosion.wav" /> </sound>

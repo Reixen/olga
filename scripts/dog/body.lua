@@ -14,7 +14,6 @@ DogBody.EXPLOSION_VARIANT = Isaac.GetEntityVariantByName("Stock Explosion")
 DogBody.SOUND_BARK_SET1 = Isaac.GetSoundIdByName("Olga Bark Set 1")
 DogBody.SOUND_SCRATCH = Isaac.GetSoundIdByName("Olga Scratch")
 DogBody.EXPLOSION_SFX = Isaac.GetSoundIdByName("Stock Explosion")
-DogBody.GRAB_PELLETS_SFX = Isaac.GetSoundIdByName("Grab Pellets")
 
 DogBody.SWITCH_CHANCE = 1 / 40
 DogBody.WANDER_CHANCE = 1 / 4
@@ -760,11 +759,11 @@ function DogBody:TryEating(olga, data)
     end
 
     if bowlAnimName:find("Dessert") or bowlAnimName:find("Generic") then
-        sfxMan:Play(DogBody.GRAB_PELLETS_SFX, 5, 2, false, math.random(9, 11) / 10)
+        sfxMan:Play(SoundEffect.SOUND_EXPLOSION_DEBRIS, 2, 2, false, math.random(14, 16) / 10)
     elseif bowlAnimName:find("Dinner") then
         sfxMan:Play(SoundEffect.SOUND_MEAT_IMPACTS_OLD, 1, 2, false, math.random(9, 11) / 10)
     else
-        sfxMan:Play(Mod.Dog.Head.SOUND_MINI_CRUNCH, 1, 2, false, math.random(9, 11) / 10)
+        sfxMan:Play(Mod.Dog.Head.SOUND_MINI_CRUNCH, 3, 2, false, math.random(9, 11) / 10)
     end
 
     local foodString
