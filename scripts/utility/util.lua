@@ -54,11 +54,13 @@ Util.BodyAnim = {
     STAND = "Stand",
     WALKING = "Walking",
     RUNNING = "Running",
+    RIDING = "Riding",
     -- Transitionals
     SIT_TO_STAND = "SitToStand",
     STAND_TO_SIT = "StandToSit",
     SIT_TO_SCRATCHING = "SitToScratching",
     SCRATCHING_TO_SIT = "ScratchingToSit",
+    RUNNING_TO_RIDING = "RunningToRiding",
     -- Idle Animations
     PLAYFUL_1 = "Playful1",
     --PLAYFUL_2 = "Playful2",

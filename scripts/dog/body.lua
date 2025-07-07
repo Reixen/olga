@@ -14,14 +14,16 @@ DogBody.EXPLOSION_VARIANT = Isaac.GetEntityVariantByName("Stock Explosion")
 DogBody.SOUND_BARK_SET1 = Isaac.GetSoundIdByName("Olga Bark Set 1")
 DogBody.SOUND_SCRATCH = Isaac.GetSoundIdByName("Olga Scratch")
 DogBody.EXPLOSION_SFX = Isaac.GetSoundIdByName("Stock Explosion")
+DogBody.DING_SFX = Isaac.GetSoundIdByName("Wall Hit Ding")
 
 DogBody.SWITCH_CHANCE = 1 / 40
 DogBody.WANDER_CHANCE = 1 / 4
 
 DogBody.WALK_SPEED = 0.4
-DogBody.RUN_SPEED = 1
+DogBody.RUN_SPEED = 0.9
 DogBody.RUN_LENGTH = 4
 DogBody.SPAWN_LENGTH = 1
+DogBody.RAMP_UP_PER_SECOND = 0.1
 
 local ONE_TILE = 40
 DogBody.FETCH_RADIUS = ONE_TILE / 2
@@ -31,10 +33,13 @@ DogBody.DECAY_STRENGTH = 0.75
 
 local ONE_SEC = 30
 DogBody.EVENT_COOLDOWN = ONE_SEC * 6
+DogBody.RAMP_UP_EVENT = ONE_SEC * 3
+DogBody.SICK_EVENT = ONE_SEC * 15
 
 DogBody.FOOD_SUBSTRING_START = 5
 DogBody.CRUMB_LAYER_ID = 5
 DogBody.EATING_VARIATIONS = 3
+DogBody.RIDING_TRANSITION_FRAMES = 20
 
 local TRINKET_ID = Mod.PickupHandler.Pickup[PickupVariant.PICKUP_TRINKET].CRUDE_DRAWING_ID
 
@@ -109,22 +114,15 @@ DogBody.ANIM_FUNC = {
     ---@param olga EntityFamiliar
     ---@param sprite Sprite
     ---@param data DogData
-    [Util.BodyAnim.STAND] = function(olga, sprite, data)
+    ---@param animName string
+    [Util.BodyAnim.STAND] = function(olga, sprite, data, animName)
         local rng = olga:GetDropRNG()
         local frameCount = olga.FrameCount
 
-        DogBody:PlayAnimation(olga.Velocity:Length(), sprite)
+        DogBody:PlayAnimation(olga.Velocity:Length(), sprite, data)
 
         if olga.State == Util.DogState.WHISTLED then
-            local pathfindingResult = DogBody:Pathfind(
-                olga, olga.Player.Position, DogBody.RUN_SPEED, data, ONE_TILE / 1.5, ONE_TILE, DogBody.DECAY_STRENGTH
-            )
-
-            if pathfindingResult == DogBody.PathfindingResult.SUCCESSFUL
-            or pathfindingResult == DogBody.PathfindingResult.NO_PATH then
-                olga.Velocity = Vector.Zero
-                DogBody:ReturnToDefault(olga, data, true)
-            end
+            DogBody:TryChasingPlayer(olga, sprite, data, animName, frameCount) -- 900
             return
 
         elseif olga.State == Util.DogState.EATING then
@@ -149,7 +147,7 @@ DogBody.ANIM_FUNC = {
             return
 
         elseif olga.State == Util.DogState.FETCH then
-            DogBody:TryFetching(olga, data) -- Line 537
+            DogBody:TryFetching(olga, data) -- Line 572
             return
         end
 
@@ -198,7 +196,7 @@ DogBody.ANIM_FUNC = {
         end
 
         if sprite:IsEventTriggered("BarkSet") then
-            sfxMan:Play(DogBody.SOUND_BARK_SET1, 2, 2, false)
+            sfxMan:Play(DogBody.SOUND_BARK_SET1, 2.2, 2, false)
         end
 
         if sprite:IsEventTriggered("Scratch") then
@@ -235,6 +233,8 @@ DogBody.ANIM_FUNC = {
 }
 DogBody.ANIM_FUNC[Util.BodyAnim.WALKING] = DogBody.ANIM_FUNC[Util.BodyAnim.STAND]
 DogBody.ANIM_FUNC[Util.BodyAnim.RUNNING] = DogBody.ANIM_FUNC[Util.BodyAnim.STAND]
+DogBody.ANIM_FUNC[Util.BodyAnim.RIDING] = DogBody.ANIM_FUNC[Util.BodyAnim.STAND]
+DogBody.ANIM_FUNC[Util.BodyAnim.RUNNING_TO_RIDING] = DogBody.ANIM_FUNC[Util.BodyAnim.STAND]
 
 -- Use when there's more animations
 Util:FillEmptyAnimFunctions(
@@ -275,6 +275,7 @@ function DogBody:OnInit(olga)
     data.eventCD = DogBody.EVENT_COOLDOWN
     data.animCD = DogBody.EVENT_COOLDOWN * 2
     data.attentionCD = 0
+    data.eventWindow = 0
     data.headRender = true
     data.feedingBowl = nil
 
@@ -306,17 +307,14 @@ function DogBody:HandleNewRoom()
         local data = familiar:GetData() ---@cast data DogData
         data.targetPos = nil
         data.canPet = false
-        familiar.Velocity = Vector.Zero
 
         local animName = data.headSprite and data.headSprite:GetAnimation()
         if data.headSprite and animName:find("Petting") then
             Util:EndPettingAnimation(data.headSprite, olga.Player, animName)
-        elseif Util:IsEating(olga) then
-            data.feedingBowl = nil
-        elseif Util:IsFetching(olga) then
-            DogBody:EndFetch(olga, data)
+        else
+            DogBody:TryTurningIdle(olga, data)
         end
-        olga.State = Mod.Util.DogState.STANDING
+        DogBody:ReturnToDefault(olga, data)
     end
 
     if (roomType ~= RoomType.ROOM_ISAACS and roomType ~= RoomType.ROOM_BARREN)
@@ -356,19 +354,10 @@ function DogBody:OnSacrifice()
 
         if not olga:GetSprite():IsPlaying(Util.BodyAnim.PLAYFUL_1) then
             local data = olga:GetData()
-            Mod.Dog.Head:DoIdleAnimation(olga, data, Mod.Dog.Head.IdleAnim[4])
 
-            if Util:IsEating(olga) then
-                data.feedingBowl = nil
-            elseif Util:IsFetching(olga) then
-                DogBody:EndFetch(olga, data, true)
-            end
+            DogBody:TryTurningIdle(olga, data)
             DogBody:ReturnToDefault(olga, data, true)
-
-            local explosion = Isaac.Spawn(EntityType.ENTITY_EFFECT, DogBody.EXPLOSION_VARIANT, 0, olga.Position, Vector.Zero, nil):ToEffect()
-            explosion.Timeout = 30
-            explosion.DepthOffset = 30
-            sfxMan:Play(DogBody.EXPLOSION_SFX)
+            DogBody:SpawnExplosion(olga, data)
             olga.FlipX = math.abs((olga.Position - olga.Player.Position):GetAngleDegrees()) > 90
         end
     end
@@ -710,7 +699,17 @@ end
 
 ---@param length number
 ---@param sprite Sprite
-function DogBody:PlayAnimation(length, sprite)
+---@param data DogData
+function DogBody:PlayAnimation(length, sprite, data)
+    if data.eventWindow > DogBody.SICK_EVENT - DogBody.RIDING_TRANSITION_FRAMES then
+        if not sprite:IsPlaying(Util.BodyAnim.RUNNING_TO_RIDING)
+        and not sprite:IsPlaying(Util.BodyAnim.RIDING) then
+            sprite:Play(Util.BodyAnim.RUNNING_TO_RIDING)
+            sfxMan:Play(SoundEffect.SOUND_ROCKET_LAUNCH, 1, 60)
+        end
+        return
+    end
+
     if length > DogBody.RUN_LENGTH then
         sprite:Play(Util.BodyAnim.RUNNING)
 
@@ -855,6 +854,109 @@ function DogBody:DoPointFeedback(olga)
     sprite:GetLayer(1):SetColor(lightOrange)
     sprite:GetLayer(2):SetColor(lightOrange)
 
-    sfxMan:Play(SoundEffect.SOUND_THUMBSUP, 0.7)
+    sfxMan:Play(SoundEffect.SOUND_THUMBSUP, 1)
+end
+
+---@param olga EntityFamiliar
+---@param data DogData?
+function DogBody:SpawnExplosion(olga, data)
+    local explosion = Isaac.Spawn(EntityType.ENTITY_EFFECT, DogBody.EXPLOSION_VARIANT, 0, olga.Position, Vector.Zero, nil):ToEffect()
+    explosion.Timeout = 30
+    explosion.DepthOffset = 30
+    sfxMan:Play(DogBody.EXPLOSION_SFX, 1.5)
+
+    if data then
+        Mod.Dog.Head:DoIdleAnimation(olga, data, Mod.Dog.Head.IdleAnim[4])
+    end
+end
+
+---@param olga EntityFamiliar
+---@param data DogData?
+function DogBody:TryTurningIdle(olga, data)
+    if olga.State == Util.DogState.WHISTLED
+    and data.eventWindow > DogBody.SICK_EVENT - DogBody.RIDING_TRANSITION_FRAMES then
+        data.eventWindow = 0
+        olga.GridCollisionClass = EntityGridCollisionClass.GRIDCOLL_GROUND
+    elseif Util:IsEating(olga) then
+        data.feedingBowl = nil
+    elseif Util:IsFetching(olga) then
+        DogBody:EndFetch(olga, data, true)
+    end
+end
+
+---@param olga EntityFamiliar
+---@param sprite Sprite
+---@param data DogData
+---@param animName string
+---@param frameCount integer
+function DogBody:TryChasingPlayer(olga, sprite, data, animName, frameCount)
+    if animName == Util.BodyAnim.RUNNING_TO_RIDING then
+        DogBody.ANIM_FUNC[Util.BodyAnim.SIT_TO_STAND](olga, sprite, data, animName)
+    end
+
+    data.eventWindow = data.eventWindow + 1
+    if data.eventWindow < DogBody.SICK_EVENT then
+        local rampUpSpeed = 0
+        if data.eventWindow > DogBody.RAMP_UP_EVENT then
+            rampUpSpeed = DogBody.RAMP_UP_PER_SECOND * ((data.eventWindow - DogBody.RAMP_UP_EVENT) / ONE_SEC)
+        end
+
+        local pathfindingResult = DogBody:Pathfind(
+            olga, olga.Player.Position, DogBody.RUN_SPEED + rampUpSpeed, data, ONE_TILE / 1.5, ONE_TILE, DogBody.DECAY_STRENGTH
+        )
+
+        if pathfindingResult == DogBody.PathfindingResult.SUCCESSFUL
+        or pathfindingResult == DogBody.PathfindingResult.NO_PATH then
+            if sprite:IsPlaying(Util.BodyAnim.RUNNING_TO_RIDING) then
+                DogBody:SpawnExplosion(olga, data)
+            end
+            DogBody:EndChase(olga, data)
+        end
+        return
+    end
+
+    -- Create variation in target
+    local player = olga.Player
+    if not data.targetPos
+    or data.eventWindow % (ONE_SEC * 2) == 0 then
+        local room = Mod.Room()
+        local randomPos = DogBody:ChooseRandomPosition(room:GetCenterPos(), 1, true)
+        data.targetPos = randomPos and (randomPos - room:GetCenterPos()) or Vector.Zero
+    end
+
+    local targetToExplode = data.targetPos + player.Position
+    olga.GridCollisionClass = EntityGridCollisionClass.GRIDCOLL_WALLS
+    local speedToAdd = (targetToExplode - olga.Position):Normalized() * (data.eventWindow / 400)
+    olga.Velocity = olga.Velocity + speedToAdd
+    olga.FlipX = math.abs((olga.Position - player.Position):GetAngleDegrees()) > 90
+
+    -- Fancy effects
+    if frameCount % 3 == 0
+    and animName == Util.BodyAnim.RIDING then
+        local dust = Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.DUST_CLOUD, 0, olga.Position, Vector.Zero, olga):ToEffect()
+        dust:SetTimeout(20)
+        dust:GetSprite():Play("Clouds", true)
+        dust.Color = Color(1, 1, 1, 0.25)
+        if frameCount % (ONE_SEC / 6) == 0 then
+            Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.EMBER_PARTICLE, 0, olga.Position, Vector.Zero, olga)
+        end
+    end
+
+    if olga:CollidesWithGrid() then
+        -- Progressively higher pitch
+        sfxMan:Play(DogBody.DING_SFX, 1, 2, false, 0.3 + (data.eventWindow / 3000))
+    end
+
+    if Util:IsWithin(olga, olga.Player.Position, ONE_TILE * 0.75) then
+        DogBody:SpawnExplosion(olga, data)
+        DogBody:EndChase(olga, data)
+    end
+end
+
+function DogBody:EndChase(olga, data)
+    data.eventWindow = 0
+    olga.GridCollisionClass = EntityGridCollisionClass.GRIDCOLL_GROUND
+    olga.Velocity = Vector.Zero
+    DogBody:ReturnToDefault(olga, data, true)
 end
 --#endregion

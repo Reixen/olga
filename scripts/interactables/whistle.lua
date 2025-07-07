@@ -18,7 +18,8 @@ if EID then
 
     EID:addCard(Whistle.WHISTLE_ID,
         "When near Olga, toggles her state between standing and sitting"..
-        "#When Olga is far, she runs towards you"
+        "#When Olga is far, she runs towards you"..
+        "# {{Warning}} When chasing Isaac for a while, Olga WILL catch you"
     )
 end
 --#endregion
