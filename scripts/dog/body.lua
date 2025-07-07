@@ -731,9 +731,11 @@ function DogBody:TryEating(olga, data)
 
     -- If the bowl is empty
     if bowlSprite:IsFinished("Idle")
-    or bowlAnimName:find("ToIdle") then
+    or bowlAnimName:find("ToIdle")
+    or not data.feedingBowl:Exists() then
         data.feedingBowl = nil
         DogBody:ReturnToDefault(olga, data, true)
+        Util:RemoveBowlIndex(saveMan.GetRoomSave().filledBowls, data.feedingBowl)
         return
     end
 
