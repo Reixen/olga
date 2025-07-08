@@ -273,7 +273,6 @@ function DogHead:TryTurningGlad(olga, sprite, data)
         return
     end
 
-
     -- If shes not due for an alternate petting animation
     if data.attentionCD > olga.FrameCount
     and Util:IsWithin(olga, olga.Player.Position, DogHead.PETTING_DISTANCE) then
@@ -366,7 +365,7 @@ function DogHead:TryFindingFood(olga, data)
     local roomSave = saveMan.GetRoomSave()
     if roomSave.filledBowls and #roomSave.filledBowls > 0 then
         local nearestBowl = Mod.Dog.Body:FindNearestPosition(roomSave.filledBowls, olga.Position)
-        Mod.Dog.Body:EndFetch(olga, data)
+        Mod.Dog.Body:TryEndingBusyState(olga, data)
 
         olga.State = Util.DogState.APPROACH_BOWL
         data.targetPos = nearestBowl

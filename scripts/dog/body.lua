@@ -23,23 +23,31 @@ DogBody.WALK_SPEED = 0.4
 DogBody.RUN_SPEED = 0.9
 DogBody.RUN_LENGTH = 4
 DogBody.SPAWN_LENGTH = 1
-DogBody.RAMP_UP_PER_SECOND = 0.1
 
 local ONE_TILE = 40
 DogBody.FETCH_RADIUS = ONE_TILE / 2
 DogBody.WANDER_RADIUS = 5
 DogBody.HAPPY_DISTANCE = ONE_TILE * 2.75
-DogBody.DECAY_STRENGTH = 0.75
 
+local NO_DECAY_VALUE = 3.5
+DogBody.DECAY_STRENGTH = 0.75
 local ONE_SEC = 30
 DogBody.EVENT_COOLDOWN = ONE_SEC * 6
+
+-- Whistle Constants
+local SICK_EVENT_START = 15 -- In seconds
 DogBody.RAMP_UP_EVENT = ONE_SEC * 3
-DogBody.SICK_EVENT = ONE_SEC * 15
+DogBody.RAMP_UP_PER_SEC = 0.04
+DogBody.SICK_EVENT = ONE_SEC * SICK_EVENT_START
+
+DogBody.WHISTLE_STOPPING_RADIUS = ONE_TILE / 1.5
+DogBody.DECAY_RADIUS_REDUCTION_PER_SEC = DogBody.WHISTLE_STOPPING_RADIUS / SICK_EVENT_START
+DogBody.DECAY_STRENGTH_REDUCTION_PER_SEC = (NO_DECAY_VALUE - DogBody.DECAY_STRENGTH) / SICK_EVENT_START
+DogBody.RIDING_TRANSITION_EVENT = DogBody.SICK_EVENT - 22 -- Amount of frames needed to finish the transition
 
 DogBody.FOOD_SUBSTRING_START = 5
 DogBody.CRUMB_LAYER_ID = 5
 DogBody.EATING_VARIATIONS = 3
-DogBody.RIDING_TRANSITION_FRAMES = 20
 
 local TRINKET_ID = Mod.PickupHandler.Pickup[PickupVariant.PICKUP_TRINKET].CRUDE_DRAWING_ID
 
@@ -82,6 +90,7 @@ end
 ---@field feedingBowl EntitySlot?
 ---@field canPet boolean? -- Used for preventing the player from petting the dog in certain scenarios
 ---@field hasOwner boolean?
+---@field targetPlayer EntityPlayer? -- Used for the whistle event
 
 --#endregion
 --#region Olga Body Animation Functions
@@ -141,8 +150,7 @@ DogBody.ANIM_FUNC = {
             -- Drop the stick when near the owner or when she cannot pathfind
             if (pathfindingResult == DogBody.PathfindingResult.SUCCESSFUL or pathfindingResult == DogBody.PathfindingResult.NO_PATH)
             and not data.headSprite:IsPlaying(Util.HeadAnim.HOLD_TO_IDLE) then
-                DogBody:EndFetch(olga, data)
-                olga.State = Util.DogState.STANDING
+                DogBody:TryEndingBusyState(olga, data)
             end
             return
 
@@ -167,7 +175,6 @@ DogBody.ANIM_FUNC = {
 
                 if pathfindingResult == DogBody.PathfindingResult.SUCCESSFUL
                 or pathfindingResult == DogBody.PathfindingResult.NO_PATH then
-                    olga.Velocity = Vector.Zero
                     DogBody:ReturnToDefault(olga, data, true)
                 end
                 return
@@ -186,6 +193,7 @@ DogBody.ANIM_FUNC = {
             sprite:Play(Util.BodyAnim.STAND, true)
             data.headRender = true
             sprite.PlaybackSpeed = 1
+            data.headSprite.FlipX = olga.FlipX
         end
 
         -- Only scratching has this event
@@ -311,10 +319,8 @@ function DogBody:HandleNewRoom()
         local animName = data.headSprite and data.headSprite:GetAnimation()
         if data.headSprite and animName:find("Petting") then
             Util:EndPettingAnimation(data.headSprite, olga.Player, animName)
-        else
-            DogBody:TryTurningIdle(olga, data)
         end
-        DogBody:ReturnToDefault(olga, data)
+        DogBody:TryEndingBusyState(olga, data)
     end
 
     if (roomType ~= RoomType.ROOM_ISAACS and roomType ~= RoomType.ROOM_BARREN)
@@ -355,10 +361,9 @@ function DogBody:OnSacrifice()
         if not olga:GetSprite():IsPlaying(Util.BodyAnim.PLAYFUL_1) then
             local data = olga:GetData()
 
-            DogBody:TryTurningIdle(olga, data)
-            DogBody:ReturnToDefault(olga, data, true)
-            DogBody:SpawnExplosion(olga, data)
             olga.FlipX = math.abs((olga.Position - olga.Player.Position):GetAngleDegrees()) > 90
+            DogBody:TryEndingBusyState(olga, data, true)
+            DogBody:SpawnExplosion(olga, data)
         end
     end
 end
@@ -597,29 +602,8 @@ function DogBody:TryFetching(olga, data)
         end
 
     elseif pathfindingResult == DogBody.PathfindingResult.NO_PATH then
-        DogBody:EndFetch(olga, data)
-        olga.State = Util.DogState.STANDING
+        DogBody:TryEndingBusyState(olga, data)
     end
-end
-
----@param olga EntityFamiliar
----@param forceDrop boolean?
-function DogBody:EndFetch(olga, data, forceDrop)
-    olga.Velocity = Vector.Zero
-    data.targetPos = nil
-    data.eventCD = olga.FrameCount + DogBody.EVENT_COOLDOWN
-
-    if olga.State == Util.DogState.RETURN
-    and data.headSprite then -- Because her headSprite isnt initialized on glowing hour glass
-        if forceDrop then
-            local pos = Mod.Room():FindFreePickupSpawnPosition(olga.Position, 0, true)
-            Isaac.Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TAROTCARD, data.objectID, pos, Vector.Zero, nil)
-        end
-        data.headSprite:Play(forceDrop and Util.HeadAnim.IDLE or Util.HeadAnim.HOLD_TO_IDLE)
-        return
-    end
-
-    data.objectID = nil
 end
 
 ---@return Vector?
@@ -681,7 +665,6 @@ function DogBody:TryApproachBowl(olga, data)
         end
 
     elseif pathfindingResult == DogBody.PathfindingResult.NO_PATH then
-        olga.Velocity = Vector.Zero
         DogBody:ReturnToDefault(olga, data)
     end
 end
@@ -690,6 +673,7 @@ end
 ---@param data DogData
 ---@param resetEventCD boolean?
 function DogBody:ReturnToDefault(olga, data, resetEventCD)
+    olga.Velocity = Vector.Zero
     data.targetPos = nil
     olga.State = Util.DogState.STANDING
     if resetEventCD then
@@ -701,7 +685,7 @@ end
 ---@param sprite Sprite
 ---@param data DogData
 function DogBody:PlayAnimation(length, sprite, data)
-    if data.eventWindow > DogBody.SICK_EVENT - DogBody.RIDING_TRANSITION_FRAMES then
+    if data.eventWindow > DogBody.RIDING_TRANSITION_EVENT then
         if not sprite:IsPlaying(Util.BodyAnim.RUNNING_TO_RIDING)
         and not sprite:IsPlaying(Util.BodyAnim.RIDING) then
             sprite:Play(Util.BodyAnim.RUNNING_TO_RIDING)
@@ -725,6 +709,11 @@ end
 ---@param olga EntityFamiliar
 ---@param data DogData
 function DogBody:TryEating(olga, data)
+    if data.feedingBowl == nil then
+        DogBody:ReturnToDefault(olga, data, true)
+        return
+    end
+
     local bowlSprite = data.feedingBowl:GetSprite()
     local bowlAnimName = bowlSprite:GetAnimation()
 
@@ -871,17 +860,37 @@ function DogBody:SpawnExplosion(olga, data)
 end
 
 ---@param olga EntityFamiliar
----@param data DogData?
-function DogBody:TryTurningIdle(olga, data)
-    if olga.State == Util.DogState.WHISTLED
-    and data.eventWindow > DogBody.SICK_EVENT - DogBody.RIDING_TRANSITION_FRAMES then
+---@param data DogData
+---@param forceDrop boolean?
+---@return DogState
+function DogBody:TryEndingBusyState(olga, data, forceDrop)
+    local olgaState
+    if olga.State == Util.DogState.WHISTLED then
+        if data.eventWindow > DogBody.RIDING_TRANSITION_EVENT then
+            DogBody:SpawnExplosion(olga, data)
+            olga.GridCollisionClass = EntityGridCollisionClass.GRIDCOLL_GROUND
+        end
+        data.targetPlayer = nil
         data.eventWindow = 0
-        olga.GridCollisionClass = EntityGridCollisionClass.GRIDCOLL_GROUND
     elseif Util:IsEating(olga) then
         data.feedingBowl = nil
     elseif Util:IsFetching(olga) then
-        DogBody:EndFetch(olga, data, true)
+        if olga.State == Util.DogState.RETURN
+        and data.headSprite then -- Because her headSprite isnt initialized on glowing hour glass
+            if forceDrop then
+                local pos = Mod.Room():FindFreePickupSpawnPosition(olga.Position, 0, true)
+                Isaac.Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TAROTCARD, data.objectID, pos, Vector.Zero, nil)
+            end
+            data.headSprite:Play(forceDrop and Util.HeadAnim.IDLE or Util.HeadAnim.HOLD_TO_IDLE)
+            goto skip
+        end
+
+        data.objectID = nil
     end
+    ::skip::
+    olgaState = olga.State
+    DogBody:ReturnToDefault(olga, data, true)
+    return olgaState
 end
 
 ---@param olga EntityFamiliar
@@ -895,28 +904,38 @@ function DogBody:TryChasingPlayer(olga, sprite, data, animName, frameCount)
     end
 
     data.eventWindow = data.eventWindow + 1
+    local timeInput = ((data.eventWindow - DogBody.RAMP_UP_EVENT) / ONE_SEC)
+    local player = data.targetPlayer
+
     if data.eventWindow < DogBody.SICK_EVENT then
-        local rampUpSpeed = 0
+        local rampUpSpeedToAdd = 0
+        local decayRadiusToReduce = 0
+        local decayStrengthToReduce = 0
+
         if data.eventWindow > DogBody.RAMP_UP_EVENT then
-            rampUpSpeed = DogBody.RAMP_UP_PER_SECOND * ((data.eventWindow - DogBody.RAMP_UP_EVENT) / ONE_SEC)
+            rampUpSpeedToAdd = DogBody.RAMP_UP_PER_SEC * timeInput
+            decayRadiusToReduce = DogBody.DECAY_RADIUS_REDUCTION_PER_SEC * timeInput
+            decayStrengthToReduce = DogBody.DECAY_STRENGTH_REDUCTION_PER_SEC * timeInput
         end
 
         local pathfindingResult = DogBody:Pathfind(
-            olga, olga.Player.Position, DogBody.RUN_SPEED + rampUpSpeed, data, ONE_TILE / 1.5, ONE_TILE, DogBody.DECAY_STRENGTH
+            olga,
+            player.Position,
+            DogBody.RUN_SPEED + rampUpSpeedToAdd,
+            data,
+            DogBody.WHISTLE_STOPPING_RADIUS,
+            ONE_TILE - decayRadiusToReduce,
+            DogBody.DECAY_STRENGTH + decayStrengthToReduce
         )
 
         if pathfindingResult == DogBody.PathfindingResult.SUCCESSFUL
         or pathfindingResult == DogBody.PathfindingResult.NO_PATH then
-            if sprite:IsPlaying(Util.BodyAnim.RUNNING_TO_RIDING) then
-                DogBody:SpawnExplosion(olga, data)
-            end
-            DogBody:EndChase(olga, data)
+            DogBody:TryEndingBusyState(olga, data)
         end
         return
     end
 
     -- Create variation in target
-    local player = olga.Player
     if not data.targetPos
     or data.eventWindow % (ONE_SEC * 2) == 0 then
         local room = Mod.Room()
@@ -925,9 +944,9 @@ function DogBody:TryChasingPlayer(olga, sprite, data, animName, frameCount)
     end
 
     local targetToExplode = data.targetPos + player.Position
-    olga.GridCollisionClass = EntityGridCollisionClass.GRIDCOLL_WALLS
-    local speedToAdd = (targetToExplode - olga.Position):Normalized() * (data.eventWindow / 400)
+    local speedToAdd = (targetToExplode - olga.Position):Normalized() * (timeInput / 20)
     olga.Velocity = olga.Velocity + speedToAdd
+    olga.GridCollisionClass = EntityGridCollisionClass.GRIDCOLL_WALLS
     olga.FlipX = math.abs((olga.Position - player.Position):GetAngleDegrees()) > 90
 
     -- Fancy effects
@@ -942,21 +961,13 @@ function DogBody:TryChasingPlayer(olga, sprite, data, animName, frameCount)
         end
     end
 
+    -- Progressively higher pitch
     if olga:CollidesWithGrid() then
-        -- Progressively higher pitch
-        sfxMan:Play(DogBody.DING_SFX, 1, 2, false, 0.3 + (data.eventWindow / 3000))
+        sfxMan:Play(DogBody.DING_SFX, 1, 2, false, 0.3 + (timeInput / 100))
     end
 
-    if Util:IsWithin(olga, olga.Player.Position, ONE_TILE * 0.75) then
-        DogBody:SpawnExplosion(olga, data)
-        DogBody:EndChase(olga, data)
+    if Util:IsWithin(olga, olga.Player.Position, DogBody.WHISTLE_STOPPING_RADIUS / 2) then
+        DogBody:TryEndingBusyState(olga, data)
     end
-end
-
-function DogBody:EndChase(olga, data)
-    data.eventWindow = 0
-    olga.GridCollisionClass = EntityGridCollisionClass.GRIDCOLL_GROUND
-    olga.Velocity = Vector.Zero
-    DogBody:ReturnToDefault(olga, data, true)
 end
 --#endregion

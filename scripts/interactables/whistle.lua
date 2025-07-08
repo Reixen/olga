@@ -35,6 +35,10 @@ function Whistle:OnWhistleUse(cardId, player)
         local data = olga:GetData() ---@cast data DogData
 
         if Util:IsBusy(olga) or not data.headRender then
+            if data.eventWindow > Body.RIDING_TRANSITION_EVENT
+            and olga.State == Util.DogState.WHISTLED then
+                Head:DoIdleAnimation(olga, data, Head.IdleAnim[2])
+            end
             goto skip
         end
 
@@ -52,6 +56,7 @@ function Whistle:OnWhistleUse(cardId, player)
             goto skip
         end
 
+        data.targetPlayer = player
         olga.State = Util.DogState.WHISTLED
         ::skip::
     end
