@@ -35,7 +35,7 @@ local ONE_SEC = 30
 DogBody.EVENT_COOLDOWN = ONE_SEC * 6
 
 -- Whistle Constants
-local SICK_EVENT_START = 15 -- In seconds
+local SICK_EVENT_START = 12 -- In seconds
 DogBody.RAMP_UP_EVENT = ONE_SEC * 3
 DogBody.RAMP_UP_PER_SEC = 0.04
 DogBody.SICK_EVENT = ONE_SEC * SICK_EVENT_START
