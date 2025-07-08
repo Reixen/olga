@@ -201,7 +201,7 @@ function Fetch:OnEffectRemove(entity)
         dogData.headSprite:ReplaceSpritesheet(4, "gfx/familiar/held_object_" .. data.objName .. ".png", true)
         dogData.targetPos = entity.Position
         dogData.objectID = data.objID
-        dogData.eventWindow = objData.duration + ONE_SEC * 2
+        dogdata.eventTimer = objData.duration + ONE_SEC * 2
         olga.State = Mod.Util.DogState.FETCH
         return
     end

@@ -81,7 +81,7 @@ end
 ---@field eventCD integer -- Time it takes for the next movement
 ---@field animCD integer -- Time it takes for the next idle animation
 ---@field attentionCD integer -- Time it takes for the dog to have a special headpat event
----@field eventWindow integer -- Not dependent on framecount, only starts counting down on specific scenarios
+---@field eventTimer integer -- Used as a separate timer, for whistle and fetching event
 ---@field headSprite Sprite
 ---@field headRender boolean | DogState? -- Used to stop the head for rendering when doing special idle animations
 ---@field targetPos Vector? -- Target position to move towards
@@ -283,7 +283,7 @@ function DogBody:OnInit(olga)
     data.eventCD = DogBody.EVENT_COOLDOWN
     data.animCD = DogBody.EVENT_COOLDOWN * 2
     data.attentionCD = 0
-    data.eventWindow = 0
+    data.eventTimer = 0
     data.headRender = true
     data.feedingBowl = nil
 
@@ -576,10 +576,10 @@ function DogBody:TryFetching(olga, data)
         olga.Velocity = Vector.Zero
 
         -- Used to make her stop staying at the area when the object does not exist
-        if data.eventWindow <= 0 then
+        if data.eventTimer <= 0 then
             DogBody:ReturnToDefault(olga, data)
         else
-            data.eventWindow = data.eventWindow - 1
+            data.eventTimer = data.eventTimer - 1
         end
 
         -- If the object does exist then...
@@ -685,9 +685,11 @@ end
 ---@param sprite Sprite
 ---@param data DogData
 function DogBody:PlayAnimation(length, sprite, data)
-    if data.eventWindow > DogBody.RIDING_TRANSITION_EVENT then
-        if not sprite:IsPlaying(Util.BodyAnim.RUNNING_TO_RIDING)
-        and not sprite:IsPlaying(Util.BodyAnim.RIDING) then
+    if data.eventTimer > DogBody.RIDING_TRANSITION_EVENT then
+        if sprite:IsPlaying(Util.BodyAnim.RIDING) then
+            return
+        end
+        if not sprite:IsPlaying(Util.BodyAnim.RUNNING_TO_RIDING) then
             sprite:Play(Util.BodyAnim.RUNNING_TO_RIDING)
             sfxMan:Play(SoundEffect.SOUND_ROCKET_LAUNCH, 1, 60)
         end
@@ -866,12 +868,12 @@ end
 function DogBody:TryEndingBusyState(olga, data, forceDrop)
     local olgaState
     if olga.State == Util.DogState.WHISTLED then
-        if data.eventWindow > DogBody.RIDING_TRANSITION_EVENT then
+        if data.eventTimer > DogBody.RIDING_TRANSITION_EVENT then
             DogBody:SpawnExplosion(olga, data)
             olga.GridCollisionClass = EntityGridCollisionClass.GRIDCOLL_GROUND
         end
         data.targetPlayer = nil
-        data.eventWindow = 0
+        data.eventTimer = 0
     elseif Util:IsEating(olga) then
         data.feedingBowl = nil
     elseif Util:IsFetching(olga) then
@@ -903,16 +905,16 @@ function DogBody:TryChasingPlayer(olga, sprite, data, animName, frameCount)
         DogBody.ANIM_FUNC[Util.BodyAnim.SIT_TO_STAND](olga, sprite, data, animName)
     end
 
-    data.eventWindow = data.eventWindow + 1
-    local timeInput = ((data.eventWindow - DogBody.RAMP_UP_EVENT) / ONE_SEC)
+    data.eventTimer = data.eventTimer + 1
+    local timeInput = ((data.eventTimer - DogBody.RAMP_UP_EVENT) / ONE_SEC)
     local player = data.targetPlayer
 
-    if data.eventWindow < DogBody.SICK_EVENT then
+    if data.eventTimer < DogBody.SICK_EVENT then
         local rampUpSpeedToAdd = 0
         local decayRadiusToReduce = 0
         local decayStrengthToReduce = 0
 
-        if data.eventWindow > DogBody.RAMP_UP_EVENT then
+        if data.eventTimer > DogBody.RAMP_UP_EVENT then
             rampUpSpeedToAdd = DogBody.RAMP_UP_PER_SEC * timeInput
             decayRadiusToReduce = DogBody.DECAY_RADIUS_REDUCTION_PER_SEC * timeInput
             decayStrengthToReduce = DogBody.DECAY_STRENGTH_REDUCTION_PER_SEC * timeInput
@@ -937,7 +939,7 @@ function DogBody:TryChasingPlayer(olga, sprite, data, animName, frameCount)
 
     -- Create variation in target
     if not data.targetPos
-    or data.eventWindow % (ONE_SEC * 2) == 0 then
+    or data.eventTimer % (ONE_SEC * 2) == 0 then
         local room = Mod.Room()
         local randomPos = DogBody:ChooseRandomPosition(room:GetCenterPos(), 1, true)
         data.targetPos = randomPos and (randomPos - room:GetCenterPos()) or Vector.Zero
