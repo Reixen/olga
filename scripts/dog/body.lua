@@ -828,7 +828,9 @@ function DogBody:DoPointFeedback(olga)
     end
 
     local runSave = saveMan.GetRunSave()
-    runSave.pupPoints = runSave.pupPoints and runSave.pupPoints + 1 or 1
+    local hasBFFS = olga.Player:HasCollectible(CollectibleType.COLLECTIBLE_BFFS)
+    local pointsGained = hasBFFS and 2 or 1
+    runSave.pupPoints = runSave.pupPoints and runSave.pupPoints + pointsGained or pointsGained
     Util:EvaluatePoints(runSave.pupPoints)
 
     local effectPos = olga.FlipX and Vector(7, -56) or Vector(-7, -56)
@@ -845,7 +847,8 @@ function DogBody:DoPointFeedback(olga)
     sprite:GetLayer(1):SetColor(lightOrange)
     sprite:GetLayer(2):SetColor(lightOrange)
 
-    sfxMan:Play(SoundEffect.SOUND_THUMBSUP, 1)
+    local sfx = hasBFFS and SoundEffect.SOUND_THUMBSUP_AMPLIFIED or SoundEffect.SOUND_THUMBSUP
+    sfxMan:Play(sfx)
 end
 
 ---@param olga EntityFamiliar
