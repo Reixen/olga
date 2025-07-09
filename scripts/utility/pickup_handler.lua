@@ -22,6 +22,7 @@ PickupHandler.Pickup = {
 }
 
 local Consumables = PickupHandler.Pickup[PickupVariant.PICKUP_TAROTCARD]
+local Trinket = PickupHandler.Pickup[PickupVariant.PICKUP_TRINKET]
 PickupHandler.BaseDrops = {
     ["FetchingObject"] = {
         Consumables.STICK_ID
@@ -40,7 +41,7 @@ PickupHandler.UnlockableDrops = {
     }
 }
 
-PickupHandler.PICKUP_CHANCE = 2 / 5
+PickupHandler.PICKUP_CHANCE = 3 / 10
 PickupHandler.ROTG_CHANCE = 1 / 25
 
 --#endregion
@@ -54,18 +55,20 @@ function PickupHandler:PrePickupMorph(pickup)
     local rng = pickup:GetDropRNG()
     local potentialDrops = PickupHandler:EvaluatePotentialDrops()
     local validDrops = {}
+    potentialDrops["Trinket"] = {Trinket.CRUDE_DRAWING_ID}
     for dropType, _ in pairs(potentialDrops) do
         validDrops[#validDrops+1] = dropType
     end
 
     local dropType = validDrops[rng:RandomInt(#validDrops) + 1]
     local subtype = potentialDrops[dropType][rng:RandomInt(#potentialDrops[dropType]) + 1]
+    local variant = dropType == "Trinket" and PickupVariant.PICKUP_TRINKET or PickupVariant.PICKUP_TAROTCARD
 
     if subtype == Consumables.STICK_ID then
         subtype = rng:RandomFloat() < PickupHandler.ROTG_CHANCE and Consumables.ROD_OF_THE_GODS_ID or Consumables.STICK_ID
     end
 
-    return {EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TAROTCARD, subtype}
+    return {EntityType.ENTITY_PICKUP, variant, subtype}
 end
 Mod:AddCallback(ModCallbacks.MC_PRE_PICKUP_MORPH, PickupHandler.PrePickupMorph)
 
@@ -141,7 +144,8 @@ Mod:AddCallback(ModCallbacks.MC_POST_PLAYER_COLLECT_CARD, PickupHandler.OnPickup
 function PickupHandler:SpawnPickup(roomRNG)
     local rng = RNG()
     rng:SetSeed(roomRNG:GetSeed())
-    if rng:RandomFloat() > PickupHandler.PICKUP_CHANCE then
+    local pickupChance = PlayerManager.AnyoneHasTrinket(Trinket.CRUDE_DRAWING_ID) and PickupHandler.PICKUP_CHANCE / 2 or PickupHandler.PICKUP_CHANCE
+    if rng:RandomFloat() > pickupChance then
         return
     end
 
