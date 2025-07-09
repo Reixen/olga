@@ -167,8 +167,7 @@ function FeedingBowl:SavePupPoints()
 
     persistentSave.pupPoints = runSave.pupPoints or persistentSave.pupPoints or 0
 end
-Mod:AddCallback(ModCallbacks.MC_POST_GAME_END, FeedingBowl.SavePupPoints)
-Mod:AddCallback(ModCallbacks.MC_PRE_GAME_EXIT, FeedingBowl.SavePupPoints) -- Needed when they start a new run mid-run
+Mod:AddCallback(ModCallbacks.MC_PRE_GAME_EXIT, FeedingBowl.SavePupPoints)
 
 function FeedingBowl:GetPupPoints()
     local runSave = saveMan.GetRunSave()

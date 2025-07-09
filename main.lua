@@ -76,9 +76,7 @@ end
 ---     - Bork Set 2
 ---     
 --- Low Priority Bugs
----     - Make her stop going to target pos if it stops existing after spawning
 ---     - Get the pickup back when HG is used after leaving the room mid-fetch
----     - Make her stop going to the fetching object when the campfire is at that position
 --- 
 --- Attribution:
 --- yawn: https://freesound.org/people/jinxycat49/sounds/490164/

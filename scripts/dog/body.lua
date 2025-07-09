@@ -307,9 +307,6 @@ end
 Mod:AddCallback(ModCallbacks.MC_FAMILIAR_INIT, DogBody.OnInit, Mod.Dog.VARIANT)
 
 function DogBody:HandleNewRoom()
-    local room = Mod.Room()
-    local roomType = room:GetType()
-
     for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
         local olga = familiar:ToFamiliar() ---@cast olga EntityFamiliar
         local data = familiar:GetData() ---@cast data DogData
@@ -322,6 +319,9 @@ function DogBody:HandleNewRoom()
         end
         DogBody:TryEndingBusyState(olga, data)
     end
+
+    local room = Mod.Room()
+    local roomType = room:GetType()
 
     if (roomType ~= RoomType.ROOM_ISAACS and roomType ~= RoomType.ROOM_BARREN)
     or not room:IsFirstVisit() or Mod.Level():GetStage() == LevelStage.STAGE8 then

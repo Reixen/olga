@@ -144,7 +144,7 @@ Mod:AddCallback(ModCallbacks.MC_POST_PLAYER_COLLECT_CARD, PickupHandler.OnPickup
 function PickupHandler:SpawnPickup(roomRNG)
     local rng = RNG()
     rng:SetSeed(roomRNG:GetSeed())
-    local pickupChance = PlayerManager.AnyoneHasTrinket(Trinket.CRUDE_DRAWING_ID) and PickupHandler.PICKUP_CHANCE / 2 or PickupHandler.PICKUP_CHANCE
+    local pickupChance = PickupHandler.PICKUP_CHANCE / (PlayerManager.AnyoneHasTrinket(Trinket.CRUDE_DRAWING_ID) and 2 or 1)
     if rng:RandomFloat() > pickupChance then
         return
     end

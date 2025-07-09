@@ -167,10 +167,10 @@ function Fetch:OnEffectRemove(entity)
 
     local data = entity:GetData()
     local player = entity.SpawnerEntity and entity.SpawnerEntity:ToPlayer() or nil ---@cast player EntityPlayer
-    local pData = Mod.Util:GetData(player, Mod.Util.DATA_IDENTIFIER)
 
     -- This is needed in case they exit the run
     if not player then return end
+    local pData = Mod.Util:GetData(player, Mod.Util.DATA_IDENTIFIER)
 
     if entity.Variant == EffectVariant.TARGET and entity.SubType == Fetch.FETCH_TARGET_SUBTYPE then
         player:AnimatePickup(data.objSprite, false, "HideItem")
@@ -225,12 +225,7 @@ function Fetch:OnFetchInterrupt()
             data.isUsingPickup = nil
         end
     end
-end
-Mod:AddCallback(ModCallbacks.MC_PRE_GAME_EXIT, Fetch.OnFetchInterrupt)
-Mod:AddCallback(ModCallbacks.MC_PRE_CHANGE_ROOM, Fetch.OnFetchInterrupt)
-Mod:AddCallback(ModCallbacks.MC_PRE_LEVEL_INIT, Fetch.OnFetchInterrupt)
 
-function Fetch:OnDogFetchInterrupt()
     for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
         local olga = familiar:ToFamiliar()
         local data = olga:GetData()
@@ -241,7 +236,8 @@ function Fetch:OnDogFetchInterrupt()
         end
     end
 end
-Mod:AddCallback(ModCallbacks.MC_PRE_GAME_EXIT, Fetch.OnDogFetchInterrupt)
+Mod:AddCallback(ModCallbacks.MC_PRE_GAME_EXIT, Fetch.OnFetchInterrupt)
+Mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, Fetch.OnFetchInterrupt)
 
 --#endregion
 --#region Fetch Helper Functions
