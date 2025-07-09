@@ -167,6 +167,7 @@ function Fetch:OnEffectRemove(entity)
 
     local data = entity:GetData()
     local player = entity.SpawnerEntity and entity.SpawnerEntity:ToPlayer() or nil ---@cast player EntityPlayer
+    local pData = Mod.Util:GetData(player, Mod.Util.DATA_IDENTIFIER)
 
     -- This is needed in case they exit the run
     if not player then return end
@@ -174,9 +175,8 @@ function Fetch:OnEffectRemove(entity)
     if entity.Variant == EffectVariant.TARGET and entity.SubType == Fetch.FETCH_TARGET_SUBTYPE then
         player:AnimatePickup(data.objSprite, false, "HideItem")
 
-        local room = Mod.Room()
-        if room:GetGridCollisionAtPos(entity.Position) ~= GridCollisionClass.COLLISION_NONE
-        or room:GetType() == RoomType.ROOM_DUNGEON then
+        if Fetch:NotValidFetchPos(entity.Position) then
+            pData.isUsingPickup = false
             sfxMan:Play(SoundEffect.SOUND_BOSS2INTRO_ERRORBUZZ)
             player:AddCard(data.objID)
             return
@@ -211,7 +211,6 @@ function Fetch:OnEffectRemove(entity)
     local sprite = pickup:GetSprite()
     sprite:SetFrame(4)
 
-    local pData = Mod.Util:GetData(player, Mod.Util.DATA_IDENTIFIER)
     pData.isUsingPickup = false
 end
 Mod:AddCallback(ModCallbacks.MC_POST_ENTITY_REMOVE, Fetch.OnEffectRemove, EntityType.ENTITY_EFFECT)
@@ -278,5 +277,28 @@ function Fetch:FindNearestDog(position)
     end
 
     return nearestDoggy
+end
+
+---@param position Vector
+---@param roomObject Room?
+function Fetch:NotValidFetchPos(position, roomObject)
+    local room = roomObject or Mod.Room()
+    local gridEnt = room:GetGridEntityFromPos(position)
+    local gridType = gridEnt and gridEnt:GetType() or GridEntityType.GRID_NULL
+    local hasFirePlace = false
+    for _, fire in ipairs(Isaac.FindByType(EntityType.ENTITY_FIREPLACE)) do
+        local fireGridIdx = room:GetGridIndex(fire.Position)
+        local posGridIdx = room:GetGridIndex(position)
+        if fireGridIdx == posGridIdx and fire.Variant ~= 10 -- Fire without wood
+        and fire:GetSprite():GetAnimation() ~= "Dissapear" then
+            hasFirePlace = true
+            break
+        end
+    end
+    return room:GetGridCollisionAtPos(position) ~= GridCollisionClass.COLLISION_NONE
+    or room:GetType() == RoomType.ROOM_DUNGEON
+    or gridType == GridEntityType.GRID_SPIKES
+    or gridType == GridEntityType.GRID_PRESSURE_PLATE
+    or hasFirePlace
 end
 --endregion
