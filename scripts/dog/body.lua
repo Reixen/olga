@@ -292,6 +292,12 @@ function DogBody:OnInit(olga)
     data.headSprite:Load("gfx/render_olga_head.anm2", true)
     data.headSprite:Play(Util.HeadAnim.IDLE, true)
 
+    if not DogBody:IsBirthdayWeek() then
+        data.headSprite:GetLayer(7):SetVisible(false)
+        data.headSprite:GetLayer(8):SetVisible(false)
+        olga:GetSprite():GetLayer(3):SetVisible(false)
+    end
+
     local floorSave = saveMan.GetFloorSave()
     floorSave.obtainedDrops = floorSave.obtainedDrops or {}
 
