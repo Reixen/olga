@@ -140,12 +140,9 @@ Mod:AddCallback(ModCallbacks.MC_POST_PLAYER_COLLECT_CARD, PickupHandler.OnPickup
 Mod:AddCallback(ModCallbacks.MC_POST_PLAYER_COLLECT_CARD, PickupHandler.OnPickupCollect, Consumables.ROD_OF_THE_GODS_ID)
 Mod:AddCallback(ModCallbacks.MC_POST_PLAYER_COLLECT_CARD, PickupHandler.OnPickupCollect, Consumables.WHISTLE_ID)
 
----@param roomRNG RNG
-function PickupHandler:SpawnPickup(roomRNG)
-    local rng = RNG()
-    rng:SetSeed(roomRNG:GetSeed())
+function PickupHandler:SpawnPickup(rng)
     local pickupChance = PickupHandler.PICKUP_CHANCE / (PlayerManager.AnyoneHasTrinket(Trinket.CRUDE_DRAWING_ID) and 2 or 1)
-    if rng:RandomFloat() > pickupChance then
+    if rng:PhantomFloat() > pickupChance then
         return
     end
 
@@ -179,11 +176,11 @@ function PickupHandler:SpawnPickup(roomRNG)
     end
 
     if #Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT) > 0 then
-        local dropType = validDrops[rng:RandomInt(#validDrops) + 1]
-        local subtype = potentialDrops[dropType][rng:RandomInt(#potentialDrops[dropType]) + 1]
+        local dropType = validDrops[rng:PhantomInt(#validDrops) + 1]
+        local subtype = potentialDrops[dropType][rng:PhantomInt(#potentialDrops[dropType]) + 1]
 
         if subtype == Consumables.STICK_ID then
-            subtype = rng:RandomFloat() < PickupHandler.ROTG_CHANCE and Consumables.ROD_OF_THE_GODS_ID or Consumables.STICK_ID
+            subtype = rng:PhantomFloat() < PickupHandler.ROTG_CHANCE and Consumables.ROD_OF_THE_GODS_ID or Consumables.STICK_ID
         end
 
         floorSave.obtainedDrops[#floorSave.obtainedDrops+1] = dropType
