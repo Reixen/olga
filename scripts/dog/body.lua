@@ -48,6 +48,7 @@ DogBody.RIDING_TRANSITION_EVENT = DogBody.SICK_EVENT - 22 -- Amount of frames ne
 DogBody.FOOD_SUBSTRING_START = 5
 DogBody.CRUMB_LAYER_ID = 5
 DogBody.EATING_VARIATIONS = 3
+DogBody.Birthday = {MONTH = 5, DAY = 10}
 
 local TRINKET_ID = Mod.PickupHandler.Pickup[PickupVariant.PICKUP_TRINKET].CRUDE_DRAWING_ID
 
@@ -331,6 +332,12 @@ function DogBody:HandleNewRoom()
     local potentialPos = DogBody:ChooseRandomPosition(room:GetCenterPos(), DogBody.SPAWN_LENGTH)
     local spawnPos = room:FindFreePickupSpawnPosition(potentialPos or room:GetCenterPos())
     Isaac.Spawn(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT, 0, spawnPos, Vector.Zero, nil)
+
+    if DogBody:IsBirthdayWeek()
+    and Epiphany then
+        Epiphany.Item.PARTY_POPPER:CreateConfetti(spawnPos, 8)
+        sfxMan:Play(Isaac.GetSoundIdByName("Surprise Box"))
+    end
 end
 Mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, DogBody.HandleNewRoom)
 
@@ -974,5 +981,12 @@ function DogBody:TryChasingPlayer(olga, sprite, data, animName, frameCount)
     if Util:IsWithin(olga, olga.Player.Position, DogBody.WHISTLE_STOPPING_RADIUS / 2) then
         DogBody:TryEndingBusyState(olga, data)
     end
+end
+
+function DogBody:IsBirthdayWeek()
+    local date = os.date("*t")
+    return date.month == DogBody.Birthday.MONTH
+    and date.day > DogBody.Birthday.DAY - 3
+    and date.day < DogBody.Birthday.DAY + 3
 end
 --#endregion
