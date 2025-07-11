@@ -35,10 +35,10 @@ local ONE_SEC = 30
 DogBody.EVENT_COOLDOWN = ONE_SEC * 6
 
 -- Whistle Constants
-local SICK_EVENT_START = 12 -- In seconds
-DogBody.RAMP_UP_EVENT = ONE_SEC * 3
-DogBody.RAMP_UP_PER_SEC = 0.043
+local SICK_EVENT_START = 15 -- In seconds
+DogBody.RAMP_UP_PER_SEC = 0.041
 DogBody.SICK_EVENT = ONE_SEC * SICK_EVENT_START
+DogBody.RAMP_UP_EVENT = (SICK_EVENT_START - 10) * ONE_SEC
 
 DogBody.WHISTLE_STOPPING_RADIUS = ONE_TILE / 1.5
 DogBody.DECAY_RADIUS_REDUCTION_PER_SEC = DogBody.WHISTLE_STOPPING_RADIUS / SICK_EVENT_START
@@ -948,6 +948,10 @@ function DogBody:TryChasingPlayer(olga, sprite, data, animName, frameCount)
 
         if pathfindingResult == DogBody.PathfindingResult.SUCCESSFUL
         or pathfindingResult == DogBody.PathfindingResult.NO_PATH then
+            if data.eventTimer > DogBody.RAMP_UP_EVENT then
+                Mod.Dog.Head:DoIdleAnimation(olga, data, Mod.Dog.Head.IdleAnim[2])
+                sfxMan:Play(SoundEffect.SOUND_THUMBS_DOWN)
+            end
             DogBody:TryEndingBusyState(olga, data)
         end
         return
@@ -962,7 +966,7 @@ function DogBody:TryChasingPlayer(olga, sprite, data, animName, frameCount)
     end
 
     local targetToExplode = data.targetPos + player.Position
-    local speedToAdd = (targetToExplode - olga.Position):Normalized() * (timeInput / 20)
+    local speedToAdd = (targetToExplode - olga.Position):Normalized() * (timeInput / 19)
     olga.Velocity = olga.Velocity + speedToAdd
     olga.GridCollisionClass = EntityGridCollisionClass.GRIDCOLL_WALLS
     olga.FlipX = math.abs((olga.Position - player.Position):GetAngleDegrees()) > 90
@@ -984,7 +988,7 @@ function DogBody:TryChasingPlayer(olga, sprite, data, animName, frameCount)
         sfxMan:Play(DogBody.DING_SFX, 1, 2, false, 0.3 + (timeInput / 100))
     end
 
-    if Util:IsWithin(olga, olga.Player.Position, DogBody.WHISTLE_STOPPING_RADIUS / 2) then
+    if Util:IsWithin(olga, olga.Player.Position, DogBody.WHISTLE_STOPPING_RADIUS) then
         DogBody:TryEndingBusyState(olga, data)
     end
 end
