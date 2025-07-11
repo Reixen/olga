@@ -42,7 +42,7 @@ function Whistle:OnWhistleUse(cardId, player)
             goto skip
         end
 
-        if Util:IsWithin(olga, olga.Player.Position, Head.HAPPY_DISTANCE) then
+        if Util:IsWithin(olga, player.Position, Head.HAPPY_DISTANCE) then
             local sprite = olga:GetSprite()
             if olga.State == Util.DogState.SITTING then
                 sprite:Play(Util.BodyAnim.SIT_TO_STAND, true)
