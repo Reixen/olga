@@ -188,7 +188,8 @@ function Util:UpdateHandColor(player, sprite, ptrHash)
         end
 
         for _, pTypeString in ipairs(modTable.PlayerTypes) do
-            if playerType == modTable.PlayerTypeTable[pTypeString] then
+            if playerType == modTable.PlayerTypeTable[pTypeString]
+            or modTable.PlayerTypeTable == GIMP.CHARACTER and playerType == modTable.PlayerTypeTable[pTypeString].ID then
                 sprite:ReplaceSpritesheet(0, "gfx/petting_hands/".. modTable.FileString .."/hand_" .. pTypeString .. ".png")
                 goto finish
             end
