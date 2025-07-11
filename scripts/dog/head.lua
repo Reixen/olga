@@ -136,8 +136,8 @@ DogHead.ANIM_FUNC = {
     end,
 
     -- Standard idle animations
-    [Util.HeadAnim.YAWN] = function(_, sprite)
-        if sprite:IsFinished() and sprite:GetAnimation() ~= Util.HeadAnim.HOLD then
+    [Util.HeadAnim.YAWN] = function(_, sprite, _, animName)
+        if sprite:IsFinished() and animName ~= Util.HeadAnim.HOLD then
             sprite:Play(Util.HeadAnim.IDLE, true)
         end
 
@@ -162,10 +162,6 @@ DogHead.ANIM_FUNC = {
         elseif sprite:IsEventTriggered("Munch") then
             sfxMan:Play(SoundEffect.SOUND_MEAT_JUMPS, 0.8, 2, false, math.random(9, 11)/10)
         end
-
-        -- Doesn't sound right
-        --elseif sprite:IsEventTriggered("Gulp") then
-            --sfxMan:Play(SoundEffect.SOUND_VAMP_GULP, 0.6, 2, false, math.random(18, 20)/10)
     end,
 
     -- Mini idle animations
