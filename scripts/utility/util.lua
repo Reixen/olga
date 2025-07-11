@@ -199,6 +199,11 @@ function Util:UpdateHandColor(player, sprite, ptrHash)
 
     ::finish::
     sprite:LoadGraphics()
+    if playerType == PlayerType.PLAYER_THESOUL
+    or playerType == PlayerType.PLAYER_THESOUL_B then
+        local handLayer = sprite:GetLayer(0) -- Petting hand layer
+        handLayer:SetColor(player.Color)
+    end
     handData.pColor = playerColor
     handData.pType = playerType
 end

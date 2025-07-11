@@ -105,6 +105,10 @@ DogBody.ANIM_FUNC = {
             return
         end
 
+        if not data.hasOwner then
+            return
+        end
+
         local frameCount = olga.FrameCount
         if rng:RandomFloat() < DogBody.SWITCH_CHANCE and data.eventCD < frameCount
         or Util:IsBusy(olga) then
@@ -381,6 +385,13 @@ function DogBody:OnSacrifice()
     end
 end
 Mod:AddCallback(ModCallbacks.MC_USE_ITEM, DogBody.OnSacrifice, CollectibleType.COLLECTIBLE_SACRIFICIAL_ALTAR)
+
+function DogBody:PostDogDeath(olga)
+    if olga.Variant == Mod.Dog.VARIANT then
+        Isaac.Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TRINKET, TRINKET_ID, olga.Position, Vector.Zero, nil)
+    end
+end
+Mod:AddCallback(ModCallbacks.MC_POST_ENTITY_KILL, DogBody.PostDogDeath, EntityType.ENTITY_FAMILIAR)
 --#endregion
 --#region Olga Helper Functions
 ---@param anim string
@@ -529,20 +540,22 @@ end
 ---@param olga EntityFamiliar
 ---@param data DogData
 function DogBody:FindDogOwner(olga, data)
-    local nearestPlayer = game:GetNearestPlayer(olga.Position)
-
-    if not Util:IsWithin(olga, nearestPlayer.Position, DogBody.HAPPY_DISTANCE) then
+    local runsave = saveMan.TryGetRunSave(olga)
+    if runsave and runsave.playerIndex then
+        local player = Isaac.GetPlayer(runsave.playerIndex)
+        DogBody:EstablishOwnership(olga, data, player)
         return
     end
 
-    olga.SpawnerEntity = nearestPlayer
-    olga.Player = nearestPlayer
-    data.hasOwner = true
+    local nearestPlayer = game:GetNearestPlayer(olga.Position)
+    if not Util:IsWithin(olga, nearestPlayer.Position, ONE_TILE * 1.2)
+    or nearestPlayer.Variant ~= PlayerVariant.PLAYER then
+        return
+    end
 
-    local pData = Util:GetData(olga.Player, Util.DATA_IDENTIFIER)
-    pData.hasDoggy = true
-
-    Util:UpdateHandColor(nearestPlayer, olga:GetData().headSprite, GetPtrHash(olga))
+    DogBody:EstablishOwnership(olga, data, nearestPlayer)
+    nearestPlayer:AnimateHappy()
+    saveMan.GetRunSave(olga).playerIndex = nearestPlayer:GetPlayerIndex()
 end
 
 -- From Epiphany's Epiphany:PickupKill()
@@ -998,5 +1011,16 @@ function DogBody:IsBirthdayWeek()
     return date.month == DogBody.Birthday.MONTH
     and date.day > DogBody.Birthday.DAY - 3
     and date.day < DogBody.Birthday.DAY + 3
+end
+
+---@param olga EntityFamiliar
+---@param data DogData
+---@param player EntityPlayer
+function DogBody:EstablishOwnership(olga, data, player)
+    olga.Player = player
+    data.hasOwner = true
+
+    local pData = Util:GetData(olga.Player, Util.DATA_IDENTIFIER)
+    pData.hasDoggy = true
 end
 --#endregion

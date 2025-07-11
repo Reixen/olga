@@ -52,7 +52,7 @@ function Whistle:OnWhistleUse(cardId, player)
                 olga.Velocity = Vector.Zero
                 data.targetPos = nil
             end
-            data.eventCD = Body.EVENT_COOLDOWN + olga.FrameCount
+            data.eventCD = (Body.EVENT_COOLDOWN * 2) + olga.FrameCount
             goto skip
         end
 

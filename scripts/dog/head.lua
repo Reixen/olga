@@ -60,9 +60,8 @@ DogHead.ANIM_FUNC = {
         DogHead:TryFindingFood(olga, data) -- Line 335
         DogHead:TryTurningGlad(olga, sprite, data)
 
-        if not sprite:IsEventTriggered("TransitionHook")
-        or Util:IsBusy(olga)
-        or data.animCD > frameCount then
+        if not sprite:IsEventTriggered("TransitionHook") or Util:IsBusy(olga)
+        or data.animCD > frameCount or data.hasOwner then
             return
         end
 
