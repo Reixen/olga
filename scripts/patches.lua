@@ -24,7 +24,7 @@ function Mod:LoadPatches()
                 "FIEND",
             }, FileString = "fiend_folio"
         },
-        {PlayerTypeTable = GIMP.CHARACTER, PlayerTypes = {
+        {PlayerTypeTable = GIMP and GIMP.CHARACTER, PlayerTypes = {
                 "GIMP",
                 "GIMP_B",
                 "GIMP_C"
