@@ -79,31 +79,7 @@ Util.DogState = {
     EATING = 7,
 }
 
-Util.ModdedHands = {
-    {Mod = Epiphany and Epiphany.PlayerType, PlayerTypes = {
-            "MAGDALENE",
-            "EDEN",
-            "BLUEBABY",
-            "SAMSON",
-            "KEEPER",
-            "JUDAS1",
-            "JUDAS2",
-            "JUDAS",
-            "JUDAS4",
-            "JUDAS5"
-        }, FileString = "epiphany"
-    },
-    {Mod = FiendFolio and FiendFolio.PLAYER, PlayerTypes = {
-            "FIEND",
-        }, FileString = "fiend_folio"
-    },
-    {Mod = GIMP and GIMP.CHARACTER, PlayerTypes = {
-            "GIMP",
-            "GIMP_B",
-            "GIMP_C"
-        }, FileString = "gimp"
-    },
-}
+Util.ModdedHands = {} -- See patches
 
 -- Used for shaders
 Util.HeadLayerId = {

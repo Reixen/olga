@@ -6,9 +6,36 @@ local Trinkets = Mod.PickupHandler.Pickup[PickupVariant.PICKUP_TRINKET]
 --#endregion
 --#region Callbacks
 function Mod:LoadPatches()
+    Mod.Util.ModdedHands = {
+        {Mod = Epiphany and Epiphany.PlayerType, PlayerTypes = {
+                "MAGDALENE",
+                "EDEN",
+                "BLUEBABY",
+                "SAMSON",
+                "KEEPER",
+                "JUDAS1",
+                "JUDAS2",
+                "JUDAS",
+                "JUDAS4",
+                "JUDAS5"
+            }, FileString = "epiphany"
+        },
+        {Mod = FiendFolio and FiendFolio.PLAYER, PlayerTypes = {
+                "FIEND",
+            }, FileString = "fiend_folio"
+        },
+        {Mod = GIMP and GIMP.CHARACTER, PlayerTypes = {
+                "GIMP",
+                "GIMP_B",
+                "GIMP_C"
+            }, FileString = "gimp"
+        },
+    }
+
     if not Epiphany then
         return
     end
+
     Epiphany:AddToDictionary(
         Epiphany.Character.KEEPER.DisallowedPickUpVariants[PickupVariant.PICKUP_TAROTCARD],
         {
