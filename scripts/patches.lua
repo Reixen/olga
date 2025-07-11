@@ -7,7 +7,7 @@ local Trinkets = Mod.PickupHandler.Pickup[PickupVariant.PICKUP_TRINKET]
 --#region Callbacks
 function Mod:LoadPatches()
     Mod.Util.ModdedHands = {
-        {Mod = Epiphany and Epiphany.PlayerType, PlayerTypes = {
+        {PlayerTypeTable = Epiphany and Epiphany.PlayerType, PlayerTypes = {
                 "MAGDALENE",
                 "EDEN",
                 "BLUEBABY",
@@ -20,11 +20,11 @@ function Mod:LoadPatches()
                 "JUDAS5"
             }, FileString = "epiphany"
         },
-        {Mod = FiendFolio and FiendFolio.PLAYER, PlayerTypes = {
+        {PlayerTypeTable = FiendFolio and FiendFolio.PLAYER, PlayerTypes = {
                 "FIEND",
             }, FileString = "fiend_folio"
         },
-        {Mod = GIMP and GIMP.CHARACTER, PlayerTypes = {
+        {PlayerTypeTable = GIMP and GIMP.CHARACTER, PlayerTypes = {
                 "GIMP",
                 "GIMP_B",
                 "GIMP_C"

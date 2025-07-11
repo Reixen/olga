@@ -182,14 +182,14 @@ function Util:UpdateHandColor(player, sprite, ptrHash)
         end
     end
 
-    for _, typeTable in ipairs(Util.ModdedHands) do
-        if not typeTable.Mod then
+    for _, modTable in ipairs(Util.ModdedHands) do
+        if not modTable.PlayerTypeTable then
             goto skip
         end
 
-        for _, pTypeString in ipairs(typeTable.PlayerTypes) do
-            if playerType == typeTable.Mod[pTypeString] then
-                sprite:ReplaceSpritesheet(0, "gfx/petting_hands/".. typeTable.FileString .."/hand_" .. pTypeString .. ".png")
+        for _, pTypeString in ipairs(modTable.PlayerTypes) do
+            if playerType == modTable.PlayerTypeTable[pTypeString] then
+                sprite:ReplaceSpritesheet(0, "gfx/petting_hands/".. modTable.FileString .."/hand_" .. pTypeString .. ".png")
                 goto finish
             end
         end
