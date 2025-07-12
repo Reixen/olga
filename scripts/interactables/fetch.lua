@@ -202,6 +202,7 @@ function Fetch:OnEffectRemove(entity)
         dogData.targetPos = entity.Position
         dogData.objectID = data.objID
         dogData.eventTimer = objData.duration + ONE_SEC * 2
+        dogData.targetPlayer = player
         olga.State = Mod.Util.DogState.FETCH
         return
     end

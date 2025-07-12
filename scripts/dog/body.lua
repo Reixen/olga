@@ -91,7 +91,7 @@ end
 ---@field feedingBowl EntitySlot?
 ---@field canPet boolean? -- Used for preventing the player from petting the dog in certain scenarios
 ---@field hasOwner boolean?
----@field targetPlayer EntityPlayer? -- Used for the whistle event
+---@field targetPlayer EntityPlayer? -- Used for the whistle and fetching
 
 --#endregion
 --#region Olga Body Animation Functions
@@ -149,7 +149,7 @@ DogBody.ANIM_FUNC = {
 
         elseif olga.State == Util.DogState.RETURN then
             local pathfindingResult = DogBody:Pathfind(
-                olga, olga.Player.Position, DogBody.RUN_SPEED, data, ONE_TILE, ONE_TILE, DogBody.DECAY_STRENGTH
+                olga, data.targetPlayer.Position, DogBody.RUN_SPEED, data, ONE_TILE, ONE_TILE, DogBody.DECAY_STRENGTH
             )
 
             -- Drop the stick when near the owner or when she cannot pathfind
@@ -622,11 +622,11 @@ end
 -- Returns a boolean if the player object matches with the spawner entity of the pickup
 ---@param pickup EntityPickup
 ---@param objectID integer
----@param olga EntityFamiliar
-function DogBody:DoesPickupMatch(pickup, objectID, olga)
+---@param data DogData
+function DogBody:DoesPickupMatch(pickup, objectID, data)
     return pickup and pickup.Variant == PickupVariant.PICKUP_TAROTCARD and pickup.SubType == objectID
-    and pickup.SpawnerEntity and pickup.SpawnerEntity:ToPlayer() and olga.Player
-    and GetPtrHash(pickup.SpawnerEntity:ToPlayer()) == GetPtrHash(olga.Player)
+    and pickup.SpawnerEntity and pickup.SpawnerEntity:ToPlayer() and data.targetPlayer
+    and GetPtrHash(pickup.SpawnerEntity:ToPlayer()) == GetPtrHash(data.targetPlayer)
 end
 
 ---@param olga EntityFamiliar
@@ -655,7 +655,7 @@ function DogBody:TryFetching(olga, data)
         for _, item in ipairs(Isaac.FindInRadius(olga.Position, ONE_TILE * 1.5, EntityPartition.PICKUP)) do
             local pickup = item:ToPickup() ---@cast pickup EntityPickup
 
-            if DogBody:DoesPickupMatch(pickup, data.objectID, olga) then
+            if DogBody:DoesPickupMatch(pickup, data.objectID, data) then
                 if data.headSprite:IsEventTriggered("Pickup") then
                     data.headSprite:Play(Util.HeadAnim.HOLD)
                     DogBody:KillPickup(pickup)
@@ -959,6 +959,7 @@ function DogBody:TryEndingBusyState(olga, data, forceDrop)
             goto skip
         end
 
+        data.targetPlayer = nil
         data.objectID = nil
     end
     ::skip::
