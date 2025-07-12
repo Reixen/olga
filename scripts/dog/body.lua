@@ -361,6 +361,7 @@ end
 Mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, DogBody.HandleNewRoom)
 
 function DogBody:GoodbyeOlga()
+    local wasDogRemoved = false
     for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
         local olga = familiar:ToFamiliar() ---@cast olga EntityFamiliar
 
@@ -372,10 +373,15 @@ function DogBody:GoodbyeOlga()
             Isaac.Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TRINKET, TRINKET_ID, pos, Vector.Zero, nil)
 
             familiar:Remove()
+            wasDogRemoved = true
         end
     end
-    if #Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT) > 0 then
-        saveMan.GetFloorSave().obtainedDrops = {}
+    local floorSave = saveMan.GetFloorSave()
+    if not wasDogRemoved then
+        floorSave.obtainedDrops = {}
+        floorSave.levelStage = Mod.Level():GetStage()
+    else
+        floorSave = {}
     end
 end
 Mod:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, DogBody.GoodbyeOlga)
@@ -417,6 +423,7 @@ function DogBody:OnAbandonOlga()
 end
 Mod:AddCallback(ModCallbacks.MC_PRE_CHANGE_ROOM, DogBody.OnAbandonOlga)
 
+-- To stop the player from smiling upon exiting the game
 function DogBody:OnGameExit()
     for _, entity in ipairs(Isaac.FindByType(EntityType.ENTITY_PLAYER, PlayerVariant.PLAYER)) do
         local player = entity:ToPlayer()
