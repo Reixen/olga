@@ -276,8 +276,10 @@ function DogBody:HandleBodyLogic(olga)
     local animName = sprite:GetAnimation()
     DogBody.ANIM_FUNC[animName](olga, sprite, data, animName)
 
-    if data.hasOwner then return end
-    DogBody:FindDogOwner(olga, data)
+    if not data.hasOwner then
+        DogBody:FindDogOwner(olga, data)
+        return
+    end
 end
 Mod:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, DogBody.HandleBodyLogic, Mod.Dog.VARIANT)
 
@@ -314,6 +316,13 @@ function DogBody:OnInit(olga)
     olga:AddEntityFlags(EntityFlag.FLAG_NO_KNOCKBACK | EntityFlag.FLAG_NO_PHYSICS_KNOCKBACK)
     olga.GridCollisionClass = EntityGridCollisionClass.GRIDCOLL_GROUND
     olga.FlipX = math.abs((olga.Position - olga.Player.Position):GetAngleDegrees()) > 90
+
+    local runSave = saveMan.TryGetRunSave(olga)
+    if not runSave or not runSave.hasOwner then
+        olga:GetSprite():PlayOverlay("SpawnSign")
+        return
+    end
+    data.hasOwner = true
 end
 Mod:AddCallback(ModCallbacks.MC_FAMILIAR_INIT, DogBody.OnInit, Mod.Dog.VARIANT)
 
@@ -386,12 +395,40 @@ function DogBody:OnSacrifice()
 end
 Mod:AddCallback(ModCallbacks.MC_USE_ITEM, DogBody.OnSacrifice, CollectibleType.COLLECTIBLE_SACRIFICIAL_ALTAR)
 
-function DogBody:PostDogDeath(olga)
-    if olga.Variant == Mod.Dog.VARIANT then
-        Isaac.Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TRINKET, TRINKET_ID, olga.Position, Vector.Zero, nil)
+function DogBody:OnAbandonOlga()
+    local room = Mod.Room()
+    local roomType = room:GetType()
+
+    if (roomType ~= RoomType.ROOM_ISAACS and roomType ~= RoomType.ROOM_BARREN)
+     or Mod.Level():GetStage() == LevelStage.STAGE8 then
+        return
+    end
+
+    for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
+        if not familiar:GetData().hasOwner then
+            sfxMan:Play(SoundEffect.SOUND_THUMBS_DOWN)
+
+            local pos = Mod.Room():FindFreePickupSpawnPosition(familiar.Position, 0, true)
+            Isaac.Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TRINKET, TRINKET_ID, pos, Vector.Zero, nil)
+
+            familiar:Remove()
+        end
     end
 end
-Mod:AddCallback(ModCallbacks.MC_POST_ENTITY_KILL, DogBody.PostDogDeath, EntityType.ENTITY_FAMILIAR)
+Mod:AddCallback(ModCallbacks.MC_PRE_CHANGE_ROOM, DogBody.OnAbandonOlga)
+
+function DogBody:OnGameExit()
+    for _, entity in ipairs(Isaac.FindByType(EntityType.ENTITY_PLAYER, PlayerVariant.PLAYER)) do
+        local player = entity:ToPlayer()
+        if not player:HasCollectible(Util.HAPPY_COLLECTIBLE)
+        and player:IsCollectibleCostumeVisible(Util.HAPPY_COLLECTIBLE, "head") then
+            local itemCfg = Isaac.GetItemConfig():GetCollectible(Util.HAPPY_COLLECTIBLE)
+            player:RemoveCostume(itemCfg)
+        end
+    end
+end
+Mod:AddCallback(ModCallbacks.MC_PRE_GAME_EXIT, DogBody.OnGameExit)
+
 --#endregion
 --#region Olga Helper Functions
 ---@param anim string
@@ -540,22 +577,21 @@ end
 ---@param olga EntityFamiliar
 ---@param data DogData
 function DogBody:FindDogOwner(olga, data)
-    local runsave = saveMan.TryGetRunSave(olga)
-    if runsave and runsave.playerIndex then
-        local player = Isaac.GetPlayer(runsave.playerIndex)
-        DogBody:EstablishOwnership(olga, data, player)
-        return
-    end
-
     local nearestPlayer = game:GetNearestPlayer(olga.Position)
     if not Util:IsWithin(olga, nearestPlayer.Position, ONE_TILE * 1.2)
     or nearestPlayer.Variant ~= PlayerVariant.PLAYER then
         return
     end
 
-    DogBody:EstablishOwnership(olga, data, nearestPlayer)
+    olga:GetSprite():PlayOverlay("RemoveSign")
+    olga.Player = nearestPlayer
+    olga.SpawnerEntity = nearestPlayer
+    data.hasOwner = true
+
     nearestPlayer:AnimateHappy()
-    saveMan.GetRunSave(olga).playerIndex = nearestPlayer:GetPlayerIndex()
+    local pData = Util:GetData(olga.Player, Util.DATA_IDENTIFIER)
+    pData.hasDoggy = true
+    saveMan.GetRunSave(olga).hasOwner = true
 end
 
 -- From Epiphany's Epiphany:PickupKill()
@@ -963,7 +999,6 @@ function DogBody:TryChasingPlayer(olga, sprite, data, animName, frameCount)
         or pathfindingResult == DogBody.PathfindingResult.NO_PATH then
             if data.eventTimer > DogBody.RAMP_UP_EVENT then
                 Mod.Dog.Head:DoIdleAnimation(olga, data, Mod.Dog.Head.IdleAnim[2])
-                sfxMan:Play(SoundEffect.SOUND_THUMBS_DOWN)
             end
             DogBody:TryEndingBusyState(olga, data)
         end
@@ -1011,16 +1046,5 @@ function DogBody:IsBirthdayWeek()
     return date.month == DogBody.Birthday.MONTH
     and date.day > DogBody.Birthday.DAY - 3
     and date.day < DogBody.Birthday.DAY + 3
-end
-
----@param olga EntityFamiliar
----@param data DogData
----@param player EntityPlayer
-function DogBody:EstablishOwnership(olga, data, player)
-    olga.Player = player
-    data.hasOwner = true
-
-    local pData = Util:GetData(olga.Player, Util.DATA_IDENTIFIER)
-    pData.hasDoggy = true
 end
 --#endregion

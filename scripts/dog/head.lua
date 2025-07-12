@@ -28,7 +28,7 @@ DogHead.ANIM_COOLDOWN = ONE_SEC * 6
 DogHead.ATTENTION_COOLDOWN = ONE_SEC * 30
 
 local ONE_TILE = 40
-DogHead.HAPPY_DISTANCE = ONE_TILE * 2
+DogHead.HAPPY_DISTANCE = Mod.Dog.Body.HAPPY_DISTANCE
 DogHead.PETTING_DISTANCE = ONE_TILE * 1.2
 
 DogHead.IdleAnim = {
@@ -61,7 +61,7 @@ DogHead.ANIM_FUNC = {
         DogHead:TryTurningGlad(olga, sprite, data)
 
         if not sprite:IsEventTriggered("TransitionHook") or Util:IsBusy(olga)
-        or data.animCD > frameCount or data.hasOwner then
+        or data.animCD > frameCount or not data.hasOwner then
             return
         end
 
