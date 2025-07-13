@@ -48,7 +48,7 @@ DogBody.RIDING_TRANSITION_EVENT = DogBody.SICK_EVENT - 22 -- Amount of frames ne
 DogBody.FOOD_SUBSTRING_START = 5
 DogBody.CRUMB_LAYER_ID = 5
 DogBody.EATING_VARIATIONS = 3
-DogBody.Birthday = {MONTH = 5, DAY = 10}
+DogBody.Birthday = {MONTH = 5, DAY = 11}
 
 local TRINKET_ID = Mod.PickupHandler.Pickup[PickupVariant.PICKUP_TRINKET].CRUDE_DRAWING_ID
 
