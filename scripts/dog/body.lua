@@ -314,7 +314,7 @@ function DogBody:OnInit(olga)
     olga.FlipX = math.abs((olga.Position - olga.Player.Position):GetAngleDegrees()) > 90
 
     local runSave = saveMan.TryGetRunSave(olga)
-    if not runSave or not runSave.hasOwner then
+    if not runSave or not Util:DoesHashExist(runSave.hasOwner, olga.InitSeed) then
         olga:GetSprite():PlayOverlay("SpawnSign")
         return
     end
@@ -360,7 +360,10 @@ end
 Mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, DogBody.HandleNewRoom)
 
 function DogBody:GoodbyeOlga()
-    local wasDogRemoved = false
+    local dogsRemoved = 0
+    local runSave = saveMan.GetRunSave()
+    local floorSave = saveMan.GetFloorSave()
+
     for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
         local olga = familiar:ToFamiliar() ---@cast olga EntityFamiliar
 
@@ -371,14 +374,20 @@ function DogBody:GoodbyeOlga()
             local pos = Mod.Room():FindFreePickupSpawnPosition(familiar.Position, 0, true)
             Isaac.Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TRINKET, TRINKET_ID, pos, Vector.Zero, nil)
 
+            Util:DoesHashExist(runSave.hasOwner, olga.InitSeed, true)
+            Util:DoesHashExist(floorSave.hasDoggyLicense, olga.InitSeed, true)
+
             familiar:Remove()
-            wasDogRemoved = true
+            dogsRemoved = dogsRemoved + 1
+            goto skip
         end
+
+        floorSave.hasDoggyLicense = floorSave.hasDoggyLicense or {}
+        floorSave.hasDoggyLicense[#floorSave.hasDoggyLicense+1] = olga.InitSeed
+        ::skip::
     end
-    if not wasDogRemoved and #Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT) > 0 then
-        local floorSave = saveMan.GetFloorSave()
+    if dogsRemoved == 0 and #Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT) > 0 then
         floorSave.obtainedDrops = {}
-        floorSave.hasDoggyLicense = true
     end
 end
 Mod:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, DogBody.GoodbyeOlga)
@@ -443,8 +452,8 @@ function DogBody:OnFlipUse(_, _, player)
     local evilLaz = player:GetFlippedForm() ---@cast evilLaz EntityPlayer
     local data = Util:GetData(evilLaz, Util.DATA_IDENTIFIER)
     local floorSave = saveMan.GetFloorSave()
-    if data.hasDoggy and not floorSave.hasDoggyLicense then
-        Isaac.CreateTimer(function() DogBody:GoodbyeOlga() end, 1, 1, true)
+    if data.hasDoggy and not Util:DoesHashExist(floorSave.hasDoggyLicense, data.hasDoggy) then
+        Isaac.CreateTimer(function() DogBody:GoodbyeOlga() end, 2, 1, true)
     end
 end
 Mod:AddCallback(ModCallbacks.MC_PRE_USE_ITEM, DogBody.OnFlipUse, CollectibleType.COLLECTIBLE_FLIP)
@@ -609,11 +618,15 @@ function DogBody:FindDogOwner(olga, data)
 
     nearestPlayer:AnimateHappy()
     local pData = Util:GetData(olga.Player, Util.DATA_IDENTIFIER)
-    pData.hasDoggy = true
-    saveMan.GetRunSave(olga).hasOwner = true
+    pData.hasDoggy = olga.InitSeed
+
+    local runSave = saveMan.GetRunSave(olga)
+    runSave.hasOwner = runSave.hasOwner or {}
+    runSave.hasOwner[#runSave.hasOwner+1] = olga.InitSeed
 
     local floorSave = saveMan.GetFloorSave()
-    floorSave.hasDoggyLicense = true
+    floorSave.hasDoggyLicense = floorSave.hasDoggyLicense or {}
+    floorSave.hasDoggyLicense[#floorSave.hasDoggyLicense+1] = olga.InitSeed
     floorSave.obtainedDrops = floorSave.obtainedDrops or {}
 end
 
@@ -1070,5 +1083,34 @@ function DogBody:IsBirthdayWeek()
     return date.month == DogBody.Birthday.MONTH
     and date.day > DogBody.Birthday.DAY - 3
     and date.day < DogBody.Birthday.DAY + 3
+end
+
+function DogBody:DebugTLaz(player)
+    for _, playerAgain in ipairs(PlayerManager.GetPlayers()) do
+        local pType = playerAgain:GetPlayerType()
+        if pType == PlayerType.PLAYER_LAZARUS_B or pType == PlayerType.PLAYER_LAZARUS2_B then
+            local lazType = pType == PlayerType.PLAYER_LAZARUS_B and "Alive" or "Dead"
+            local playerIdx = playerAgain:GetPlayerIndex()
+            print("I am "..(playerAgain:IsHologram() and "holo " or "").. ""..lazType.." Laz, with Idx: "..tostring(playerIdx))
+
+            local flippedForm = playerAgain:GetFlippedForm()
+            if not playerAgain:HasCollectible(CollectibleType.COLLECTIBLE_BIRTHRIGHT)
+            and not playerAgain:IsHologram()
+            and flippedForm then
+                pType = flippedForm:GetPlayerType()
+                lazType = pType == PlayerType.PLAYER_LAZARUS_B and "Alive" or "Dead"
+                playerIdx = flippedForm:GetPlayerIndex()
+                print("I am opposite "..lazType.." Laz, with Idx: "..tostring(playerIdx))
+            end
+        end
+    end
+    print("Idx + 1:")
+    local lazindex = player:GetPlayerIndex()
+    local susLaz = player:GetFlippedForm() or Isaac.GetPlayer(lazindex+1)
+    local pType = susLaz:GetPlayerType()
+    local lazType = pType == PlayerType.PLAYER_LAZARUS_B and "Alive" or "Dead"
+    local playerIdx = susLaz:GetPlayerIndex()
+    print("Sussy holograpic "..lazType.." Laz, with Idx: "..tostring(playerIdx))
+    print("===========")
 end
 --#endregion

@@ -389,4 +389,22 @@ function Util:EvaluatePoints(points)
         end
     end
 end
+
+---@param saveTable table
+---@param hash integer
+---@param remove boolean?
+function Util:DoesHashExist(saveTable, hash, remove)
+    if not saveTable then
+        return false
+    end
+    for pos, hashVal in ipairs(saveTable) do
+        if hash == hashVal then
+            if remove == true then
+                table.remove(saveTable, pos)
+            end
+            return true
+        end
+    end
+    return false
+end
 --endregion
