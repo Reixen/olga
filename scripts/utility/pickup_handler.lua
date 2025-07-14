@@ -84,9 +84,8 @@ Mod:AddCallback(ModCallbacks.MC_PRE_PICKUP_COMPOSTED, PickupHandler.PrePickupCon
 Mod:AddCallback(ModCallbacks.MC_PRE_PICKUP_VOIDED, PickupHandler.PrePickupConsumed, PickupVariant.PICKUP_TAROTCARD)
 Mod:AddCallback(ModCallbacks.MC_PRE_PICKUP_VOIDED, PickupHandler.PrePickupConsumed, PickupVariant.PICKUP_TRINKET)
 
----@param cardID Card
 ---@param player EntityPlayer
-function PickupHandler:PreAceCardUse(cardID, player)
+function PickupHandler:PreAceCardUse(_, player)
     local data = Util:GetData(player, Util.DATA_IDENTIFIER)
     data.olgaPickupData = {}
     for _, entity in ipairs(Isaac.FindByType(EntityType.ENTITY_PICKUP)) do
@@ -107,9 +106,8 @@ Mod:AddCallback(ModCallbacks.MC_PRE_USE_CARD, PickupHandler.PreAceCardUse, Card.
 Mod:AddCallback(ModCallbacks.MC_PRE_USE_CARD, PickupHandler.PreAceCardUse, Card.CARD_ACE_OF_HEARTS)
 Mod:AddCallback(ModCallbacks.MC_PRE_USE_CARD, PickupHandler.PreAceCardUse, Card.CARD_ACE_OF_SPADES)
 
----@param cardID Card
 ---@param player EntityPlayer
-function PickupHandler:PostAceCardUse(cardID, player)
+function PickupHandler:PostAceCardUse(_, player)
     local data = Util:GetData(player, Util.DATA_IDENTIFIER)
     if not data.olgaPickupData or #data.olgaPickupData < 1 then
         return
@@ -126,6 +124,41 @@ Mod:AddCallback(ModCallbacks.MC_USE_CARD, PickupHandler.PostAceCardUse, Card.CAR
 Mod:AddCallback(ModCallbacks.MC_USE_CARD, PickupHandler.PostAceCardUse, Card.CARD_ACE_OF_DIAMONDS)
 Mod:AddCallback(ModCallbacks.MC_USE_CARD, PickupHandler.PostAceCardUse, Card.CARD_ACE_OF_HEARTS)
 Mod:AddCallback(ModCallbacks.MC_USE_CARD, PickupHandler.PostAceCardUse, Card.CARD_ACE_OF_SPADES)
+
+---@param player EntityPlayer
+function PickupHandler:PreD1Use(_, _, player)
+    local data = Util:GetData(player, Util.DATA_IDENTIFIER)
+    data.olgaPickupData = {}
+    for _, entity in ipairs(Isaac.FindByType(EntityType.ENTITY_PICKUP)) do
+        local pickup = entity:ToPickup() ---@cast pickup EntityPickup
+
+        if PickupHandler:IsOlgaModPickup(pickup) then
+            data.olgaPickupData[#data.olgaPickupData+1] = {
+                Position = pickup.Position,
+                Variant = pickup.Variant,
+                Subtype = pickup.SubType
+            }
+            pickup:Remove()
+        end
+    end
+end
+Mod:AddCallback(ModCallbacks.MC_PRE_USE_ITEM, PickupHandler.PreD1Use, CollectibleType.COLLECTIBLE_D1)
+
+---@param player EntityPlayer
+function PickupHandler:PostD1Use(_, _, player)
+    local data = Util:GetData(player, Util.DATA_IDENTIFIER)
+    if not data.olgaPickupData or #data.olgaPickupData < 1 then
+        return
+    end
+
+    local idleFrame = 40
+    for _, pickupData in ipairs(data.olgaPickupData) do
+        local olgaModPickup = Isaac.Spawn(EntityType.ENTITY_PICKUP, pickupData.Variant, pickupData.Subtype, pickupData.Position, Vector.Zero, nil):ToPickup()
+        local sprite = olgaModPickup:GetSprite()
+        sprite:SetFrame(idleFrame)
+    end
+end
+Mod:AddCallback(ModCallbacks.MC_USE_ITEM, PickupHandler.PostD1Use, CollectibleType.COLLECTIBLE_D1)
 --#endregion
 --#region Pickup Handler Callbacks
 function PickupHandler:OnPickupCollect()
