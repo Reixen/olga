@@ -107,7 +107,7 @@ Mod:AddCallback(ModCallbacks.MC_PRE_USE_CARD, PickupHandler.PreAceCardUse, Card.
 Mod:AddCallback(ModCallbacks.MC_PRE_USE_CARD, PickupHandler.PreAceCardUse, Card.CARD_ACE_OF_SPADES)
 
 ---@param player EntityPlayer
-function PickupHandler:PostAceCardUse(_, player)
+function PickupHandler:OnAceCardUse(_, player)
     local data = Util:GetData(player, Util.DATA_IDENTIFIER)
     if not data.olgaPickupData or #data.olgaPickupData < 1 then
         return
@@ -120,10 +120,10 @@ function PickupHandler:PostAceCardUse(_, player)
         sprite:SetFrame(idleFrame)
     end
 end
-Mod:AddCallback(ModCallbacks.MC_USE_CARD, PickupHandler.PostAceCardUse, Card.CARD_ACE_OF_CLUBS)
-Mod:AddCallback(ModCallbacks.MC_USE_CARD, PickupHandler.PostAceCardUse, Card.CARD_ACE_OF_DIAMONDS)
-Mod:AddCallback(ModCallbacks.MC_USE_CARD, PickupHandler.PostAceCardUse, Card.CARD_ACE_OF_HEARTS)
-Mod:AddCallback(ModCallbacks.MC_USE_CARD, PickupHandler.PostAceCardUse, Card.CARD_ACE_OF_SPADES)
+Mod:AddCallback(ModCallbacks.MC_USE_CARD, PickupHandler.OnAceCardUse, Card.CARD_ACE_OF_CLUBS)
+Mod:AddCallback(ModCallbacks.MC_USE_CARD, PickupHandler.OnAceCardUse, Card.CARD_ACE_OF_DIAMONDS)
+Mod:AddCallback(ModCallbacks.MC_USE_CARD, PickupHandler.OnAceCardUse, Card.CARD_ACE_OF_HEARTS)
+Mod:AddCallback(ModCallbacks.MC_USE_CARD, PickupHandler.OnAceCardUse, Card.CARD_ACE_OF_SPADES)
 
 ---@param player EntityPlayer
 function PickupHandler:PreD1Use(_, _, player)
@@ -145,7 +145,7 @@ end
 Mod:AddCallback(ModCallbacks.MC_PRE_USE_ITEM, PickupHandler.PreD1Use, CollectibleType.COLLECTIBLE_D1)
 
 ---@param player EntityPlayer
-function PickupHandler:PostD1Use(_, _, player)
+function PickupHandler:OnD1Use(_, _, player)
     local data = Util:GetData(player, Util.DATA_IDENTIFIER)
     if not data.olgaPickupData or #data.olgaPickupData < 1 then
         return
@@ -158,7 +158,7 @@ function PickupHandler:PostD1Use(_, _, player)
         sprite:SetFrame(idleFrame)
     end
 end
-Mod:AddCallback(ModCallbacks.MC_USE_ITEM, PickupHandler.PostD1Use, CollectibleType.COLLECTIBLE_D1)
+Mod:AddCallback(ModCallbacks.MC_USE_ITEM, PickupHandler.OnD1Use, CollectibleType.COLLECTIBLE_D1)
 --#endregion
 --#region Pickup Handler Callbacks
 function PickupHandler:OnPickupCollect()
