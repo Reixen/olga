@@ -278,7 +278,6 @@ function DogBody:HandleBodyLogic(olga)
 
     if not data.hasOwner then
         DogBody:FindDogOwner(olga, data)
-        return
     end
 end
 Mod:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, DogBody.HandleBodyLogic, Mod.Dog.VARIANT)
@@ -379,7 +378,7 @@ function DogBody:GoodbyeOlga()
     if not wasDogRemoved and #Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT) > 0 then
         local floorSave = saveMan.GetFloorSave()
         floorSave.obtainedDrops = {}
-        floorSave.doggyLicense = Mod.Level():GetStage()
+        floorSave.hasDoggyLicense = true
     end
 end
 Mod:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, DogBody.GoodbyeOlga)
@@ -424,12 +423,8 @@ Mod:AddCallback(ModCallbacks.MC_PRE_CHANGE_ROOM, DogBody.OnAbandonOlga)
 -- To stop the player from smiling upon exiting the game
 function DogBody:OnGameExit()
     for _, entity in ipairs(Isaac.FindByType(EntityType.ENTITY_PLAYER, PlayerVariant.PLAYER)) do
-        local player = entity:ToPlayer()
-        if not player:HasCollectible(Util.HAPPY_COLLECTIBLE)
-        and player:IsCollectibleCostumeVisible(Util.HAPPY_COLLECTIBLE, "head") then
-            local itemCfg = Isaac.GetItemConfig():GetCollectible(Util.HAPPY_COLLECTIBLE)
-            player:RemoveCostume(itemCfg)
-        end
+        local player = entity:ToPlayer() ---@cast player EntityPlayer
+        Util:TryTurningPlayerSad(player)
     end
 end
 Mod:AddCallback(ModCallbacks.MC_PRE_GAME_EXIT, DogBody.OnGameExit)
@@ -437,21 +432,22 @@ Mod:AddCallback(ModCallbacks.MC_PRE_GAME_EXIT, DogBody.OnGameExit)
 ---@param player EntityPlayer
 function DogBody:OnFlipUse(_, _, player)
     local playerType = player:GetPlayerType()
-    if playerType ~= PlayerType.PLAYER_LAZARUS_B and playerType ~= PlayerType.PLAYER_LAZARUS2_B then
+    if playerType ~= PlayerType.PLAYER_LAZARUS_B and playerType ~= PlayerType.PLAYER_LAZARUS2_B
+    or not player:GetFlippedForm() then
         return
     end
-    if player:HasCollectible(CollectibleType.COLLECTIBLE_BIRTHRIGHT)
-    or Isaac.GetPlayer(player:GetPlayerIndex()+1):IsHologram() then
-        return
-    end
+
+    Util:TryTurningPlayerSad(player)
+    --DogBody:DebugTLaz(player)
+
     local evilLaz = player:GetFlippedForm() ---@cast evilLaz EntityPlayer
     local data = Util:GetData(evilLaz, Util.DATA_IDENTIFIER)
     local floorSave = saveMan.GetFloorSave()
-    if data.hasDoggy and not floorSave.doggyLicense then
-        DogBody:GoodbyeOlga()
+    if data.hasDoggy and not floorSave.hasDoggyLicense then
+        Isaac.CreateTimer(function() DogBody:GoodbyeOlga() end, 1, 1, true)
     end
 end
-Mod:AddCallback(ModCallbacks.MC_USE_ITEM, DogBody.OnFlipUse, CollectibleType.COLLECTIBLE_FLIP)
+Mod:AddCallback(ModCallbacks.MC_PRE_USE_ITEM, DogBody.OnFlipUse, CollectibleType.COLLECTIBLE_FLIP)
 --#endregion
 --#region Olga Helper Functions
 ---@param anim string
@@ -617,7 +613,7 @@ function DogBody:FindDogOwner(olga, data)
     saveMan.GetRunSave(olga).hasOwner = true
 
     local floorSave = saveMan.GetFloorSave()
-    floorSave.doggyLicense = Mod.Level():GetStage()
+    floorSave.hasDoggyLicense = true
     floorSave.obtainedDrops = floorSave.obtainedDrops or {}
 end
 

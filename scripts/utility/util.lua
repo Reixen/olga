@@ -367,6 +367,11 @@ function Util:EndPettingAnimation(sprite, player, animName)
     local animTransition = pettingVariant and Util.HeadAnim.GLAD_PETTING_TO_GLAD or Util.HeadAnim.PETTING_TO_IDLE
     sprite:Play(animTransition, true)
 
+    Util:TryTurningPlayerSad(player)
+end
+
+---@param player EntityPlayer
+function Util:TryTurningPlayerSad(player)
     if not player:HasCollectible(Util.HAPPY_COLLECTIBLE)
     and player:IsCollectibleCostumeVisible(Util.HAPPY_COLLECTIBLE, "head") then
         local itemCfg = Isaac.GetItemConfig():GetCollectible(Util.HAPPY_COLLECTIBLE)
