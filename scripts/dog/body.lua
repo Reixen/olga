@@ -436,6 +436,28 @@ function DogBody:OnGameExit()
 end
 Mod:AddCallback(ModCallbacks.MC_PRE_GAME_EXIT, DogBody.OnGameExit)
 
+---@param player EntityPlayer
+function DogBody:OnFlipUse(_, _, player)
+    local playerType = player:GetPlayerType()
+    if playerType ~= PlayerType.PLAYER_LAZARUS_B and playerType ~= PlayerType.PLAYER_LAZARUS2_B then
+        return
+    end
+
+    local table = {}
+    for _, playerAgain in ipairs(PlayerManager.GetPlayers()) do
+        local pType = playerAgain:GetPlayerType()
+        if pType == PlayerType.PLAYER_LAZARUS_B or pType == PlayerType.PLAYER_LAZARUS2_B then
+            local hasBr = playerAgain:HasCollectible(CollectibleType.COLLECTIBLE_BIRTHRIGHT)
+            table[#table+1] = playerAgain
+            if not hasBr and not playerAgain:IsHologram() then
+                table[#table+1] = playerAgain:GetFlippedForm()
+            end
+        end
+    end
+    print(#table)
+    print()
+end
+Mod:AddCallback(ModCallbacks.MC_PRE_USE_ITEM, DogBody.OnFlipUse, CollectibleType.COLLECTIBLE_FLIP)
 --#endregion
 --#region Olga Helper Functions
 ---@param anim string
