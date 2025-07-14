@@ -304,9 +304,6 @@ function DogBody:OnInit(olga)
         olga:GetSprite():GetLayer(3):SetVisible(false)
     end
 
-    local floorSave = saveMan.GetFloorSave()
-    floorSave.obtainedDrops = floorSave.obtainedDrops or {}
-
     local persistentSave = saveMan.GetPersistentSave()
     if persistentSave.furColor ~= nil and persistentSave.furColor ~= 0 then
         Util:ApplyColorPalette(olga:GetSprite(), "olga_shader", persistentSave.furColor)
@@ -322,6 +319,9 @@ function DogBody:OnInit(olga)
         olga:GetSprite():PlayOverlay("SpawnSign")
         return
     end
+
+    local floorSave = saveMan.GetFloorSave()
+    floorSave.obtainedDrops = floorSave.obtainedDrops or {}
     data.hasOwner = true
 end
 Mod:AddCallback(ModCallbacks.MC_FAMILIAR_INIT, DogBody.OnInit, Mod.Dog.VARIANT)
@@ -376,12 +376,10 @@ function DogBody:GoodbyeOlga()
             wasDogRemoved = true
         end
     end
-    local floorSave = saveMan.GetFloorSave()
-    if not wasDogRemoved then
+    if not wasDogRemoved and #Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT) > 0 then
+        local floorSave = saveMan.GetFloorSave()
         floorSave.obtainedDrops = {}
-        floorSave.levelStage = Mod.Level():GetStage()
-    else
-        floorSave = {}
+        floorSave.doggyLicense = Mod.Level():GetStage()
     end
 end
 Mod:AddCallback(ModCallbacks.MC_POST_NEW_LEVEL, DogBody.GoodbyeOlga)
@@ -442,22 +440,18 @@ function DogBody:OnFlipUse(_, _, player)
     if playerType ~= PlayerType.PLAYER_LAZARUS_B and playerType ~= PlayerType.PLAYER_LAZARUS2_B then
         return
     end
-
-    local table = {}
-    for _, playerAgain in ipairs(PlayerManager.GetPlayers()) do
-        local pType = playerAgain:GetPlayerType()
-        if pType == PlayerType.PLAYER_LAZARUS_B or pType == PlayerType.PLAYER_LAZARUS2_B then
-            local hasBr = playerAgain:HasCollectible(CollectibleType.COLLECTIBLE_BIRTHRIGHT)
-            table[#table+1] = playerAgain
-            if not hasBr and not playerAgain:IsHologram() then
-                table[#table+1] = playerAgain:GetFlippedForm()
-            end
-        end
+    if player:HasCollectible(CollectibleType.COLLECTIBLE_BIRTHRIGHT)
+    or Isaac.GetPlayer(player:GetPlayerIndex()+1):IsHologram() then
+        return
     end
-    print(#table)
-    print()
+    local evilLaz = player:GetFlippedForm() ---@cast evilLaz EntityPlayer
+    local data = Util:GetData(evilLaz, Util.DATA_IDENTIFIER)
+    local floorSave = saveMan.GetFloorSave()
+    if data.hasDoggy and not floorSave.doggyLicense then
+        DogBody:GoodbyeOlga()
+    end
 end
-Mod:AddCallback(ModCallbacks.MC_PRE_USE_ITEM, DogBody.OnFlipUse, CollectibleType.COLLECTIBLE_FLIP)
+Mod:AddCallback(ModCallbacks.MC_USE_ITEM, DogBody.OnFlipUse, CollectibleType.COLLECTIBLE_FLIP)
 --#endregion
 --#region Olga Helper Functions
 ---@param anim string
@@ -621,6 +615,10 @@ function DogBody:FindDogOwner(olga, data)
     local pData = Util:GetData(olga.Player, Util.DATA_IDENTIFIER)
     pData.hasDoggy = true
     saveMan.GetRunSave(olga).hasOwner = true
+
+    local floorSave = saveMan.GetFloorSave()
+    floorSave.doggyLicense = Mod.Level():GetStage()
+    floorSave.obtainedDrops = floorSave.obtainedDrops or {}
 end
 
 -- From Epiphany's Epiphany:PickupKill()
