@@ -1073,7 +1073,7 @@ function DogBody:TryChasingPlayer(olga, sprite, data, animName, frameCount)
         sfxMan:Play(DogBody.DING_SFX, 1, 2, false, 0.3 + (timeInput / 100))
     end
 
-    if Util:IsWithin(olga, olga.Player.Position, DogBody.WHISTLE_STOPPING_RADIUS) then
+    if Util:IsWithin(olga, player.Position, DogBody.WHISTLE_STOPPING_RADIUS) then
         DogBody:TryEndingBusyState(olga, data)
     end
 end
