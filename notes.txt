@@ -1,0 +1,23 @@
+-------------------------------------------------------------
+---                       TO DO:                          ---
+-------------------------------------------------------------
+1) Bugfixes - In progress!
+2) Sfx - Currently under review!
+
+Future TODO:
+    - Animations
+        - Lie Down:
+            - When initialized, sleep
+            - Wake up and stretch if approached.
+            - Lie back to position if within range, otherwise stand.
+        - Bork Set 2
+        - Reanimate Bork Set 1
+    - Animation Helper
+    - Squeezy Toy
+    - Dog Bed/Dog Cage/Sleeping Bag
+    - Hat/Face Cosmetics
+    
+Low Priority Bugs
+    - Get the pickup back when HG is used after leaving the room mid-fetch
+    - Anything Esau Jr related
+    - Glowing Hourglass.
