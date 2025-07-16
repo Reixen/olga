@@ -33,6 +33,7 @@ local NO_DECAY_VALUE = 3.5
 DogBody.DECAY_STRENGTH = 0.75
 local ONE_SEC = 30
 DogBody.EVENT_COOLDOWN = ONE_SEC * 6
+DogBody.BOREDOM_COOLDOWN = ONE_SEC * 3
 
 -- Whistle Constants
 local SICK_EVENT_START = 15 -- In seconds
@@ -81,8 +82,9 @@ end
 ---@class DogData
 ---@field eventCD integer -- Time it takes for the next movement
 ---@field animCD integer -- Time it takes for the next idle animation
----@field attentionCD integer -- Time it takes for the dog to have a special headpat event
+---@field specialPettingCD integer -- Time it takes for the dog to have a special headpat event
 ---@field eventTimer integer -- Used as a separate timer, for whistle and fetching event
+---@field attentionCD integer -- Used as a timer for when the dog stops pathfinding
 ---@field headSprite Sprite
 ---@field headRender boolean | DogState? -- Used to stop the head for rendering when doing special idle animations
 ---@field targetPos Vector? -- Target position to move towards
@@ -153,7 +155,8 @@ DogBody.ANIM_FUNC = {
             )
 
             -- Drop the stick when near the owner or when she cannot pathfind
-            if (pathfindingResult == DogBody.PathfindingResult.SUCCESSFUL or pathfindingResult == DogBody.PathfindingResult.NO_PATH)
+            if (pathfindingResult == DogBody.PathfindingResult.SUCCESSFUL
+            or DogBody:IsDogBored(pathfindingResult, data.attentionCD, frameCount, DogBody.BOREDOM_COOLDOWN))
             and not data.headSprite:IsPlaying(Util.HeadAnim.HOLD_TO_IDLE) then
                 DogBody:TryEndingBusyState(olga, data)
             end
@@ -179,7 +182,7 @@ DogBody.ANIM_FUNC = {
                 local pathfindingResult = DogBody:Pathfind(olga, data.targetPos, DogBody.WALK_SPEED, data)
 
                 if pathfindingResult == DogBody.PathfindingResult.SUCCESSFUL
-                or pathfindingResult == DogBody.PathfindingResult.NO_PATH then
+                or DogBody:IsDogBored(pathfindingResult, data.attentionCD, frameCount, DogBody.BOREDOM_COOLDOWN) then
                     DogBody:ReturnToDefault(olga, data, true)
                 end
                 return
@@ -288,7 +291,8 @@ function DogBody:OnInit(olga)
 
     data.eventCD = DogBody.EVENT_COOLDOWN
     data.animCD = DogBody.EVENT_COOLDOWN * 2
-    data.attentionCD = 0
+    data.specialPettingCD = 0
+    data.attentionCD = olga.FrameCount
     data.eventTimer = 0
     data.headRender = true
     data.feedingBowl = nil
@@ -509,11 +513,14 @@ function DogBody:Pathfind(olga, target, speed, data, endRadius, decayRadius, dec
     local gridIdx = room:GetGridIndex(olga.Position)
     if not pathfinder:HasPathToPos(target, true) then
         if not olga:CollidesWithGrid() and room:GetGridCollision(gridIdx) == GridCollisionClass.COLLISION_NONE then
+            pathfinder:FindGridPath(target, speed, 1, true)
             return DogBody.PathfindingResult.NO_PATH
         end
 
         return DogBody.PathfindingResult.COLLIDING
     end
+
+    data.attentionCD = olga.FrameCount
 
     local sprite = olga:GetSprite()
     local endDistance = (endRadius and endRadius > 1) and endRadius or 1
@@ -1053,7 +1060,7 @@ function DogBody:TryChasingPlayer(olga, sprite, data, animName, frameCount)
         )
 
         if pathfindingResult == DogBody.PathfindingResult.SUCCESSFUL
-        or pathfindingResult == DogBody.PathfindingResult.NO_PATH then
+        or DogBody:IsDogBored(pathfindingResult, data.attentionCD, olga.FrameCount, ONE_SEC) then
             if data.eventTimer > DogBody.RAMP_UP_EVENT then
                 Mod.Dog.Head:DoIdleAnimation(olga, data, Mod.Dog.Head.IdleAnim[2])
             end
@@ -1103,6 +1110,14 @@ function DogBody:IsBirthdayWeek()
     return date.month == DogBody.Birthday.MONTH
     and date.day > DogBody.Birthday.DAY - 3
     and date.day < DogBody.Birthday.DAY + 3
+end
+
+---@param timeFrame integer
+---@param pathfindingResult PathfindingResult
+---@param frameCount integer
+---@param timeWindow integer?
+function DogBody:IsDogBored(pathfindingResult, timeFrame, frameCount, timeWindow)
+    return DogBody.PathfindingResult.NO_PATH == pathfindingResult and timeFrame + (timeWindow or 0) < frameCount
 end
 
 function DogBody:DebugTLaz(player)

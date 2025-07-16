@@ -114,7 +114,7 @@ DogHead.ANIM_FUNC = {
         end
 
         Util:EndPettingAnimation(sprite, olga.Player, animName)
-        data.attentionCD = olga.FrameCount + DogHead.ATTENTION_COOLDOWN
+        data.specialPettingCD = olga.FrameCount + DogHead.ATTENTION_COOLDOWN
     end,
 
     -- Transitional animations
@@ -269,11 +269,11 @@ function DogHead:TryTurningGlad(olga, sprite, data)
     end
 
     -- If shes not due for an alternate petting animation
-    if data.attentionCD > olga.FrameCount
+    if data.specialPettingCD > olga.FrameCount
     and Util:IsWithin(olga, olga.Player.Position, DogHead.PETTING_DISTANCE) then
         Util:UpdateHandColor(olga.Player, sprite, GetPtrHash(olga))
         sprite:Play(Util.HeadAnim.IDLE_TO_PETTING, true)
-    elseif data.attentionCD < olga.FrameCount
+    elseif data.specialPettingCD < olga.FrameCount
     and Util:IsWithin(olga, olga.Player.Position, DogHead.HAPPY_DISTANCE) then
         sprite:Play(Util.HeadAnim.IDLE_TO_GLAD, true)
     end
