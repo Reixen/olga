@@ -55,14 +55,17 @@ function PickupHandler:PrePickupMorph(pickup)
     local rng = pickup:GetDropRNG()
     local potentialDrops = PickupHandler:EvaluatePotentialDrops()
     local validDrops = {}
-    potentialDrops["Trinket"] = {Trinket.CRUDE_DRAWING_ID}
+
+    potentialDrops["Misc"] = potentialDrops["Misc"] or {}
+    potentialDrops["Misc"][#potentialDrops["Misc"]+1] = Trinket.CRUDE_DRAWING_ID
+
     for dropType, _ in pairs(potentialDrops) do
         validDrops[#validDrops+1] = dropType
     end
 
     local dropType = validDrops[rng:RandomInt(#validDrops) + 1]
     local subtype = potentialDrops[dropType][rng:RandomInt(#potentialDrops[dropType]) + 1]
-    local variant = dropType == "Trinket" and PickupVariant.PICKUP_TRINKET or PickupVariant.PICKUP_TAROTCARD
+    local variant = (dropType == "Misc" and subtype == Trinket.CRUDE_DRAWING_ID) and PickupVariant.PICKUP_TRINKET or PickupVariant.PICKUP_TAROTCARD
 
     if subtype == Consumables.STICK_ID then
         subtype = rng:RandomFloat() < PickupHandler.ROTG_CHANCE and Consumables.ROD_OF_THE_GODS_ID or Consumables.STICK_ID
