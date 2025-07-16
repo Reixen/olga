@@ -9,7 +9,7 @@ local sfxMan = Mod.SfxMan
 Fetch.FETCH_TARGET_SUBTYPE = Isaac.GetEntitySubTypeByName("Fetch Target")
 Fetch.FETCHING_OBJECT_VARIANT = Isaac.GetEntityVariantByName("Fetching Object")
 
-Fetch.TARGET_SPEED = 17
+Fetch.TARGET_SPEED = 13
 
 local ONE_SEC = 30
 Fetch.MARK_TIMEOUT = ONE_SEC * 1.5

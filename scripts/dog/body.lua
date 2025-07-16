@@ -412,7 +412,7 @@ function DogBody:OnAbandonOlga()
     local roomType = room:GetType()
 
     if (roomType ~= RoomType.ROOM_ISAACS and roomType ~= RoomType.ROOM_BARREN)
-     or Mod.Level():GetStage() == LevelStage.STAGE8 then
+    or Mod.Level():GetStage() == LevelStage.STAGE8 then
         return
     end
 
