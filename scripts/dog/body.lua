@@ -368,7 +368,7 @@ function DogBody:GoodbyeOlga()
         local olga = familiar:ToFamiliar() ---@cast olga EntityFamiliar
 
         if not PlayerManager.AnyoneHasTrinket(TRINKET_ID) then
-            local pData = Util:GetData(olga.Player, Util.DATA_IDENTIFIER)
+            local pData = saveMan.GetRunSave(olga.Player)
             pData.hasDoggy = false
 
             local pos = Mod.Room():FindFreePickupSpawnPosition(familiar.Position, 0, true)
@@ -439,7 +439,7 @@ end
 Mod:AddCallback(ModCallbacks.MC_PRE_GAME_EXIT, DogBody.OnGameExit)
 
 ---@param player EntityPlayer
-function DogBody:OnFlipUse(_, _, player)
+function DogBody:OnPreFlipUse(_, _, player)
     local playerType = player:GetPlayerType()
     if playerType ~= PlayerType.PLAYER_LAZARUS_B and playerType ~= PlayerType.PLAYER_LAZARUS2_B
     or not player:GetFlippedForm() then
@@ -450,13 +450,33 @@ function DogBody:OnFlipUse(_, _, player)
     --DogBody:DebugTLaz(player)
 
     local evilLaz = player:GetFlippedForm() ---@cast evilLaz EntityPlayer
-    local data = Util:GetData(evilLaz, Util.DATA_IDENTIFIER)
+    local data = saveMan.GetRunSave(evilLaz)
+    local floorSave = saveMan.GetFloorSave()
+    if data.hasDoggy and not Util:DoesHashExist(floorSave.hasDoggyLicense, data.hasDoggy) then
+        Isaac.CreateTimer(function() DogBody:GoodbyeOlga() end, 1, 1, true)
+    end
+end
+Mod:AddCallback(ModCallbacks.MC_PRE_USE_ITEM, DogBody.OnPreFlipUse, CollectibleType.COLLECTIBLE_FLIP)
+
+-- Fix for a pretty niche interaction
+-- Only accounts for one Esau Jr. state and the dog disappears when exiting and continuing the run
+-- The familiar disappearing is also a bug with Monster Manual, probably wont fix
+function DogBody:OnPreEsauJrUse(_, _, player)
+    local esauJr = PlayerManager.GetEsauJrState(0)
+    if not esauJr then
+        return
+    end
+
+    Util:TryTurningPlayerSad(player)
+    --DogBody:DebugTLaz(player)
+
+    local data = saveMan.GetRunSave(esauJr)
     local floorSave = saveMan.GetFloorSave()
     if data.hasDoggy and not Util:DoesHashExist(floorSave.hasDoggyLicense, data.hasDoggy) then
         Isaac.CreateTimer(function() DogBody:GoodbyeOlga() end, 2, 1, true)
     end
 end
-Mod:AddCallback(ModCallbacks.MC_PRE_USE_ITEM, DogBody.OnFlipUse, CollectibleType.COLLECTIBLE_FLIP)
+Mod:AddCallback(ModCallbacks.MC_PRE_USE_ITEM, DogBody.OnPreEsauJrUse, CollectibleType.COLLECTIBLE_ESAU_JR)
 --#endregion
 --#region Olga Helper Functions
 ---@param anim string
@@ -617,7 +637,7 @@ function DogBody:FindDogOwner(olga, data)
     data.hasOwner = true
 
     nearestPlayer:AnimateHappy()
-    local pData = Util:GetData(olga.Player, Util.DATA_IDENTIFIER)
+    local pData = saveMan.GetRunSave(olga.Player)
     pData.hasDoggy = olga.InitSeed
 
     local runSave = saveMan.GetRunSave(olga)
