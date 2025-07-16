@@ -18,7 +18,7 @@ DogHead.SOUND_SNIFF = Isaac.GetSoundIdByName("Olga Sniff")
 DogHead.SOUND_GULP = Isaac.GetSoundIdByName("Olga Gulp")
 
 DogHead.ANIM_CHANCE = 1 / 30
-DogHead.MINI_ANIM_CHANCE = 1 / 4
+DogHead.MINI_ANIM_CHANCE = 3 / 5
 DogHead.REPEAT_CHANCE = 1 / 6
 DogHead.PANT_CHANCE = 1 / 20
 
@@ -68,7 +68,7 @@ DogHead.ANIM_FUNC = {
         local rng = olga:GetDropRNG()
         if rng:RandomFloat() < DogHead.ANIM_CHANCE then
 
-            if rng:RandomFloat() < DogHead.MINI_ANIM_CHANCE then
+            if math.random() < DogHead.MINI_ANIM_CHANCE then
                 data.animCD = olga.FrameCount + DogHead.MINI_IDLE_COOLDOWN
                 DogHead:DoMiniIdleAnim(data.headSprite)
             else
@@ -150,13 +150,13 @@ DogHead.ANIM_FUNC = {
             sfxMan:Play(DogHead.SOUND_SNIFF, 1.5, 2, false, math.random(10, 12)/10)
 
         elseif sprite:IsEventTriggered("Crunch") then
-            sfxMan:Play(DogHead.SOUND_CRUNCH, 2.5, 2, false, math.random(9, 11)/10)
+            sfxMan:Play(DogHead.SOUND_CRUNCH, 2.6, 2, false, math.random(9, 11)/10)
 
         elseif sprite:IsEventTriggered("MiniCrunch") then
-            sfxMan:Play(DogHead.SOUND_MINI_CRUNCH, 2.5, 2, false, math.random(9, 11)/10)
+            sfxMan:Play(DogHead.SOUND_MINI_CRUNCH, 2.6, 2, false, math.random(9, 11)/10)
 
         elseif sprite:IsEventTriggered("Gulp") then
-            sfxMan:Play(DogHead.SOUND_GULP, 1.5, 2, false, math.random(10, 12)/10)
+            sfxMan:Play(DogHead.SOUND_GULP, 1.7, 2, false, math.random(10, 12)/10)
 
         elseif sprite:IsEventTriggered("Munch") then
             sfxMan:Play(SoundEffect.SOUND_MEAT_JUMPS, 0.8, 2, false, math.random(9, 11)/10)
@@ -342,7 +342,7 @@ function DogHead:TryProlongTilt(olga, data, rng, sprite, animName)
             sprite:Play("TiltSwitch_" .. tiltDirection, true)
             data.animCD = olga.FrameCount + DogHead.MINI_IDLE_COOLDOWN
         else
-            data.animCD = olga.FrameCount + (DogHead.MINI_IDLE_COOLDOWN / 4)
+            data.animCD = olga.FrameCount + (DogHead.MINI_IDLE_COOLDOWN / 2)
         end
     else
         sprite:Play("Tilt" .. tiltDirection .. "ToIdle", true)
