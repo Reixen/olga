@@ -276,6 +276,10 @@ function DogBody:HandleBodyLogic(olga)
         data.headRender = false
     end
 
+    if sprite:IsOverlayFinished("RemoveSign") then
+        sprite:RemoveOverlay()
+    end
+
     local animName = sprite:GetAnimation()
     DogBody.ANIM_FUNC[animName](olga, sprite, data, animName)
 
