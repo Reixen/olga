@@ -37,7 +37,7 @@ DogBody.BOREDOM_COOLDOWN = ONE_SEC * 3
 
 -- Whistle Constants
 local SICK_EVENT_START = 15 -- In seconds
-DogBody.RAMP_UP_PER_SEC = 0.041
+DogBody.RAMP_UP_PER_SEC = 0.042
 DogBody.SICK_EVENT = ONE_SEC * SICK_EVENT_START
 DogBody.RAMP_UP_EVENT = (SICK_EVENT_START - 10) * ONE_SEC
 
@@ -1042,7 +1042,7 @@ function DogBody:TryChasingPlayer(olga, sprite, data, animName, frameCount)
     local timeInput = ((data.eventTimer - DogBody.RAMP_UP_EVENT) / ONE_SEC)
     local player = data.targetPlayer
 
-    if not player then
+    if not player or not player:Exists() then
         if data.eventTimer > DogBody.RAMP_UP_EVENT
         and data.eventTimer < DogBody.SICK_EVENT then
             Mod.Dog.Head:DoIdleAnimation(olga, data, Mod.Dog.Head.IdleAnim[2])
