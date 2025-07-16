@@ -454,7 +454,6 @@ function DogBody:OnPreFlipUse(_, _, player)
     end
 
     Util:TryTurningPlayerSad(player)
-    --DogBody:DebugTLaz(player)
 
     local evilLaz = player:GetFlippedForm() ---@cast evilLaz EntityPlayer
     local data = saveMan.GetRunSave(evilLaz)
@@ -475,7 +474,6 @@ function DogBody:OnPreEsauJrUse(_, _, player)
     end
 
     Util:TryTurningPlayerSad(player)
-    --DogBody:DebugTLaz(player)
 
     local data = saveMan.GetRunSave(esauJr)
     local floorSave = saveMan.GetFloorSave()
@@ -1131,34 +1129,5 @@ end
 ---@param timeWindow integer?
 function DogBody:IsDogBored(pathfindingResult, timeFrame, frameCount, timeWindow)
     return DogBody.PathfindingResult.NO_PATH == pathfindingResult and timeFrame + (timeWindow or 0) < frameCount
-end
-
-function DogBody:DebugTLaz(player)
-    for _, playerAgain in ipairs(PlayerManager.GetPlayers()) do
-        local pType = playerAgain:GetPlayerType()
-        if pType == PlayerType.PLAYER_LAZARUS_B or pType == PlayerType.PLAYER_LAZARUS2_B then
-            local lazType = pType == PlayerType.PLAYER_LAZARUS_B and "Alive" or "Dead"
-            local playerIdx = playerAgain:GetPlayerIndex()
-            print("I am "..(playerAgain:IsHologram() and "holo " or "").. ""..lazType.." Laz, with Idx: "..tostring(playerIdx))
-
-            local flippedForm = playerAgain:GetFlippedForm()
-            if not playerAgain:HasCollectible(CollectibleType.COLLECTIBLE_BIRTHRIGHT)
-            and not playerAgain:IsHologram()
-            and flippedForm then
-                pType = flippedForm:GetPlayerType()
-                lazType = pType == PlayerType.PLAYER_LAZARUS_B and "Alive" or "Dead"
-                playerIdx = flippedForm:GetPlayerIndex()
-                print("I am opposite "..lazType.." Laz, with Idx: "..tostring(playerIdx))
-            end
-        end
-    end
-    print("Idx + 1:")
-    local lazindex = player:GetPlayerIndex()
-    local susLaz = player:GetFlippedForm() or Isaac.GetPlayer(lazindex+1)
-    local pType = susLaz:GetPlayerType()
-    local lazType = pType == PlayerType.PLAYER_LAZARUS_B and "Alive" or "Dead"
-    local playerIdx = susLaz:GetPlayerIndex()
-    print("Sussy holograpic "..lazType.." Laz, with Idx: "..tostring(playerIdx))
-    print("===========")
 end
 --#endregion
