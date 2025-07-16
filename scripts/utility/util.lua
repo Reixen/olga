@@ -393,7 +393,7 @@ end
 ---@param saveTable table
 ---@param hash integer
 ---@param remove boolean?
-function Util:DoesHashExist(saveTable, hash, remove)
+function Util:DoesSeedExist(saveTable, hash, remove)
     if not saveTable then
         return false
     end
