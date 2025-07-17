@@ -36,7 +36,7 @@ DogHead.IdleAnim = {
     {Name = Util.HeadAnim.BARK,                 BodyState = nil},
     {Name = Util.HeadAnim.SNIFF,                BodyState = nil},
     {Name = Util.BodyAnim.PLAYFUL_1,            BodyState = Util.DogState.STANDING},
-    --{Name = Util.BodyAnim.PLAYFUL_2,          BodyState = Util.DogState.STANDING},
+    {Name = Util.BodyAnim.PLAYFUL_2,            BodyState = Util.DogState.STANDING},
     {Name = Util.BodyAnim.SIT_TO_SCRATCHING,    BodyState = Util.DogState.SITTING},
 }
 

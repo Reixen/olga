@@ -63,7 +63,7 @@ Util.BodyAnim = {
     RUNNING_TO_RIDING = "RunningToRiding",
     -- Idle Animations
     PLAYFUL_1 = "Playful1",
-    --PLAYFUL_2 = "Playful2",
+    PLAYFUL_2 = "Playful2",
     SCRATCHING = "Scratching",
 }
 

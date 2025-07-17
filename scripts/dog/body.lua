@@ -12,6 +12,7 @@ local saveMan = Mod.SaveManager
 DogBody.EXPLOSION_VARIANT = Isaac.GetEntityVariantByName("Stock Explosion")
 
 DogBody.SOUND_BARK_SET1 = Isaac.GetSoundIdByName("Olga Bark Set 1")
+DogBody.SOUND_BARK_SET2 = Isaac.GetSoundIdByName("Olga Bark Set 2")
 DogBody.SOUND_SCRATCH = Isaac.GetSoundIdByName("Olga Scratch")
 DogBody.EXPLOSION_SFX = Isaac.GetSoundIdByName("Stock Explosion")
 DogBody.DING_SFX = Isaac.GetSoundIdByName("Wall Hit Ding")
@@ -212,19 +213,18 @@ DogBody.ANIM_FUNC = {
         end
 
         if sprite:IsEventTriggered("BarkSet") then
-            sfxMan:Play(DogBody.SOUND_BARK_SET1, 2.2, 2, false)
+            sfxMan:Play((name == Util.BodyAnim.PLAYFUL_1 and DogBody.SOUND_BARK_SET1 or DogBody.SOUND_BARK_SET2), 2.2, 2, false)
         end
 
         if sprite:IsEventTriggered("Scratch") then
             sfxMan:Play(DogBody.SOUND_SCRATCH, 1.25, 1, false, math.random(7, 10)/10)
         end
 
-        if name ~= Util.BodyAnim.SCRATCHING then
+        if name == Util.BodyAnim.SCRATCHING then
+            sprite.PlaybackSpeed = 1.3
+        elseif name == Util.BodyAnim.PLAYFUL_1 then
             sprite.PlaybackSpeed = 0.74
-            return
         end
-
-        sprite.PlaybackSpeed = 1.3
     end,
 
     -- Transitional animations
