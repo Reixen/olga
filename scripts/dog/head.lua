@@ -207,7 +207,7 @@ Util:FillEmptyAnimFunctions(
 ---@param olga EntityFamiliar
 ---@param offset Vector
 function DogHead:OnHeadRender(olga, offset)
-    local data = olga:GetData()
+    local data = olga:GetData() ---@cast data DogData
 
     -- Sac Altar / GH          Special Idle Animations       When spawning
     if not data.headSprite or data.headRender == false or not olga.Visible then
@@ -236,7 +236,6 @@ function DogHead:OnHeadRender(olga, offset)
     and math.random() < DogHead.PANT_CHANCE then
         sfxMan:Play(DogHead.SOUND_PANT, 3, 2, false, math.random(9, 11)/10)
     end
-
 
     local animName = data.headSprite:GetAnimation()
     DogHead.ANIM_FUNC[animName](olga, data.headSprite, data, animName)

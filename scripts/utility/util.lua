@@ -111,6 +111,7 @@ function Util:OnDressingTable(slot)
     local touch = slot:GetTouch()
     local gameData = Isaac.GetPersistentGameData()
     if not gameData:Unlocked(Util.Achievements.FUR_COLORS.ID)
+    or slot:GetState() ~= 1
     or (touch ~= 0 and touch % 15 ~= 0) then
         return
     end
