@@ -498,14 +498,17 @@ end
 Mod:AddCallback(ModCallbacks.MC_PRE_USE_ITEM, DogBody.OnPreEsauJrUse, CollectibleType.COLLECTIBLE_ESAU_JR)
 
 ---@param effect EntityEffect
-function DogBody:OnBombDog(effect)
-    for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
-        if Util:IsWithin(familiar:ToFamiliar(), effect.Position, DogBody.EXPLOSION_RADIUS) then
+---@param removePoof boolean?
+function DogBody:OnBombDog(effect, removePoof)
+    for _, familiar in ipairs(Isaac.FindInRadius(effect.Position, DogBody.EXPLOSION_RADIUS, EntityPartition.FAMILIAR)) do
+        if familiar.Variant == Mod.Dog.VARIANT then
             local darkerColor = Color(0.15, 0.15, 0.15)
-            local poof = Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.POOF01, 0, familiar.Position, Vector.Zero, familiar):ToEffect()
-            poof.Color = Color(0.5, 0.5, 0.5)
             familiar:GetSprite().Color = darkerColor
             familiar:GetData().headSprite.Color = darkerColor
+            if not removePoof then
+                local poof = Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.POOF01, 0, familiar.Position, Vector.Zero, familiar):ToEffect()
+                poof.Color = Color(0.7, 0.7, 0.7)
+            end
         end
     end
 end
@@ -1013,6 +1016,7 @@ function DogBody:SpawnExplosion(olga, data)
     explosion.Timeout = 30
     explosion.DepthOffset = 30
     sfxMan:Play(DogBody.EXPLOSION_SFX, 1.5)
+    Isaac.CreateTimer(function() DogBody:OnBombDog(explosion, true) end, 6, 1, true)
 
     if data then
         Mod.Dog.Head:DoIdleAnimation(olga, data, Mod.Dog.Head.IdleAnim[4])
@@ -1117,7 +1121,7 @@ function DogBody:TryChasingPlayer(olga, sprite, data, animName, frameCount)
     end
 
     local targetToExplode = data.targetPos + player.Position
-    local speedToAdd = (targetToExplode - olga.Position):Normalized() * (timeInput / 19)
+    local speedToAdd = (targetToExplode - olga.Position):Normalized() * (timeInput / 18)
     olga.Velocity = olga.Velocity + speedToAdd
     olga.GridCollisionClass = EntityGridCollisionClass.GRIDCOLL_WALLS
     olga.FlipX = math.abs((olga.Position - player.Position):GetAngleDegrees()) > 90
