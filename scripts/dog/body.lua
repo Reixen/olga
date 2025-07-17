@@ -29,6 +29,7 @@ local ONE_TILE = 40
 DogBody.FETCH_RADIUS = ONE_TILE / 2
 DogBody.WANDER_RADIUS = 5
 DogBody.HAPPY_DISTANCE = ONE_TILE * 2.75
+DogBody.EXPLOSION_RADIUS = ONE_TILE * 1.5
 
 local NO_DECAY_VALUE = 3.5
 DogBody.DECAY_STRENGTH = 0.75
@@ -283,6 +284,15 @@ function DogBody:HandleBodyLogic(olga)
     local animName = sprite:GetAnimation()
     DogBody.ANIM_FUNC[animName](olga, sprite, data, animName)
 
+    if sprite.Color.R < 1 then
+        local colorToAdd = 0.02
+        local color = sprite.Color
+        sprite.Color = Color(color.R + colorToAdd, color.G + colorToAdd, color.B + colorToAdd)
+        if data.headSprite then
+            data.headSprite.Color = sprite.Color
+        end
+    end
+
     if not data.hasOwner then
         DogBody:FindDogOwner(olga, data)
     end
@@ -486,6 +496,20 @@ function DogBody:OnPreEsauJrUse(_, _, player)
     end
 end
 Mod:AddCallback(ModCallbacks.MC_PRE_USE_ITEM, DogBody.OnPreEsauJrUse, CollectibleType.COLLECTIBLE_ESAU_JR)
+
+---@param effect EntityEffect
+function DogBody:OnBombDog(effect)
+    for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
+        if Util:IsWithin(familiar:ToFamiliar(), effect.Position, DogBody.EXPLOSION_RADIUS) then
+            local darkerColor = Color(0.15, 0.15, 0.15)
+            local poof = Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.POOF01, 0, familiar.Position, Vector.Zero, familiar):ToEffect()
+            poof.Color = Color(0.5, 0.5, 0.5)
+            familiar:GetSprite().Color = darkerColor
+            familiar:GetData().headSprite.Color = darkerColor
+        end
+    end
+end
+Mod:AddCallback(ModCallbacks.MC_POST_EFFECT_INIT, DogBody.OnBombDog, EffectVariant.BOMB_EXPLOSION)
 --#endregion
 --#region Olga Helper Functions
 ---@param anim string
