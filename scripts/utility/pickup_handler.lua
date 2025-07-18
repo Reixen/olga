@@ -170,11 +170,15 @@ function PickupHandler:OnPickupCollect()
     end, 1, 1, true)
     sfxMan:Play(SoundEffect.SOUND_SHELLGAME)
 end
-Mod:AddCallback(ModCallbacks.MC_POST_PLAYER_COLLECT_CARD, PickupHandler.OnPickupCollect, Consumables.STICK_ID)
-Mod:AddCallback(ModCallbacks.MC_POST_PLAYER_COLLECT_CARD, PickupHandler.OnPickupCollect, Consumables.TENNIS_BALL_ID)
-Mod:AddCallback(ModCallbacks.MC_POST_PLAYER_COLLECT_CARD, PickupHandler.OnPickupCollect, Consumables.FEEDING_KIT_ID)
-Mod:AddCallback(ModCallbacks.MC_POST_PLAYER_COLLECT_CARD, PickupHandler.OnPickupCollect, Consumables.ROD_OF_THE_GODS_ID)
-Mod:AddCallback(ModCallbacks.MC_POST_PLAYER_COLLECT_CARD, PickupHandler.OnPickupCollect, Consumables.WHISTLE_ID)
+---@param modCallback ModCallbacks
+---@param functionToUse function
+---@param variant PickupVariant
+function PickupHandler:RegisterCallbacks(modCallback, functionToUse, variant)
+    for _, pickupId in pairs(PickupHandler.Pickup[variant]) do
+        Mod:AddCallback(modCallback, functionToUse, pickupId)
+    end
+end
+PickupHandler:RegisterCallbacks(ModCallbacks.MC_POST_PLAYER_COLLECT_CARD, PickupHandler.OnPickupCollect, PickupVariant.PICKUP_TAROTCARD)
 
 function PickupHandler:SpawnPickup(rng)
     local pickupChance = PickupHandler.PICKUP_CHANCE / (PlayerManager.AnyoneHasTrinket(Trinket.CRUDE_DRAWING_ID) and 2 or 1)

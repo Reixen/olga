@@ -49,15 +49,13 @@ local fileStructure = {
     {FolderName = "",
         Files = {
             "patches",
+            "ency"
         }
     }
 }
 
 for _, folder in ipairs(fileStructure) do
     for _, fileName in ipairs(folder.Files) do
-        if fileName == "save_manager" then
-        else
-            include("scripts." .. folder.FolderName .. "."  .. fileName)
-        end
+        include("scripts." .. folder.FolderName .. "."  .. fileName)
     end
 end
