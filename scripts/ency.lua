@@ -1,7 +1,7 @@
 --#region Variables
 local Mod = OlgaMod
 --#endregion
-
+-- dpower yearns for Ency entries
 --#region Ency
 if Encyclopedia then
     local info = {
