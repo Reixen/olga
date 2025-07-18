@@ -53,7 +53,7 @@ DogBody.CRUMB_LAYER_ID = 5
 DogBody.EATING_VARIATIONS = 3
 DogBody.Birthday = {MONTH = 5, DAY = 11}
 
-local TRINKET_ID = Mod.PickupHandler.Pickup[PickupVariant.PICKUP_TRINKET].CRUDE_DRAWING_ID
+DogBody.TRINKET_ID = Mod.PickupHandler.Pickup[PickupVariant.PICKUP_TRINKET].CRUDE_DRAWING_ID
 
 ---@enum PathfindingResult
 DogBody.PathfindingResult = {
@@ -68,8 +68,9 @@ DogBody.PathfindingResult = {
 --#region EID Compatibility
 if EID then
     EID:addIcon("Olga", "Olga", 0, 9, 9, 5, 6, Mod.EIDSprite)
-    EID:addTrinket(TRINKET_ID,
-        "Prevents {{Olga}} Olga from disappearing next floor"
+    EID:addTrinket(DogBody.TRINKET_ID,
+        "Prevents {{Olga}} Olga from disappearing next floor"..
+        "# {{Warning}} Reduces the droprates of special consumables by half"
     )
     --EID:addEntity(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT, 0, "{{Olga}} Olga",
         --"Your very own canine companion!"..
@@ -287,11 +288,9 @@ function DogBody:HandleBodyLogic(olga)
     if sprite.Color.R < 1 then
         local colorToAdd = 0.02
         local color = sprite.Color
-        sprite.Color = Color(color.R + colorToAdd, color.G + colorToAdd, color.B + colorToAdd)
-        if data.headSprite then
-            data.headSprite.Color = sprite.Color
-        end
+        color = Color(color.R + colorToAdd, color.G + colorToAdd, color.B + colorToAdd)
     end
+    data.headSprite.Color = sprite.Color
 
     if not data.hasOwner then
         DogBody:FindDogOwner(olga, data)
@@ -388,11 +387,11 @@ function DogBody:GoodbyeOlga()
     for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
         local olga = familiar:ToFamiliar() ---@cast olga EntityFamiliar
 
-        if not PlayerManager.AnyoneHasTrinket(TRINKET_ID) then
+        if not PlayerManager.AnyoneHasTrinket(DogBody.TRINKET_ID) then
             local pData = saveMan.GetRunSave(olga.Player)
 
             local pos = Mod.Room():FindFreePickupSpawnPosition(familiar.Position, 0, true)
-            Isaac.Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TRINKET, TRINKET_ID, pos, Vector.Zero, nil)
+            Isaac.Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TRINKET, DogBody.TRINKET_ID, pos, Vector.Zero, nil)
 
             Util:DoesSeedExist(runSave.hasOwner, olga.InitSeed, true)
             Util:DoesSeedExist(floorSave.hasDoggyLicense, olga.InitSeed, true)
@@ -442,7 +441,7 @@ function DogBody:OnAbandonOlga()
             sfxMan:Play(SoundEffect.SOUND_THUMBS_DOWN)
 
             local pos = Mod.Room():FindFreePickupSpawnPosition(familiar.Position, 0, true)
-            Isaac.Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TRINKET, TRINKET_ID, pos, Vector.Zero, nil)
+            Isaac.Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TRINKET, DogBody.TRINKET_ID, pos, Vector.Zero, nil)
 
             familiar:Remove()
         end
