@@ -57,16 +57,16 @@ if Encyclopedia then
                 },
             },
         },
-        crudeDrawing = {
-            ID = Mod.Dog.Body.TRINKET_ID,
-            WIKI = {
-                { -- Effect
-                    { str = "Effect", fsize = 2, clr = 3, halign = 0 },
-                    { str = "Prevents Olga from disappearing next floor"},
-                    { str = "Reduces the droprates of special consumables by half"}
-                },
-            },
-        },
+        --crudeDrawing = {
+            --ID = Mod.Dog.Body.TRINKET_ID,
+            --WIKI = {
+                --{ -- Effect
+                    --{ str = "Effect", fsize = 2, clr = 3, halign = 0 },
+                    --{ str = "Prevents Olga from disappearing next floor"},
+                    --{ str = "Reduces the droprates of special consumables by half"}
+                --},
+            --},
+        --},
     }
     for name, PickupTable in pairs(info) do
         Encyclopedia.AddCard({
