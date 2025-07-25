@@ -31,6 +31,6 @@ function Cosmetics:OnUseDressingTable(slot)
         Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.POOF01, 0, olga.Position, Vector.Zero, olga)
     end
 end
-Mod:AddCallback(ModCallbacks.MC_POST_SLOT_COLLISION, Util.OnUseDressingTable, SlotVariant.MOMS_DRESSING_TABLE)
+Mod:AddCallback(ModCallbacks.MC_POST_SLOT_COLLISION, Cosmetics.OnUseDressingTable, SlotVariant.MOMS_DRESSING_TABLE)
 --#region Helper Functions
 --#endregion
