@@ -1,9 +1,9 @@
 <AnimatedActor>
-	<Info CreatedBy="Reixen" CreatedOn="5/29/2025 9:26:28 PM" Version="105" Fps="30"/>
+	<Info CreatedBy="Reixen" CreatedOn="7/24/2025 6:02:17 PM" Version="106" Fps="30"/>
 	<Content>
 		<Spritesheets>
 			<Spritesheet Path="items\pickups\stick.png" Id="0"/>
-			<Spritesheet Path="ui\ui_mini_objects.png" Id="1"/>
+			<Spritesheet Path="ui\olga_mini_objects_ui.png" Id="1"/>
 			<Spritesheet Path="Effects\Effect_023_StarFlash.png" Id="2"/>
 		</Spritesheets>
 		<Layers>
