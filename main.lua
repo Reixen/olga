@@ -11,11 +11,13 @@ OlgaMod.Level = function() return OlgaMod.Game:GetLevel() end
 OlgaMod.Dog = {}
 OlgaMod.Util = {}
 OlgaMod.Debug = {}
--- Interactables
 OlgaMod.PickupHandler = {}
+
+-- Interactables
 OlgaMod.Fetch = {}
 OlgaMod.FeedingBowl = {}
 OlgaMod.Whistle = {}
+OlgaMod.Cosmetics = {}
 
 OlgaMod.Dog.VARIANT = Isaac.GetEntityVariantByName("Olga")
 
@@ -48,7 +50,8 @@ local fileStructure = {
         Files = {
             "fetch",
             "feeding_bowl",
-            "whistle"
+            "whistle",
+            "cosmetics"
         }
     },
     {FolderName = "",
