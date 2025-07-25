@@ -80,6 +80,22 @@ if EID then
     EID:setModIndicatorName("Olga")
     EID:setModIndicatorIcon("Olga")
 end
+if Encyclopedia then
+    local encyWiki = {
+        { -- Effect
+            { str = "Effect", fsize = 2, clr = 3, halign = 0 },
+            { str = "Prevents Olga from disappearing next floor"},
+            { str = "Reduces the droprates of special consumables by half"}
+        },
+    }
+    Encyclopedia.AddTrinket({
+        Class = "Olga",
+        ID = DogBody.TRINKET_ID,
+        WikiDesc = encyWiki,
+        ModName = "Olga",
+    })
+end
+
 --#endregion
 --#region Annotations
 ---@class DogData

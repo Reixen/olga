@@ -32,6 +32,12 @@ function Mod:LoadPatches()
         },
     }
 
+    if Encyclopedia then
+        for _, compatFunc in ipairs(Mod.EncyCompat) do
+            compatFunc()
+        end
+    end
+
     if not Epiphany then
         return
     end
@@ -51,21 +57,17 @@ function Mod:LoadPatches()
         Epiphany.Character.KEEPER.DisallowedPickUpVariants[PickupVariant.PICKUP_TRINKET],
         {[Trinkets.CRUDE_DRAWING_ID] = 1}
     )
-end
-Mod:AddCallback(ModCallbacks.MC_POST_MODS_LOADED, Mod.LoadPatches)
 
-if not Epiphany then
-    return
-end
-
-function Mod:OnEssenceOfTheKeeperUse()
-    for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
-        local sprite = familiar:GetSprite()
-        if sprite:GetRenderFlags() ~= AnimRenderFlags.GOLDEN then
-            sprite:SetRenderFlags(AnimRenderFlags.GOLDEN)
-            familiar:GetData().headSprite:SetRenderFlags(AnimRenderFlags.GOLDEN)
+    function Mod:OnEssenceOfTheKeeperUse()
+        for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
+            local sprite = familiar:GetSprite()
+            if sprite:GetRenderFlags() ~= AnimRenderFlags.GOLDEN then
+                sprite:SetRenderFlags(AnimRenderFlags.GOLDEN)
+                familiar:GetData().headSprite:SetRenderFlags(AnimRenderFlags.GOLDEN)
+            end
         end
     end
+    Mod:AddCallback(ModCallbacks.MC_USE_CARD, Mod.OnEssenceOfTheKeeperUse, Epiphany.Essence.KEEPER.ID)
 end
-Mod:AddCallback(ModCallbacks.MC_USE_CARD, Mod.OnEssenceOfTheKeeperUse, Epiphany.Essence.KEEPER.ID)
+Mod:AddCallback(ModCallbacks.MC_POST_MODS_LOADED, Mod.LoadPatches)
 --#endregion

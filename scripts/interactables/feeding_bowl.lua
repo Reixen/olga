@@ -33,7 +33,7 @@ FeedingBowl.AnimToSfx = {
     ["FillSnack"] =   {Land = FeedingBowl.FALL_SFX,                 Drop = SoundEffect.SOUND_1UP},
 }
 --#endregion
---#region EID Compatibility
+--#region Compatibility
 if EID then
     EID:addIcon("Card" .. FeedingBowl.FEEDING_KIT_ID, "Feeding Kit", 0, 9, 9, 6, 6, Mod.EIDSprite)
     EID:addIcon("Feeding Bowl", "Feeding Bowl", 0, 9, 9, 5, 6, Mod.EIDSprite)
@@ -47,6 +47,41 @@ if EID then
         "{{Collectible" .. CollectibleType.COLLECTIBLE_DINNER .. "}}, or {{Collectible" .. CollectibleType.COLLECTIBLE_SNACK.. "}} "..
         "and will not be removed from Isaac's inventory"
     )
+end
+if Encyclopedia then
+    local encyWiki = {
+        { -- Effect
+            { str = "Effect", fsize = 2, clr = 3, halign = 0 },
+            { str = "Spawns a Feeding Bowl and grants Isaac 1 Generic Food"},
+            { str = "Bombing the bowl will drop nothing"}
+        },
+        { -- Effect
+            { str = "Feeding Bowl", fsize = 2, clr = 3, halign = 0 },
+            { str = "Touching the bowl will consume 1 Generic Food"},
+            { str = "Olga grants you 1 Pup Point when fed. It will grant you 2 if the owner has BFFS"},
+            { str = "Can be fed with Dessert, Dinner or Snack and will not be removed from Isaac's inventory nor can they be reused infinitely" },
+            { str = "Generic Food and Dessert needs 3 bites from Olga before it becomes empty, Dinner needs 2, and A Snack only needs 1"},
+            { str = "Pup points allow you to unlock achievements, try to get as much as possible!"}
+        },
+    }
+    Encyclopedia.AddCard({
+        Class = "Olga",
+        ID = FeedingBowl.FEEDING_KIT_ID,
+        WikiDesc = encyWiki,
+        ModName = "Olga",
+    })
+end
+if MinimapAPI then
+    MinimapAPI:AddPickup(
+        "Feeding Kit", "Feeding Kit",
+        EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TAROTCARD, FeedingBowl.FEEDING_KIT_ID,
+        nil, "FeedingKit")
+    MinimapAPI:AddPickup(
+        "Feeding Bowl", "Feeding Bowl",
+        EntityType.ENTITY_SLOT, FeedingBowl.BOWL_VARIANT, 0,
+        nil, "FeedingBowl")
+    MinimapAPI:AddIcon("Feeding Kit", Mod.MinimapSprite, "Feeding Kit")
+    MinimapAPI:AddIcon("Feeding Bowl", Mod.MinimapSprite, "Feeding Bowl")
 end
 --#endregion
 --#region Feeding Bowl Callbacks

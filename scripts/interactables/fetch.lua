@@ -5,6 +5,7 @@ local Fetch = {}
 OlgaMod.Fetch = Fetch
 
 local sfxMan = Mod.SfxMan
+local Util = Mod.Util
 
 Fetch.FETCH_TARGET_SUBTYPE = Isaac.GetEntitySubTypeByName("Fetch Target")
 Fetch.FETCHING_OBJECT_VARIANT = Isaac.GetEntityVariantByName("Fetching Object")
@@ -25,28 +26,71 @@ Fetch.SPIN_STRENGTH = 8
 Fetch.ARC_HEIGHT = 46
 Fetch.ARC_SHIFT = 6
 
-Fetch.STICK_ID = Mod.PickupHandler.Pickup[PickupVariant.PICKUP_TAROTCARD].STICK_ID
-Fetch.ROD_OF_THE_GODS_ID = Mod.PickupHandler.Pickup[PickupVariant.PICKUP_TAROTCARD].ROD_OF_THE_GODS_ID
-Fetch.TENNIS_BALL_ID = Mod.PickupHandler.Pickup[PickupVariant.PICKUP_TAROTCARD].TENNIS_BALL_ID
+local Consumables = Mod.PickupHandler.Pickup[PickupVariant.PICKUP_TAROTCARD]
+Fetch.PickupID = {
+    STICK = Consumables.STICK_ID,
+    ROD_OF_THE_GODS = Consumables.ROD_OF_THE_GODS_ID,
+    TENNIS_BALL = Consumables.TENNIS_BALL_ID
+}
 --#endregion
---#region EID Compatibility
-if EID then
-    EID:addIcon("Card" .. Fetch.STICK_ID, "Stick", 0, 9, 9, 6, 6, Mod.EIDSprite)
-    EID:addIcon("Card" .. Fetch.TENNIS_BALL_ID, "Tennis Ball", 0, 9, 9, 6, 6, Mod.EIDSprite)
-    EID:addIcon("Card" .. Fetch.ROD_OF_THE_GODS_ID, "Rod of the Gods", 0, 9, 9, 6, 6, Mod.EIDSprite)
+--#region Compatibility
+local genericText = {}
+genericText.LINE_1 = "Spawns a movable target that lasts longer when moved"
+genericText.LINE_2 = "Throws the %s towards the target"
 
-    EID:addCard(Fetch.STICK_ID,
-        "Spawns a movable target that lasts longer when moved" ..
-        "#{{Card" .. Fetch.STICK_ID .. "}} Throws the Stick towards the target"
-    )
-    EID:addCard(Fetch.TENNIS_BALL_ID,
-        "Spawns a movable target that lasts longer when moved" ..
-        "#{{Card" .. Fetch.TENNIS_BALL_ID .. "}} Throws the Tennis Ball towards the target"
-    )
-    EID:addCard(Fetch.ROD_OF_THE_GODS_ID,
-        "Spawns a movable target that lasts longer when moved" ..
-        "#{{Card" .. Fetch.ROD_OF_THE_GODS_ID .. "}} Throws the pole towards the target"
-    )
+local pickupNames = {}
+for varName, pickup in pairs(Fetch.PickupID) do
+    local name = Isaac.GetItemConfig():GetCard(pickup).Name
+    pickupNames[varName] = name
+end
+if EID then
+    for varName, pickupID in pairs(Fetch.PickupID) do
+        EID:addIcon("Card"..pickupID, pickupNames[varName], 0, 9, 9, 6, 6, Mod.EIDSprite)
+        EID:addCard(pickupID,
+            genericText.LINE_1 ..
+            "#{{Card".. pickupID .. "}} " .. genericText.LINE_2:format(pickupNames[varName])
+        )
+    end
+end
+Mod.EncyCompat[#Mod.EncyCompat+1] = function()
+    for varName, pickupID in pairs(Fetch.PickupID) do
+        local encyWiki = {
+            { -- Effect
+                { str = "Effect", fsize = 2, clr = 3, halign = 0 },
+                { str = genericText.LINE_1 },
+                { str = genericText.LINE_2:format(pickupNames[varName]) },
+                { str = "Cannot be thrown on spikes, rocks or pits"}
+            },
+        }
+        local unlockFunction = nil
+        if pickupID == Consumables.TENNIS_BALL_ID then
+            unlockFunction = function(self)
+                local gameData = Isaac.GetPersistentGameData()
+                local ballAch = Util.Achievements.TENNIS_BALL
+                if not gameData:Unlocked(ballAch.ID) then
+                    self.Desc = "Get " ..tostring(ballAch.Requirement) .. " Pup Points to unlock!"
+                    return self
+                end
+            end
+        end
+        Encyclopedia.AddCard({
+            Class = "Olga",
+            ID = pickupID,
+            WikiDesc = encyWiki,
+            ModName = "Olga",
+            UnlockFunc = unlockFunction,
+            Hide = pickupID == Consumables.ROD_OF_THE_GODS_ID and true or false
+        })
+    end
+end
+if MinimapAPI then
+    for varName, pickupID in pairs(Fetch.PickupID) do
+        MinimapAPI:AddPickup(
+            pickupNames[varName], pickupNames[varName],
+            EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TAROTCARD, pickupID,
+            nil, "FetchingObject")
+        MinimapAPI:AddIcon(pickupNames[varName], Mod.MinimapSprite, pickupNames[varName])
+    end
 end
 --#endregion
 --#region Fetch Callbacks
@@ -74,7 +118,7 @@ function Fetch:OnUsePickup(cardId, player)
     targetData.objName = pickupName
 
     local targetSprite = target:GetSprite()
-    if cardId == Fetch.ROD_OF_THE_GODS_ID then
+    if cardId == Fetch.PickupID.ROD_OF_THE_GODS then
         targetSprite:PlayOverlay("ObjectROTG", true)
         return
     end
@@ -82,9 +126,9 @@ function Fetch:OnUsePickup(cardId, player)
     targetSprite:ReplaceSpritesheet(2, "gfx/items/pickups/" .. pickupName .. ".png", true)
     target:GetSprite():PlayOverlay("Object", true)
 end
-Mod:AddCallback(ModCallbacks.MC_USE_CARD, Fetch.OnUsePickup, Fetch.STICK_ID)
-Mod:AddCallback(ModCallbacks.MC_USE_CARD, Fetch.OnUsePickup, Fetch.TENNIS_BALL_ID)
-Mod:AddCallback(ModCallbacks.MC_USE_CARD, Fetch.OnUsePickup, Fetch.ROD_OF_THE_GODS_ID)
+for _, pickupID in pairs(Fetch.PickupID) do
+    Mod:AddCallback(ModCallbacks.MC_USE_CARD, Fetch.OnUsePickup, pickupID)
+end
 
 ---@param target EntityEffect
 function Fetch:OnTargetInit(target)

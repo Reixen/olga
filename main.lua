@@ -20,10 +20,15 @@ OlgaMod.Whistle = {}
 OlgaMod.Dog.VARIANT = Isaac.GetEntityVariantByName("Olga")
 
 OlgaMod.EIDSprite = Sprite()
-OlgaMod.EIDSprite:Load("gfx/ui/eid_icons.anm2", true)
+OlgaMod.EIDSprite:Load("gfx/ui/olga_eid_icons.anm2", true)
+OlgaMod.MinimapSprite = Sprite()
+OlgaMod.MinimapSprite:Load("gfx/ui/olga_minimap_ui.anm2", true)
 
 OlgaMod.SaveManager = include("scripts.utility.save_manager")
 OlgaMod.SaveManager.Init(OlgaMod)
+
+-- Needed because of I need to access Persistent Game Data for unlocks
+OlgaMod.EncyCompat = {}
 
 local fileStructure = {
     {FolderName = "utility",

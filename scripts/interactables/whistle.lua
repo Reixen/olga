@@ -22,6 +22,42 @@ if EID then
         "# {{Warning}} When chasing Isaac for a while, Olga WILL catch you"
     )
 end
+Mod.EncyCompat[#Mod.EncyCompat+1] = function()
+    local encyWiki = {
+        { -- Effect
+            { str = "Effect", fsize = 2, clr = 3, halign = 0 },
+            { str = "When near Olga, toggles her state between standing and sitting." },
+            { str = "When Olga is far, she runs towards you" },
+            { str = "When chasing Isaac for a while, Olga WILL catch you" },
+        },
+        { -- Notes
+            { str = "Notes", fsize = 2, clr = 3, halign = 0 },
+            { str = "The sound effects dont mean anything aside from how long you've survived"},
+            { str = "Try to not get caught for as long as you can!"}
+        },
+    }
+    Encyclopedia.AddCard({
+        Class = "Olga",
+        ID = Whistle.WHISTLE_ID,
+        WikiDesc = encyWiki,
+        ModName = "Olga",
+        UnlockFunc = function(self)
+            local gameData = Isaac.GetPersistentGameData()
+            local whistleAch = Util.Achievements.WHISTLE
+            if not gameData:Unlocked(whistleAch.ID) then
+                self.Desc = "Get " ..tostring(whistleAch.Requirement) .. " Pup Points to unlock!"
+                return self
+            end
+        end
+    })
+end
+if MinimapAPI then
+    MinimapAPI:AddPickup(
+        "Whistle", "Whistle",
+        EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TAROTCARD, Whistle.WHISTLE_ID,
+        nil, "OlgaPickup")
+    MinimapAPI:AddIcon("Whistle", Mod.MinimapSprite, "Whistle")
+end
 --#endregion
 --#region Whistle Callbacks
 ---@param cardId Card
