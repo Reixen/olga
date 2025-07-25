@@ -27,6 +27,9 @@ OlgaMod.MinimapSprite:Load("gfx/ui/olga_minimap_ui.anm2", true)
 OlgaMod.SaveManager = include("scripts.utility.save_manager")
 OlgaMod.SaveManager.Init(OlgaMod)
 
+-- Needed because of I need to access Persistent Game Data for unlocks
+OlgaMod.EncyCompat = {}
+
 local fileStructure = {
     {FolderName = "utility",
         Files = {
@@ -51,7 +54,6 @@ local fileStructure = {
     {FolderName = "",
         Files = {
             "patches",
-            "ency"
         }
     }
 }
