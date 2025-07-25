@@ -4,7 +4,6 @@ local Mod = OlgaMod
 local Util = {}
 OlgaMod.Util = Util
 
-local saveMan = Mod.SaveManager
 Util.DATA_IDENTIFIER = "olgaMod"
 
 Util.HAPPY_COLLECTIBLE = CollectibleType.COLLECTIBLE_NUMBER_ONE
@@ -79,7 +78,7 @@ Util.DogState = {
     EATING = 7,
 }
 
-Util.ModdedHands = {} -- See patches
+Util.ModdedHands = {} -- See patches.lua
 
 -- Used for shaders
 Util.HeadLayerId = {
@@ -94,7 +93,6 @@ Util.Achievements = {
     WHISTLE =           {ID = Isaac.GetAchievementIdByName("Whistle"),          Requirement = 10},
     FUR_COLORS =        {ID = Isaac.GetAchievementIdByName("Fur Colors"),       Requirement = 20}
 }
-
 --#endregion
 --#region Callbacks
 function Util:OnReviveOrClicker()
@@ -106,56 +104,6 @@ end
 Mod:AddCallback(ModCallbacks.MC_USE_ITEM, Util.OnReviveOrClicker, CollectibleType.COLLECTIBLE_CLICKER)
 Mod:AddCallback(ModCallbacks.MC_POST_PLAYER_REVIVE, Util.OnReviveOrClicker)
 
----@param slot EntitySlot
-function Util:OnDressingTable(slot)
-    local touch = slot:GetTouch()
-    local gameData = Isaac.GetPersistentGameData()
-    if not gameData:Unlocked(Util.Achievements.FUR_COLORS.ID)
-    or slot:GetState() ~= 1
-    or (touch ~= 0 and touch % 15 ~= 0) then
-        return
-    end
-
-    local persistentSave = saveMan.GetPersistentSave()
-    persistentSave.furColor = persistentSave.furColor or 0 -- If it doesn't exist, set to default
-    persistentSave.furColor = persistentSave.furColor >= 3 and 0 or persistentSave.furColor + 1
-
-    for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
-        local olga = familiar:ToFamiliar() ---@cast olga EntityFamiliar
-        local sprite = olga:GetSprite()
-
-        Util:ApplyColorPalette(sprite, "olga_shader", persistentSave.furColor)
-        Util:ApplyColorPalette(olga:GetData().headSprite, "olga_shader", persistentSave.furColor, Util.HeadLayerId)
-        Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.POOF01, 0, olga.Position, Vector.Zero, olga)
-    end
-end
-Mod:AddCallback(ModCallbacks.MC_POST_SLOT_COLLISION, Util.OnDressingTable, SlotVariant.MOMS_DRESSING_TABLE)
---#endregion
---local PriceTextFontTempesta = Font()
---PriceTextFontTempesta:Load("font/pftempestasevencondensed.fnt")
-
---local function effectRender(effect)
-    --local pos = Isaac.WorldToScreen(effect.Position)
-    --PriceTextFontTempesta:DrawStringScaled(
-            --effect.Type.."."..effect.Variant.."."..effect.SubType,
-            --pos.X,
-            --pos.Y,
-            --0.75, 0.75, -- scale
-            --KColor(1, 1, 1, 1)
-        --)
---end
-
---local function renderEffects(_, effect)
-    --if not effect then
-        --for index, value in ipairs(Isaac.GetRoomEntities()) do
-            --effectRender(value)
-        --end
-    --else
-        --effectRender(effect)
-    --end
---end
-
---Mod:AddCallback(ModCallbacks.MC_POST_RENDER, renderEffects)
 --#endregion
 --#region Helper Functions
 -- Update the petting hand color based on the player's skin
@@ -409,3 +357,29 @@ function Util:DoesSeedExist(saveTable, hash, remove)
     return false
 end
 --endregion
+-- Entity Identifier
+--local PriceTextFontTempesta = Font()
+--PriceTextFontTempesta:Load("font/pftempestasevencondensed.fnt")
+
+--local function effectRender(effect)
+    --local pos = Isaac.WorldToScreen(effect.Position)
+    --PriceTextFontTempesta:DrawStringScaled(
+            --effect.Type.."."..effect.Variant.."."..effect.SubType,
+            --pos.X,
+            --pos.Y,
+            --0.75, 0.75, -- scale
+            --KColor(1, 1, 1, 1)
+        --)
+--end
+
+--local function renderEffects(_, effect)
+    --if not effect then
+        --for index, value in ipairs(Isaac.GetRoomEntities()) do
+            --effectRender(value)
+        --end
+    --else
+        --effectRender(effect)
+    --end
+--end
+
+--Mod:AddCallback(ModCallbacks.MC_POST_RENDER, renderEffects)
