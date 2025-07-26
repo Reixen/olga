@@ -38,6 +38,10 @@ function Mod:LoadPatches()
         end
     end
 
+    if BedroomExpanded then
+        Mod:AddCallback(ModCallbacks.MC_POST_SLOT_COLLISION, Mod.Cosmetics.OnUseDressingTable, BedroomExpanded.Slot.CLOTHING_RACK.ID)
+    end
+
     if not Epiphany then
         return
     end
