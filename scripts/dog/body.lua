@@ -285,7 +285,7 @@ Util:FillEmptyAnimFunctions(
 --#region Olga Callbacks
 ---@param olga EntityFamiliar
 function DogBody:HandleBodyLogic(olga)
-    local data = olga:GetData()
+    local data = olga:GetData() ---@cast data DogData
     local sprite = olga:GetSprite()
 
     -- Play her special idle animation
@@ -300,13 +300,6 @@ function DogBody:HandleBodyLogic(olga)
 
     local animName = sprite:GetAnimation()
     DogBody.ANIM_FUNC[animName](olga, sprite, data, animName)
-
-    if sprite.Color.R < 1 then
-        local colorToAdd = 0.02
-        local color = sprite.Color
-        color = Color(color.R + colorToAdd, color.G + colorToAdd, color.B + colorToAdd)
-    end
-    data.headSprite.Color = sprite.Color
 
     if not data.hasOwner then
         DogBody:FindDogOwner(olga, data)
@@ -517,9 +510,20 @@ Mod:AddCallback(ModCallbacks.MC_PRE_USE_ITEM, DogBody.OnPreEsauJrUse, Collectibl
 function DogBody:OnBombDog(effect, removePoof)
     for _, familiar in ipairs(Isaac.FindInRadius(effect.Position, DogBody.EXPLOSION_RADIUS, EntityPartition.FAMILIAR)) do
         if familiar.Variant == Mod.Dog.VARIANT then
-            local darkerColor = Color(0.15, 0.15, 0.15)
-            familiar:GetSprite().Color = darkerColor
-            familiar:GetData().headSprite.Color = darkerColor
+            local darkerColor = Color(0.16, 0.16, 0.16)
+            local sprite = familiar:GetSprite()
+            local colorToAdd = 0.02
+            sprite.Color = darkerColor
+
+            for i = 1, (100 - darkerColor.R * 100) / (colorToAdd * 100) do
+                Isaac.CreateTimer(function()
+                local color = sprite.Color
+                color = Color(color.R + colorToAdd, color.G + colorToAdd, color.B + colorToAdd)
+                sprite.Color = color
+                familiar:GetData().headSprite.Color = color
+                end, i, 1, true)
+            end
+
             if not removePoof then
                 local poof = Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.POOF01, 0, familiar.Position, Vector.Zero, familiar):ToEffect()
                 poof.Color = Color(0.7, 0.7, 0.7)

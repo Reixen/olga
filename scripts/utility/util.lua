@@ -183,11 +183,11 @@ function Util:ApplyColorPalette(sprite, paletteName, colorPalette, layerIDs)
 end
 
 -- Returns a boolean if olga is near the target. DistanceSquared is faster I heard.
----@param olga EntityFamiliar
+---@param entity Entity
 ---@param target Vector
 ---@param distance number
-function Util:IsWithin(olga, target, distance)
-    return olga.Position:DistanceSquared(target) < distance ^ 2
+function Util:IsWithin(entity, target, distance)
+    return entity.Position:DistanceSquared(target) < distance ^ 2
 end
 
 -- Creates a unique table to make it less likely for mods to edit your variables.
