@@ -91,7 +91,9 @@ Util.HeadLayerId = {
 Util.Achievements = {
     TENNIS_BALL =       {ID = Isaac.GetAchievementIdByName("Tennis Ball"),      Requirement = 5},
     WHISTLE =           {ID = Isaac.GetAchievementIdByName("Whistle"),          Requirement = 10},
-    FUR_COLORS =        {ID = Isaac.GetAchievementIdByName("Fur Colors"),       Requirement = 20}
+    FUR_COLORS =        {ID = Isaac.GetAchievementIdByName("Fur Colors"),       Requirement = 20},
+    HAT_COSTUMES =      {ID = Isaac.GetAchievementIdByName("Hat Costumes"),     Requirement = 30},
+    PARTY_HAT =         {ID = Isaac.GetAchievementIdByName("Party Hat")}
 }
 --#endregion
 --#region Callbacks
@@ -333,6 +335,7 @@ function Util:EvaluatePoints(points)
     for _, ach in pairs(Util.Achievements) do
         local gameData = Isaac.GetPersistentGameData()
         if not gameData:Unlocked(ach.ID)
+        and ach.Requirement ~= nil
         and points >= ach.Requirement then
             gameData:TryUnlock(ach.ID)
         end
@@ -355,6 +358,16 @@ function Util:DoesSeedExist(saveTable, hash, remove)
         end
     end
     return false
+end
+
+---@param table table
+---@return table
+function Util:CopyTable(table)
+    local copy = {}
+    for key, val in pairs(table) do
+        copy[key] = type(val) ~= "table" and val or Util:CopyTable(val)
+    end
+    return copy
 end
 --endregion
 -- Entity Identifier
