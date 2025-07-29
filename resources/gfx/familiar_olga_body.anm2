@@ -1,11 +1,11 @@
 <AnimatedActor>
-	<Info CreatedBy="Reixen" CreatedOn="7/29/2025 12:55:26 AM" Version="118" Fps="30"/>
+	<Info CreatedBy="Reixen" CreatedOn="7/29/2025 12:55:17 PM" Version="119" Fps="30"/>
 	<Content>
 		<Spritesheets>
 			<Spritesheet Path="familiar\familiar_olga_body.png" Id="0"/>
 			<Spritesheet Path="familiar\familiar_olga_head.png" Id="1"/>
 			<Spritesheet Path="familiar\sick_rocket.png" Id="2"/>
-			<Spritesheet Path="familiar\olga_costumes\hat_top.png" Id="3"/>
+			<Spritesheet Path="familiar\olga_costumes\hat_dargon.png" Id="3"/>
 		</Spritesheets>
 		<Layers>
 			<Layer Name="body" Id="0" SpritesheetId="0"/>
