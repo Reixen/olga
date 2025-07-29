@@ -1,12 +1,12 @@
 <AnimatedActor>
-	<Info CreatedBy="Reixen" CreatedOn="7/29/2025 12:25:36 PM" Version="154" Fps="30"/>
+	<Info CreatedBy="Reixen" CreatedOn="7/29/2025 4:09:19 PM" Version="155" Fps="30"/>
 	<Content>
 		<Spritesheets>
 			<Spritesheet Path="petting_hands\hand_pink.png" Id="0"/>
 			<Spritesheet Path="familiar\familiar_olga_head.png" Id="1"/>
 			<Spritesheet Path="familiar\held_object_stick.png" Id="2"/>
 			<Spritesheet Path="familiar\food_crumbs_generic.png" Id="3"/>
-			<Spritesheet Path="familiar\olga_costumes\hat_dargon.png" Id="4"/>
+			<Spritesheet Path="familiar\olga_costumes\hat_cowgirl.png" Id="4"/>
 		</Spritesheets>
 		<Layers>
 			<Layer Name="hand" Id="0" SpritesheetId="0"/>
