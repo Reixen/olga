@@ -17,7 +17,7 @@ FeedingBowl.CONSUMABLE_DESSERT_ID = Isaac.GetNullItemIdByName("Consumable Desser
 FeedingBowl.CONSUMABLE_SNACK_ID = Isaac.GetNullItemIdByName("Consumable Snack")
 FeedingBowl.CONSUMABLE_GENERIC_ID = Isaac.GetNullItemIdByName("Consumable Generic")
 
-FeedingBowl.CAKE_CHANCE = 1
+FeedingBowl.CAKE_CHANCE = 1 / 25
 FeedingBowl.FEEDING_KIT_ID = Mod.PickupHandler.Pickup[PickupVariant.PICKUP_TAROTCARD].FEEDING_KIT_ID
 
 FeedingBowl.CollectibleToNullFX = {
@@ -29,10 +29,12 @@ FeedingBowl.CollectibleToNullFX = {
 
 FeedingBowl.AnimToSfx = {
     ["FillGeneric"] = {Land = FeedingBowl.POUR_SFX,                 Drop = SoundEffect.SOUND_ROCK_CRUMBLE},
-    ["FillDessert"] = {Land = FeedingBowl.POUR_SFX,                 Drop = SoundEffect.SOUND_ROCK_CRUMBLE},
     ["FillDinner"] =  {Land = SoundEffect.SOUND_MEAT_IMPACTS_OLD,   Drop = SoundEffect.SOUND_MEAT_IMPACTS},
     ["FillSnack"] =   {Land = FeedingBowl.FALL_SFX,                 Drop = SoundEffect.SOUND_1UP},
 }
+FeedingBowl.AnimToSfx["FillDessert"] = FeedingBowl.AnimToSfx["FillGeneric"]
+FeedingBowl.AnimToSfx["FillCake"] = FeedingBowl.AnimToSfx["FillGeneric"]
+
 --#endregion
 --#region Compatibility
 if EID then
