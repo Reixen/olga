@@ -6,6 +6,7 @@ local Trinkets = Mod.PickupHandler.Pickup[PickupVariant.PICKUP_TRINKET]
 --#endregion
 --#region Callbacks
 function Mod:LoadPatches()
+
     Mod.Util.ModdedHands = {
         {PlayerTypeTable = Epiphany and Epiphany.PlayerType, PlayerTypes = {
                 "MAGDALENE",
