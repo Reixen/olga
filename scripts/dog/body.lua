@@ -945,7 +945,7 @@ function DogBody:TryEating(olga, data)
     end
 
     if not DogBody:IsOlgaEating(data.headSprite) then
-        if bowlAnimName:find("Dinner") then
+        if bowlAnimName:find("Dinner") or bowlAnimName:find("Cake") then
             data.headSprite:Play("EatDinner", true)
         else
             data.headSprite:Play("Eat" .. math.random(DogBody.EATING_VARIATIONS), true)
@@ -954,7 +954,7 @@ function DogBody:TryEating(olga, data)
 
     if bowlAnimName:find("Dessert") or bowlAnimName:find("Generic") then
         sfxMan:Play(SoundEffect.SOUND_EXPLOSION_DEBRIS, 2, 2, false, math.random(14, 16) / 10)
-    elseif bowlAnimName:find("Dinner") then
+    elseif bowlAnimName:find("Dinner") or bowlAnimName:find("Cake") then
         sfxMan:Play(SoundEffect.SOUND_MEAT_IMPACTS_OLD, 1, 2, false, math.random(9, 11) / 10)
     else
         sfxMan:Play(Mod.Dog.Head.SOUND_MINI_CRUNCH, 3, 2, false, math.random(9, 11) / 10)
