@@ -343,18 +343,32 @@ function Util:EvaluatePoints(points)
 end
 
 ---@param saveTable table
----@param hash integer
+---@param seedOrTable integer | table
 ---@param remove boolean?
-function Util:DoesSeedExist(saveTable, hash, remove)
+function Util:DoesSeedExist(saveTable, seedOrTable, remove)
     if not saveTable then
         return false
     end
-    for pos, hashVal in ipairs(saveTable) do
-        if hash == hashVal then
+
+    local doSeedsMatch = function(seed1, seed2, pos)
+        if seed1 == seed2 then
             if remove == true then
                 table.remove(saveTable, pos)
             end
             return true
+        end
+    end
+
+    for pos, seedVal1 in ipairs(saveTable) do
+        if type(seedOrTable) == "table" then
+            for _, seedVal2 in ipairs(seedOrTable) do
+                if doSeedsMatch(seedVal1, seedVal2, pos) then return true end
+            end
+
+        else
+            if doSeedsMatch(seedVal1, seedOrTable, pos) then
+                return true
+            end
         end
     end
     return false

@@ -45,12 +45,17 @@ function Cosmetics:OnUseDressingTable(slot)
         return
     end
 
+    local doggies = Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)
+    if #doggies < 1 then
+        return
+    end
+
     local persistentSave = saveMan.GetPersistentSave()
     if data.optionSprite:GetFrame() == 0 then
         persistentSave.furColor = persistentSave.furColor or 0 -- If it doesn't exist, set to default
         persistentSave.furColor = persistentSave.furColor >= 3 and 0 or persistentSave.furColor + 1
 
-        for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
+        for _, familiar in ipairs(doggies) do
             local olga = familiar:ToFamiliar() ---@cast olga EntityFamiliar
             local sprite = olga:GetSprite()
 
@@ -66,7 +71,7 @@ function Cosmetics:OnUseDressingTable(slot)
     persistentSave.hatCostume = persistentSave.hatCostume >= #hatCostumes and 1 or persistentSave.hatCostume + 1
 
     local chosenVanity = hatCostumes[persistentSave.hatCostume]
-        for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
+        for _, familiar in ipairs(doggies) do
             local sprite = familiar:GetSprite()
             local olgaData = familiar:GetData()
 

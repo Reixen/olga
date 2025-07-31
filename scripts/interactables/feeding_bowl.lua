@@ -17,7 +17,7 @@ FeedingBowl.CONSUMABLE_DESSERT_ID = Isaac.GetNullItemIdByName("Consumable Desser
 FeedingBowl.CONSUMABLE_SNACK_ID = Isaac.GetNullItemIdByName("Consumable Snack")
 FeedingBowl.CONSUMABLE_GENERIC_ID = Isaac.GetNullItemIdByName("Consumable Generic")
 
-FeedingBowl.CAKE_CHANCE = 1 / 25
+--FeedingBowl.CAKE_CHANCE = 1 / 25
 FeedingBowl.FEEDING_KIT_ID = Mod.PickupHandler.Pickup[PickupVariant.PICKUP_TAROTCARD].FEEDING_KIT_ID
 
 FeedingBowl.CollectibleToNullFX = {
@@ -237,10 +237,10 @@ function FeedingBowl:PlayFillAnimation(bowl, tempFX, sprite, foodItems)
         local name = Isaac.GetItemConfig():GetNullItem(nullFX).Name
         name = name:gsub("Consumable ", "")
 
-        if name == "Generic"
-        and (Mod.Dog.Body:IsBirthdayWeek() or math.random() < FeedingBowl.CAKE_CHANCE) then
-            name = "Cake"
-        end
+        --if name == "Generic" then
+        --and (Mod.Dog.Body:IsBirthdayWeek() or math.random() < FeedingBowl.CAKE_CHANCE) then
+            --name = "Cake"
+        --end
 
         sprite:Play("Fill" .. name)
         tempFX:RemoveNullEffect(nullFX, 1)

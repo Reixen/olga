@@ -41,7 +41,7 @@ PickupHandler.UnlockableDrops = {
     }
 }
 
-PickupHandler.PICKUP_CHANCE = 3 / 10
+PickupHandler.PICKUP_CHANCE = 2 / 5
 PickupHandler.ROTG_CHANCE = 1 / 25
 
 --#endregion
