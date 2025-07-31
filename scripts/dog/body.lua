@@ -216,10 +216,15 @@ DogBody.ANIM_FUNC = {
     -- Idle animations
     [Util.BodyAnim.PLAYFUL_1] = function(olga, sprite, data, name)
         if sprite:IsFinished() then
-            sprite:Play(Util.BodyAnim.STAND, true)
             data.headRender = true
             sprite.PlaybackSpeed = 1
             data.headSprite.FlipX = olga.FlipX
+
+            if not data.hasOwner then
+                sprite:Play(Util.BodyAnim.STAND_TO_SIT, true)
+                return
+            end
+            sprite:Play(Util.BodyAnim.STAND, true)
         end
 
         -- Only scratching has this event
