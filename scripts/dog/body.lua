@@ -365,8 +365,8 @@ function DogBody:OnInit(olga)
     olga.FlipX = math.abs((olga.Position - olga.Player.Position):GetAngleDegrees()) > 90
 
     -- Use player for ownership
-    local runSave = saveMan.TryGetRunSave()
-    if not runSave or not Util:DoesSeedExist(runSave.hasOwner, olga.InitSeed) then
+    local runSave = saveMan.TryGetRunSave(olga.Player)
+    if not runSave or not Util:DoesSeedExist(runSave.hasDoggy, olga.InitSeed) then
         olga:GetSprite():PlayOverlay("SpawnSign")
         return
     end
@@ -412,15 +412,13 @@ end
 Mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, DogBody.HandleNewRoom)
 
 function DogBody:GoodbyeOlga()
-    -- Use dogamounts
-    local runSave = saveMan.TryGetRunSave()
-    if not runSave or not runSave.hasOwner or #runSave.hasOwner == 0 then
+    local dogAmount = Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)
+    if #dogAmount < 1 then
         return
     end
 
     local floorSave = saveMan.GetFloorSave()
     local dogsRemoved = 0
-    local dogAmount = Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)
     for _, familiar in ipairs(dogAmount) do
         local olga = familiar:ToFamiliar() ---@cast olga EntityFamiliar
 
@@ -430,7 +428,6 @@ function DogBody:GoodbyeOlga()
             local pos = Mod.Room():FindFreePickupSpawnPosition(familiar.Position, 0, true)
             Isaac.Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TRINKET, DogBody.TRINKET_ID, pos, Vector.Zero, nil)
 
-            Util:DoesSeedExist(runSave.hasOwner, olga.InitSeed, true)
             Util:DoesSeedExist(floorSave.hasDoggyLicense, olga.InitSeed, true)
             Util:DoesSeedExist(pData.hasDoggy, olga.InitSeed, true)
 
@@ -508,7 +505,7 @@ function DogBody:OnPreFlipUse(_, _, player)
     local data = saveMan.GetRunSave(evilLaz)
     local floorSave = saveMan.GetFloorSave()
     if data.hasDoggy and not Util:DoesSeedExist(floorSave.hasDoggyLicense, data.hasDoggy) then
-        Isaac.CreateTimer(function() DogBody:GoodbyeOlga() end, 1, 1, true)
+        Isaac.CreateTimer(function() DogBody:GoodbyeOlga() end, 0, 1, true)
     end
 end
 Mod:AddCallback(ModCallbacks.MC_PRE_USE_ITEM, DogBody.OnPreFlipUse, CollectibleType.COLLECTIBLE_FLIP)
@@ -526,7 +523,7 @@ function DogBody:OnPreEsauJrUse(_, _, player)
     local data = saveMan.GetRunSave(esauJr)
     local floorSave = saveMan.GetFloorSave()
     if data.hasDoggy and not Util:DoesSeedExist(floorSave.hasDoggyLicense, data.hasDoggy) then
-        Isaac.CreateTimer(function() DogBody:GoodbyeOlga() end, 1, 1, true)
+        Isaac.CreateTimer(function() DogBody:GoodbyeOlga() end, 0, 1, true)
     end
 end
 Mod:AddCallback(ModCallbacks.MC_PRE_USE_ITEM, DogBody.OnPreEsauJrUse, CollectibleType.COLLECTIBLE_ESAU_JR)
@@ -719,17 +716,11 @@ function DogBody:FindDogOwner(olga, data)
     olga.Player = nearestPlayer
     olga.SpawnerEntity = nearestPlayer
     data.hasOwner = true
-
     nearestPlayer:AnimateHappy()
     -- Used for determining if player has an Olga
     local pData = saveMan.GetRunSave(olga.Player)
     pData.hasDoggy = pData.hasDoggy or {}
     pData.hasDoggy[#pData.hasDoggy+1] = olga.InitSeed
-
-    -- In the chopping block later
-    local runSave = saveMan.GetRunSave()
-    runSave.hasOwner = runSave.hasOwner or {}
-    runSave.hasOwner[#runSave.hasOwner+1] = olga.InitSeed
 
     -- Used for obtainable drops and removing Olgas for T. Laz and Esau Jr.
     local floorSave = saveMan.GetFloorSave()

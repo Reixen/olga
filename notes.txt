@@ -21,3 +21,4 @@ Low Priority Bugs
     - Get the pickup back when HG is used after leaving the room mid-fetch
     - Anything Esau Jr related
     - Glowing Hourglass.
+    - Olga disappears when strawman picks her up after flipping with T. Laz
