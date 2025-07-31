@@ -140,7 +140,7 @@ Mod:AddCallback(ModCallbacks.MC_POST_SLOT_RENDER, Cosmetics.OnDressingTableRende
 
 ---@param player EntityPlayer
 function Cosmetics:PostPlayerUpdate(player)
-    for _, slot in ipairs(Isaac.FindByType(EntityType.ENTITY_SLOT, SlotVariant.MOMS_DRESSING_TABLE)) do
+    for _, slot in ipairs(Isaac.FindByType(EntityType.ENTITY_SLOT)) do
         local data = Util:GetData(slot, Util.DATA_IDENTIFIER)
         local charge = data.cosmeticCharge or 0
 
