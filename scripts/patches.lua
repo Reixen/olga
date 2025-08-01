@@ -40,6 +40,7 @@ function Mod:LoadPatches()
     end
 
     if BedroomExpanded then
+        Mod.Cosmetics.VanitySlots[#Mod.Cosmetics.VanitySlots+1] = BedroomExpanded.Slot.CLOTHING_RACK.ID
         Mod:AddCallback(ModCallbacks.MC_POST_SLOT_INIT, Mod.Cosmetics.OnDressingTableInit, BedroomExpanded.Slot.CLOTHING_RACK.ID)
         Mod:AddCallback(ModCallbacks.MC_POST_SLOT_RENDER, Mod.Cosmetics.OnDressingTableRender, BedroomExpanded.Slot.CLOTHING_RACK.ID)
         Mod:AddCallback(ModCallbacks.MC_POST_SLOT_COLLISION, Mod.Cosmetics.OnUseDressingTable, BedroomExpanded.Slot.CLOTHING_RACK.ID)

@@ -14,6 +14,9 @@ Cosmetics.MAX_CHARGE = 60
 Cosmetics.CHARGE_BAR_OFFSET = Vector(5, -20)
 Cosmetics.SIGN_OFFSET = Vector(25, 8)
 
+Cosmetics.VanitySlots = {}
+Cosmetics.VanitySlots[1] = SlotVariant.MOMS_DRESSING_TABLE
+
 Cosmetics.Costumes = {}
 Cosmetics.UnlockableHats = {
     function(persistentData) ---@param persistentData? PersistentGameData
@@ -105,6 +108,9 @@ function Cosmetics:OnDressingTableInit(slot)
     data.optionSprite = Sprite()
     data.optionSprite:Load("gfx/render_cosmetic_options.anm2", true)
     data.optionSprite:SetFrame("Sign", 0)
+
+    data.cosmeticChargeBar = Sprite()
+    data.cosmeticChargeBar:Load("gfx/chargebar.anm2", true)
 end
 Mod:AddCallback(ModCallbacks.MC_POST_SLOT_INIT, Cosmetics.OnDressingTableInit, SlotVariant.MOMS_DRESSING_TABLE)
 
@@ -128,11 +134,6 @@ function Cosmetics:OnDressingTableRender(slot, offset)
         return
     end
 
-    if not data.cosmeticChargeBar then
-        data.cosmeticChargeBar = Sprite()
-        data.cosmeticChargeBar:Load("gfx/chargebar.anm2", true)
-    end
-
     local renderPos = Isaac.WorldToRenderPosition(slot.Position) + offset + Cosmetics.CHARGE_BAR_OFFSET + Cosmetics.SIGN_OFFSET
     Cosmetics:RenderChargeBar(data.cosmeticChargeBar, charge, Cosmetics.MAX_CHARGE, renderPos)
 end
@@ -140,43 +141,30 @@ Mod:AddCallback(ModCallbacks.MC_POST_SLOT_RENDER, Cosmetics.OnDressingTableRende
 
 ---@param player EntityPlayer
 function Cosmetics:PostPlayerUpdate(player)
-    for _, slot in ipairs(Isaac.FindByType(EntityType.ENTITY_SLOT)) do
-        local data = Util:GetData(slot, Util.DATA_IDENTIFIER)
-        local charge = data.cosmeticCharge or 0
+    for _, slotVariant in ipairs(Mod.Cosmetics.VanitySlots) do
+        for _, slot in ipairs(Isaac.FindByType(EntityType.ENTITY_SLOT, slotVariant)) do
+            local data = Util:GetData(slot, Util.DATA_IDENTIFIER)
+            local charge = data.cosmeticCharge or 0
 
-        if not Util:IsWithin(player, slot.Position, Cosmetics.SWAPPING_RADIUS)
-        or not data.optionSprite or slot:ToSlot():GetState() == 3 then
-            charge = 0
-            goto skip
-        end
-
-        do
-            local persistentSave = Isaac.GetPersistentGameData()
-            if not persistentSave:Unlocked(Util.Achievements.HAT_COSTUMES.ID)
-            and not persistentSave:Unlocked(Util.Achievements.PARTY_HAT.ID) then
-                return
-            end
-
-            if Input.IsActionPressed(ButtonAction.ACTION_DROP, player.ControllerIndex) then
-                if charge >= Cosmetics.MAX_CHARGE then
-                    local endFrame = data.optionSprite:GetCurrentAnimationData():GetLength() - 1
-                    local currentFrame = data.optionSprite:GetFrame()
-                    local nextFrame = currentFrame < endFrame and currentFrame + 1 or 0
-                    data.optionSprite:SetFrame(nextFrame)
-
-                    Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.POOF01, 1, slot.Position + Cosmetics.SIGN_OFFSET, Vector.Zero, slot)
-
-                    charge = 0
-                else
-                    charge = math.min(charge + 1, Cosmetics.MAX_CHARGE)
-                end
-            else
+            if not Util:IsWithin(player, slot.Position, Cosmetics.SWAPPING_RADIUS)
+            or not data.optionSprite or slot:ToSlot():GetState() == 3 then
                 charge = 0
+                goto skip
             end
-        end
 
-        ::skip::
-        data.cosmeticCharge = charge
+            do -- Because goto hates local variables
+                local persistentSave = Isaac.GetPersistentGameData()
+                if not persistentSave:Unlocked(Util.Achievements.HAT_COSTUMES.ID)
+                and not persistentSave:Unlocked(Util.Achievements.PARTY_HAT.ID) then
+                    return
+                end
+            end
+
+            charge = Cosmetics:TryChangingCosmeticCategory(player, slot, data, charge)
+
+            ::skip::
+            data.cosmeticCharge = charge
+        end
     end
 end
 Mod:AddCallback(ModCallbacks.MC_POST_PLAYER_UPDATE, Cosmetics.PostPlayerUpdate)
@@ -265,5 +253,29 @@ function Cosmetics:EvaluateUnlockedHats(persistentData)
     end
 
     return hatCostumes
+end
+
+---@param player EntityPlayer
+---@param slot EntitySlot
+---@param data table
+---@param charge integer
+function Cosmetics:TryChangingCosmeticCategory(player, slot, data, charge)
+    if Input.IsActionPressed(ButtonAction.ACTION_DROP, player.ControllerIndex) then
+        if charge >= Cosmetics.MAX_CHARGE then
+            local endFrame = data.optionSprite:GetCurrentAnimationData():GetLength() - 1
+            local currentFrame = data.optionSprite:GetFrame()
+            local nextFrame = currentFrame < endFrame and currentFrame + 1 or 0
+            data.optionSprite:SetFrame(nextFrame)
+
+            Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.POOF01, 1, slot.Position + Cosmetics.SIGN_OFFSET, Vector.Zero, slot)
+
+            charge = 0
+        else
+            charge = math.min(charge + 1, Cosmetics.MAX_CHARGE)
+        end
+    else
+        charge = 0
+    end
+    return charge
 end
 --#endregion
