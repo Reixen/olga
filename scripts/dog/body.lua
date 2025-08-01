@@ -217,10 +217,15 @@ DogBody.ANIM_FUNC = {
     -- Idle animations
     [Util.BodyAnim.PLAYFUL_1] = function(olga, sprite, data, name)
         if sprite:IsFinished() then
-            sprite:Play(Util.BodyAnim.STAND, true)
             data.headRender = true
             sprite.PlaybackSpeed = 1
             data.headSprite.FlipX = olga.FlipX
+
+            if not data.hasOwner then
+                sprite:Play(Util.BodyAnim.STAND_TO_SIT, true)
+                return
+            end
+            sprite:Play(Util.BodyAnim.STAND, true)
         end
 
         -- Only scratching has this event
@@ -285,7 +290,7 @@ Util:FillEmptyAnimFunctions(
 --#region Olga Callbacks
 ---@param olga EntityFamiliar
 function DogBody:HandleBodyLogic(olga)
-    local data = olga:GetData()
+    local data = olga:GetData() ---@cast data DogData
     local sprite = olga:GetSprite()
 
     -- Play her special idle animation
@@ -301,13 +306,6 @@ function DogBody:HandleBodyLogic(olga)
     local animName = sprite:GetAnimation()
     DogBody.ANIM_FUNC[animName](olga, sprite, data, animName)
 
-    if sprite.Color.R < 1 then
-        local colorToAdd = 0.02
-        local color = sprite.Color
-        color = Color(color.R + colorToAdd, color.G + colorToAdd, color.B + colorToAdd)
-    end
-    data.headSprite.Color = sprite.Color
-
     if not data.hasOwner then
         DogBody:FindDogOwner(olga, data)
     end
@@ -317,6 +315,7 @@ Mod:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, DogBody.HandleBodyLogic, Mod.Do
 ---@param olga EntityFamiliar
 function DogBody:OnInit(olga)
     local data = olga:GetData()
+    local sprite = olga:GetSprite()
 
     data.eventCD = DogBody.EVENT_COOLDOWN
     data.animCD = DogBody.EVENT_COOLDOWN * 2
@@ -330,24 +329,49 @@ function DogBody:OnInit(olga)
     data.headSprite:Load("gfx/render_olga_head.anm2", true)
     data.headSprite:Play(Util.HeadAnim.IDLE, true)
 
-    if not DogBody:IsBirthdayWeek() then
-        data.headSprite:GetLayer(7):SetVisible(false)
-        data.headSprite:GetLayer(8):SetVisible(false)
-        olga:GetSprite():GetLayer(3):SetVisible(false)
-    end
-
+    -- Fur Colors
     local persistentSave = saveMan.GetPersistentSave()
     if persistentSave.furColor ~= nil and persistentSave.furColor ~= 0 then
-        Util:ApplyColorPalette(olga:GetSprite(), "olga_shader", persistentSave.furColor)
-        Util:ApplyColorPalette(olga:GetData().headSprite, "olga_shader", persistentSave.furColor, Util.HeadLayerId)
+        Util:ApplyColorPalette(sprite, "olga_shader", persistentSave.furColor)
+        Util:ApplyColorPalette(data.headSprite, "olga_shader", persistentSave.furColor, Util.HeadLayerId)
+    end
+
+    local gameData = Isaac.GetPersistentGameData()
+    local isBday = DogBody:IsBirthdayWeek()
+    if isBday then
+        gameData:TryUnlock(Util.Achievements.PARTY_HAT.ID)
+    end
+
+    -- Hat Costumes
+    if persistentSave.hatCostume == 1 or not persistentSave.hatCostume then
+        if isBday then
+            if not sprite:GetLayer(3):IsVisible() then
+                Util:SetHatVisibility(true, sprite, data.headSprite)
+            end
+
+            Util:ChangeVanity("party", sprite, data.headSprite)
+        else
+            Util:SetHatVisibility(false, sprite, data.headSprite)
+        end
+    else
+        local gameData = Isaac.GetPersistentGameData()
+        local hatCostumes = Mod.Cosmetics:EvaluateUnlockedHats(gameData)
+        local chosenVanity = hatCostumes[persistentSave.hatCostume]
+
+        if chosenVanity == nil or chosenVanity == "none" then
+            Util:SetHatVisibility(false, sprite, data.headSprite)
+        else
+            Util:ChangeVanity(chosenVanity, sprite, data.headSprite)
+        end
     end
 
     olga:AddEntityFlags(EntityFlag.FLAG_NO_KNOCKBACK | EntityFlag.FLAG_NO_PHYSICS_KNOCKBACK)
     olga.GridCollisionClass = EntityGridCollisionClass.GRIDCOLL_GROUND
     olga.FlipX = math.abs((olga.Position - olga.Player.Position):GetAngleDegrees()) > 90
 
-    local runSave = saveMan.TryGetRunSave(olga)
-    if not runSave or not Util:DoesSeedExist(runSave.hasOwner, olga.InitSeed) then
+    -- Use player for ownership
+    local runSave = saveMan.TryGetRunSave(olga.Player)
+    if not runSave or not Util:DoesSeedExist(runSave.hasDoggy, olga.InitSeed) then
         olga:GetSprite():PlayOverlay("SpawnSign")
         return
     end
@@ -393,14 +417,14 @@ end
 Mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, DogBody.HandleNewRoom)
 
 function DogBody:GoodbyeOlga()
-    local runSave = saveMan.TryGetRunSave()
-    local floorSave = saveMan.TryGetFloorSave()
-    if not runSave or not floorSave then
+    local dogAmount = Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)
+    if #dogAmount < 1 then
         return
     end
 
+    local floorSave = saveMan.GetFloorSave()
     local dogsRemoved = 0
-    for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
+    for _, familiar in ipairs(dogAmount) do
         local olga = familiar:ToFamiliar() ---@cast olga EntityFamiliar
 
         if not PlayerManager.AnyoneHasTrinket(DogBody.TRINKET_ID) then
@@ -409,7 +433,6 @@ function DogBody:GoodbyeOlga()
             local pos = Mod.Room():FindFreePickupSpawnPosition(familiar.Position, 0, true)
             Isaac.Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TRINKET, DogBody.TRINKET_ID, pos, Vector.Zero, nil)
 
-            Util:DoesSeedExist(runSave.hasOwner, olga.InitSeed, true)
             Util:DoesSeedExist(floorSave.hasDoggyLicense, olga.InitSeed, true)
             Util:DoesSeedExist(pData.hasDoggy, olga.InitSeed, true)
 
@@ -422,7 +445,7 @@ function DogBody:GoodbyeOlga()
         floorSave.hasDoggyLicense[#floorSave.hasDoggyLicense+1] = olga.InitSeed
         ::skip::
     end
-    if dogsRemoved == 0 and #Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT) > 0 then
+    if dogsRemoved == 0 and #dogAmount > 0 then
         floorSave.obtainedDrops = {}
     end
 end
@@ -483,12 +506,11 @@ function DogBody:OnPreFlipUse(_, _, player)
     end
 
     Util:TryTurningPlayerSad(player)
-
     local evilLaz = player:GetFlippedForm() ---@cast evilLaz EntityPlayer
     local data = saveMan.GetRunSave(evilLaz)
     local floorSave = saveMan.GetFloorSave()
     if data.hasDoggy and not Util:DoesSeedExist(floorSave.hasDoggyLicense, data.hasDoggy) then
-        Isaac.CreateTimer(function() DogBody:GoodbyeOlga() end, 1, 1, true)
+        Isaac.CreateTimer(function() DogBody:GoodbyeOlga() end, 0, 1, true)
     end
 end
 Mod:AddCallback(ModCallbacks.MC_PRE_USE_ITEM, DogBody.OnPreFlipUse, CollectibleType.COLLECTIBLE_FLIP)
@@ -503,11 +525,10 @@ function DogBody:OnPreEsauJrUse(_, _, player)
     end
 
     Util:TryTurningPlayerSad(player)
-
     local data = saveMan.GetRunSave(esauJr)
     local floorSave = saveMan.GetFloorSave()
     if data.hasDoggy and not Util:DoesSeedExist(floorSave.hasDoggyLicense, data.hasDoggy) then
-        Isaac.CreateTimer(function() DogBody:GoodbyeOlga() end, 2, 1, true)
+        Isaac.CreateTimer(function() DogBody:GoodbyeOlga() end, 0, 1, true)
     end
 end
 Mod:AddCallback(ModCallbacks.MC_PRE_USE_ITEM, DogBody.OnPreEsauJrUse, CollectibleType.COLLECTIBLE_ESAU_JR)
@@ -517,9 +538,20 @@ Mod:AddCallback(ModCallbacks.MC_PRE_USE_ITEM, DogBody.OnPreEsauJrUse, Collectibl
 function DogBody:OnBombDog(effect, removePoof)
     for _, familiar in ipairs(Isaac.FindInRadius(effect.Position, DogBody.EXPLOSION_RADIUS, EntityPartition.FAMILIAR)) do
         if familiar.Variant == Mod.Dog.VARIANT then
-            local darkerColor = Color(0.15, 0.15, 0.15)
-            familiar:GetSprite().Color = darkerColor
-            familiar:GetData().headSprite.Color = darkerColor
+            local darkerColor = Color(0.16, 0.16, 0.16)
+            local sprite = familiar:GetSprite()
+            local colorToAdd = 0.02
+            sprite.Color = darkerColor
+
+            for i = 1, (100 - darkerColor.R * 100) / (colorToAdd * 100) do
+                Isaac.CreateTimer(function()
+                local color = sprite.Color
+                color = Color(color.R + colorToAdd, color.G + colorToAdd, color.B + colorToAdd)
+                sprite.Color = color
+                familiar:GetData().headSprite.Color = color
+                end, i, 1, true)
+            end
+
             if not removePoof then
                 local poof = Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.POOF01, 0, familiar.Position, Vector.Zero, familiar):ToEffect()
                 poof.Color = Color(0.7, 0.7, 0.7)
@@ -689,16 +721,13 @@ function DogBody:FindDogOwner(olga, data)
     olga.Player = nearestPlayer
     olga.SpawnerEntity = nearestPlayer
     data.hasOwner = true
-
     nearestPlayer:AnimateHappy()
+    -- Used for determining if player has an Olga
     local pData = saveMan.GetRunSave(olga.Player)
     pData.hasDoggy = pData.hasDoggy or {}
     pData.hasDoggy[#pData.hasDoggy+1] = olga.InitSeed
 
-    local runSave = saveMan.GetRunSave(olga)
-    runSave.hasOwner = runSave.hasOwner or {}
-    runSave.hasOwner[#runSave.hasOwner+1] = olga.InitSeed
-
+    -- Used for obtainable drops and removing Olgas for T. Laz and Esau Jr.
     local floorSave = saveMan.GetFloorSave()
     floorSave.hasDoggyLicense = floorSave.hasDoggyLicense or {}
     floorSave.hasDoggyLicense[#floorSave.hasDoggyLicense+1] = olga.InitSeed
@@ -916,7 +945,7 @@ function DogBody:TryEating(olga, data)
     end
 
     if not DogBody:IsOlgaEating(data.headSprite) then
-        if bowlAnimName:find("Dinner") then
+        if bowlAnimName:find("Dinner") or bowlAnimName:find("Cake") then
             data.headSprite:Play("EatDinner", true)
         else
             data.headSprite:Play("Eat" .. math.random(DogBody.EATING_VARIATIONS), true)
@@ -925,7 +954,7 @@ function DogBody:TryEating(olga, data)
 
     if bowlAnimName:find("Dessert") or bowlAnimName:find("Generic") then
         sfxMan:Play(SoundEffect.SOUND_EXPLOSION_DEBRIS, 2, 2, false, math.random(14, 16) / 10)
-    elseif bowlAnimName:find("Dinner") then
+    elseif bowlAnimName:find("Dinner") or bowlAnimName:find("Cake") then
         sfxMan:Play(SoundEffect.SOUND_MEAT_IMPACTS_OLD, 1, 2, false, math.random(9, 11) / 10)
     else
         sfxMan:Play(Mod.Dog.Head.SOUND_MINI_CRUNCH, 3, 2, false, math.random(9, 11) / 10)

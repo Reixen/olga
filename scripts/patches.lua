@@ -6,6 +6,7 @@ local Trinkets = Mod.PickupHandler.Pickup[PickupVariant.PICKUP_TRINKET]
 --#endregion
 --#region Callbacks
 function Mod:LoadPatches()
+
     Mod.Util.ModdedHands = {
         {PlayerTypeTable = Epiphany and Epiphany.PlayerType, PlayerTypes = {
                 "MAGDALENE",
@@ -36,6 +37,13 @@ function Mod:LoadPatches()
         for _, compatFunc in ipairs(Mod.EncyCompat) do
             compatFunc()
         end
+    end
+
+    if BedroomExpanded then
+        Mod.Cosmetics.VanitySlots[#Mod.Cosmetics.VanitySlots+1] = BedroomExpanded.Slot.CLOTHING_RACK.ID
+        Mod:AddCallback(ModCallbacks.MC_POST_SLOT_INIT, Mod.Cosmetics.OnDressingTableInit, BedroomExpanded.Slot.CLOTHING_RACK.ID)
+        Mod:AddCallback(ModCallbacks.MC_POST_SLOT_RENDER, Mod.Cosmetics.OnDressingTableRender, BedroomExpanded.Slot.CLOTHING_RACK.ID)
+        Mod:AddCallback(ModCallbacks.MC_POST_SLOT_COLLISION, Mod.Cosmetics.OnUseDressingTable, BedroomExpanded.Slot.CLOTHING_RACK.ID)
     end
 
     if not Epiphany then

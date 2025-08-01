@@ -91,7 +91,9 @@ Util.HeadLayerId = {
 Util.Achievements = {
     TENNIS_BALL =       {ID = Isaac.GetAchievementIdByName("Tennis Ball"),      Requirement = 5},
     WHISTLE =           {ID = Isaac.GetAchievementIdByName("Whistle"),          Requirement = 10},
-    FUR_COLORS =        {ID = Isaac.GetAchievementIdByName("Fur Colors"),       Requirement = 20}
+    FUR_COLORS =        {ID = Isaac.GetAchievementIdByName("Fur Colors"),       Requirement = 20},
+    HAT_COSTUMES =      {ID = Isaac.GetAchievementIdByName("Hat Costumes"),     Requirement = 30},
+    PARTY_HAT =         {ID = Isaac.GetAchievementIdByName("Party Hat")}
 }
 --#endregion
 --#region Callbacks
@@ -183,11 +185,11 @@ function Util:ApplyColorPalette(sprite, paletteName, colorPalette, layerIDs)
 end
 
 -- Returns a boolean if olga is near the target. DistanceSquared is faster I heard.
----@param olga EntityFamiliar
+---@param entity Entity
 ---@param target Vector
 ---@param distance number
-function Util:IsWithin(olga, target, distance)
-    return olga.Position:DistanceSquared(target) < distance ^ 2
+function Util:IsWithin(entity, target, distance)
+    return entity.Position:DistanceSquared(target) < distance ^ 2
 end
 
 -- Creates a unique table to make it less likely for mods to edit your variables.
@@ -333,6 +335,7 @@ function Util:EvaluatePoints(points)
     for _, ach in pairs(Util.Achievements) do
         local gameData = Isaac.GetPersistentGameData()
         if not gameData:Unlocked(ach.ID)
+        and ach.Requirement ~= nil
         and points >= ach.Requirement then
             gameData:TryUnlock(ach.ID)
         end
@@ -340,21 +343,63 @@ function Util:EvaluatePoints(points)
 end
 
 ---@param saveTable table
----@param hash integer
+---@param seedOrTable integer | table
 ---@param remove boolean?
-function Util:DoesSeedExist(saveTable, hash, remove)
+function Util:DoesSeedExist(saveTable, seedOrTable, remove)
     if not saveTable then
         return false
     end
-    for pos, hashVal in ipairs(saveTable) do
-        if hash == hashVal then
+
+    local doSeedsMatch = function(seed1, seed2, pos)
+        if seed1 == seed2 then
             if remove == true then
                 table.remove(saveTable, pos)
             end
             return true
         end
     end
+
+    for pos, seedVal1 in ipairs(saveTable) do
+        if type(seedOrTable) == "table" then
+            for _, seedVal2 in ipairs(seedOrTable) do
+                if doSeedsMatch(seedVal1, seedVal2, pos) then return true end
+            end
+
+        else
+            if doSeedsMatch(seedVal1, seedOrTable, pos) then
+                return true
+            end
+        end
+    end
     return false
+end
+
+---@param table table
+---@return table
+function Util:CopyTable(table)
+    local copy = {}
+    for key, val in pairs(table) do
+        copy[key] = type(val) ~= "table" and val or Util:CopyTable(val)
+    end
+    return copy
+end
+
+---@param bool boolean
+---@param sprite Sprite
+---@param headSprite Sprite
+function Util:SetHatVisibility(bool, sprite, headSprite)
+    sprite:GetLayer(3):SetVisible(bool)
+    headSprite:GetLayer(7):SetVisible(bool)
+    headSprite:GetLayer(8):SetVisible(bool)
+end
+
+---@param hatType string
+---@param sprite Sprite
+---@param headSprite Sprite
+function Util:ChangeVanity(hatType, sprite, headSprite)
+    sprite:ReplaceSpritesheet(3, "gfx/familiar/olga_costumes/hat_" .. hatType .. ".png", true)
+    headSprite:ReplaceSpritesheet(7, "gfx/familiar/olga_costumes/hat_" .. hatType .. ".png", true)
+    headSprite:ReplaceSpritesheet(8, "gfx/familiar/olga_costumes/hat_" .. hatType .. ".png", true)
 end
 --endregion
 -- Entity Identifier

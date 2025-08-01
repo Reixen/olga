@@ -17,9 +17,9 @@ DogHead.SOUND_MINI_CRUNCH = Isaac.GetSoundIdByName("Olga Mini Crunch")
 DogHead.SOUND_SNIFF = Isaac.GetSoundIdByName("Olga Sniff")
 DogHead.SOUND_GULP = Isaac.GetSoundIdByName("Olga Gulp")
 
-DogHead.ANIM_CHANCE = 1 / 30
+DogHead.ANIM_CHANCE = 1 / 40
 DogHead.MINI_ANIM_CHANCE = 3 / 5
-DogHead.REPEAT_CHANCE = 1 / 6
+DogHead.REPEAT_CHANCE = 1 / 7
 DogHead.PANT_CHANCE = 1 / 20
 
 local ONE_SEC = 30
