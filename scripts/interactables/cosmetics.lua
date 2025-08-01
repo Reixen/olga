@@ -256,7 +256,7 @@ function Cosmetics:EvaluateUnlockedHats(persistentData)
 end
 
 ---@param player EntityPlayer
----@param slot EntitySlot
+---@param slot Entity
 ---@param data table
 ---@param charge integer
 function Cosmetics:TryChangingCosmeticCategory(player, slot, data, charge)
