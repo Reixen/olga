@@ -303,6 +303,10 @@ function DogBody:HandleBodyLogic(olga)
         sprite:RemoveOverlay()
     end
 
+    if data.headSprite then
+        data.headSprite:Update()
+    end
+
     local animName = sprite:GetAnimation()
     DogBody.ANIM_FUNC[animName](olga, sprite, data, animName)
 

@@ -228,9 +228,9 @@ function DogHead:OnHeadRender(olga, offset)
         return
     end
 
+    -- Probably need to be in body.lua
     data.headSprite.FlipX = olga.FlipX
     data.headSprite.Scale = olga.Player:HasCollectible(CollectibleType.COLLECTIBLE_BFFS) and Vector(1.25, 1.25) or Vector.One
-    data.headSprite:Update()
 
     if data.headSprite:IsEventTriggered("Pant")
     and math.random() < DogHead.PANT_CHANCE then
