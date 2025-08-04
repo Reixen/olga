@@ -91,8 +91,8 @@ Util.HeadLayerId = {
 Util.Achievements = {
     TENNIS_BALL =       {ID = Isaac.GetAchievementIdByName("Tennis Ball"),      Requirement = 5},
     WHISTLE =           {ID = Isaac.GetAchievementIdByName("Whistle"),          Requirement = 10},
-    FUR_COLORS =        {ID = Isaac.GetAchievementIdByName("Fur Colors"),       Requirement = 20},
-    HAT_COSTUMES =      {ID = Isaac.GetAchievementIdByName("Hat Costumes"),     Requirement = 30},
+    FUR_COLORS =        {ID = Isaac.GetAchievementIdByName("Fur Colors"),       Requirement = 15},
+    HAT_COSTUMES =      {ID = Isaac.GetAchievementIdByName("Hat Costumes"),     Requirement = 20},
     PARTY_HAT =         {ID = Isaac.GetAchievementIdByName("Party Hat")}
 }
 --#endregion
