@@ -8,18 +8,6 @@ local Consumables = Mod.PickupHandler.Pickup[PickupVariant.PICKUP_TAROTCARD]
 local Trinkets = Mod.PickupHandler.Pickup[PickupVariant.PICKUP_TRINKET]
 --#endregion
 --#region Callbacks
-
----@param isSelected boolean
-function Patches:PostSaveSlotLoad(_, isSelected)
-    if not isSelected then return end
-    if Encyclopedia then
-        for _, compatFunc in ipairs(Mod.Compatibility["Ency"]) do
-            compatFunc()
-        end
-    end
-end
-Mod:AddCallback(ModCallbacks.MC_POST_SAVESLOT_LOAD, Patches.PostSaveSlotLoad)
-
 function Patches:LoadPatches()
     Mod.Util.ModdedHands = {
         {PlayerTypeTable = Epiphany and Epiphany.PlayerType, PlayerTypes = {
@@ -53,6 +41,11 @@ function Patches:LoadPatches()
             compatFunc()
         end
         EID._currentMod = "Olga_reserved"
+    end
+    if Encyclopedia then
+        for _, compatFunc in ipairs(Mod.Compatibility["Ency"]) do
+            compatFunc()
+        end
     end
     if MinimapAPI then
         for _, compatFunc in ipairs(Mod.Compatibility["Minimap"]) do
