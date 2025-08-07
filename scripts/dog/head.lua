@@ -223,12 +223,13 @@ function DogHead:OnHeadRender(olga, offset)
         return
     end
     data.headSprite:Render(Isaac.WorldToRenderPosition(olga.Position + olga.PositionOffset + olga:GetNullOffset("head")) + offset)
+end
+Mod:AddCallback(ModCallbacks.MC_POST_FAMILIAR_RENDER, DogHead.OnHeadRender, Mod.Dog.VARIANT)
 
-    if not (Isaac.GetFrameCount() % 2 == 0) or game:IsPaused() then
-        return
-    end
-
-    -- Probably need to be in body.lua
+-- Used in body.lua in Familiar Update
+---@param olga EntityFamiliar
+---@param data DogData
+function DogHead:OnHeadUpdate(olga, data)
     data.headSprite.FlipX = olga.FlipX
     data.headSprite.Scale = olga.Player:HasCollectible(CollectibleType.COLLECTIBLE_BFFS) and Vector(1.25, 1.25) or Vector.One
 
@@ -239,8 +240,9 @@ function DogHead:OnHeadRender(olga, offset)
 
     local animName = data.headSprite:GetAnimation()
     DogHead.ANIM_FUNC[animName](olga, data.headSprite, data, animName)
+
+    data.headSprite:Update()
 end
-Mod:AddCallback(ModCallbacks.MC_POST_FAMILIAR_RENDER, DogHead.OnHeadRender, Mod.Dog.VARIANT)
 --#endregion
 --#region Olga Helper Functions
 ---@param sprite Sprite

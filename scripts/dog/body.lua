@@ -304,7 +304,7 @@ function DogBody:HandleBodyLogic(olga)
     end
 
     if data.headSprite then
-        data.headSprite:Update()
+        Mod.Dog.Head:OnHeadUpdate(olga, data)
     end
 
     local animName = sprite:GetAnimation()
