@@ -1,12 +1,26 @@
 --#region Variables
 local Mod = OlgaMod
 
+local Patches = {}
+OlgaMod.Patches = Patches
+
 local Consumables = Mod.PickupHandler.Pickup[PickupVariant.PICKUP_TAROTCARD]
 local Trinkets = Mod.PickupHandler.Pickup[PickupVariant.PICKUP_TRINKET]
 --#endregion
 --#region Callbacks
-function Mod:LoadPatches()
 
+---@param isSelected boolean
+function Patches:PostSaveSlotLoad(_, isSelected)
+    if not isSelected then return end
+    if Encyclopedia then
+        for _, compatFunc in ipairs(Mod.Compatibility["Ency"]) do
+            compatFunc()
+        end
+    end
+end
+Mod:AddCallback(ModCallbacks.MC_POST_SAVESLOT_LOAD, Patches.PostSaveSlotLoad)
+
+function Patches:LoadPatches()
     Mod.Util.ModdedHands = {
         {PlayerTypeTable = Epiphany and Epiphany.PlayerType, PlayerTypes = {
                 "MAGDALENE",
@@ -33,8 +47,15 @@ function Mod:LoadPatches()
         },
     }
 
-    if Encyclopedia then
-        for _, compatFunc in ipairs(Mod.EncyCompat) do
+    if EID then
+        EID._currentMod = "Olga"
+        for _, compatFunc in ipairs(Mod.Compatibility["EID"]) do
+            compatFunc()
+        end
+        EID._currentMod = "Olga_reserved"
+    end
+    if MinimapAPI then
+        for _, compatFunc in ipairs(Mod.Compatibility["Minimap"]) do
             compatFunc()
         end
     end
@@ -66,7 +87,7 @@ function Mod:LoadPatches()
         {[Trinkets.CRUDE_DRAWING_ID] = 1}
     )
 
-    function Mod:OnEssenceOfTheKeeperUse()
+    function Patches:OnEssenceOfTheKeeperUse()
         for _, familiar in ipairs(Isaac.FindByType(EntityType.ENTITY_FAMILIAR, Mod.Dog.VARIANT)) do
             local sprite = familiar:GetSprite()
             if sprite:GetRenderFlags() ~= AnimRenderFlags.GOLDEN then
@@ -75,7 +96,7 @@ function Mod:LoadPatches()
             end
         end
     end
-    Mod:AddCallback(ModCallbacks.MC_USE_CARD, Mod.OnEssenceOfTheKeeperUse, Epiphany.Essence.KEEPER.ID)
+    Mod:AddCallback(ModCallbacks.MC_USE_CARD, Patches.OnEssenceOfTheKeeperUse, Epiphany.Essence.KEEPER.ID)
 end
-Mod:AddCallback(ModCallbacks.MC_POST_MODS_LOADED, Mod.LoadPatches)
+Mod:AddCallback(ModCallbacks.MC_POST_MODS_LOADED, Patches.LoadPatches)
 --#endregion

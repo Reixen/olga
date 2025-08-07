@@ -65,7 +65,7 @@ DogBody.PathfindingResult = {
 }
 --#endregion
 --#region EID Compatibility
-if EID then
+Mod.Compatibility["EID"][#Mod.Compatibility["EID"]+1] = function()
     EID:addIcon("Olga", "Olga", 0, 9, 9, 5, 6, Mod.EIDSprite)
     EID:addTrinket(DogBody.TRINKET_ID,
         "Prevents {{Olga}} Olga from disappearing next floor"..
@@ -79,7 +79,7 @@ if EID then
     EID:setModIndicatorName("Olga")
     EID:setModIndicatorIcon("Olga")
 end
-if Encyclopedia then
+Mod.Compatibility["Ency"][#Mod.Compatibility["Ency"]+1] = function()
     local encyWiki = {
         { -- Effect
             { str = "Effect", fsize = 2, clr = 3, halign = 0 },

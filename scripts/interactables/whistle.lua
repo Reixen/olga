@@ -12,8 +12,8 @@ local Body = Mod.Dog.Body
 Whistle.WHISTLE_ID = Mod.PickupHandler.Pickup[PickupVariant.PICKUP_TAROTCARD].WHISTLE_ID
 Whistle.WHISTLE_SFX = Isaac.GetSoundIdByName("Dog Whistle")
 --#endregion
---#region EID Compatibility
-if EID then
+--#region Compatibility
+Mod.Compatibility["EID"][#Mod.Compatibility["EID"]+1] = function()
     EID:addIcon("Card" .. Whistle.WHISTLE_ID, "Whistle", 0, 9, 9, 6, 6, Mod.EIDSprite)
 
     EID:addCard(Whistle.WHISTLE_ID,
@@ -22,7 +22,7 @@ if EID then
         "# {{Warning}} When chasing Isaac for a while, Olga WILL catch you"
     )
 end
-Mod.EncyCompat[#Mod.EncyCompat+1] = function()
+Mod.Compatibility["Ency"][#Mod.Compatibility["Ency"]+1] = function()
     local encyWiki = {
         { -- Effect
             { str = "Effect", fsize = 2, clr = 3, halign = 0 },
@@ -51,7 +51,7 @@ Mod.EncyCompat[#Mod.EncyCompat+1] = function()
         end
     })
 end
-if MinimapAPI then
+Mod.Compatibility["Minimap"][#Mod.Compatibility["Minimap"]+1] = function()
     MinimapAPI:AddPickup(
         "Whistle", "Whistle",
         EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TAROTCARD, Whistle.WHISTLE_ID,

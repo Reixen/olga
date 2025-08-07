@@ -37,7 +37,7 @@ FeedingBowl.AnimToSfx["FillCake"] = FeedingBowl.AnimToSfx["FillGeneric"]
 
 --#endregion
 --#region Compatibility
-if EID then
+Mod.Compatibility["EID"][#Mod.Compatibility["EID"]+1] = function()
     EID:addIcon("Card" .. FeedingBowl.FEEDING_KIT_ID, "Feeding Kit", 0, 9, 9, 6, 6, Mod.EIDSprite)
     EID:addIcon("Feeding Bowl", "Feeding Bowl", 0, 9, 9, 5, 6, Mod.EIDSprite)
     EID:addIcon("Generic Food", "Generic Food", 0, 9, 9, 5, 6, Mod.EIDSprite)
@@ -51,7 +51,8 @@ if EID then
         "and will not be removed from Isaac's inventory"
     )
 end
-if Encyclopedia then
+
+Mod.Compatibility["Ency"][#Mod.Compatibility["Ency"]+1] = function()
     local encyWiki = {
         { -- Effect
             { str = "Effect", fsize = 2, clr = 3, halign = 0 },
@@ -74,7 +75,8 @@ if Encyclopedia then
         ModName = "Olga",
     })
 end
-if MinimapAPI then
+
+Mod.Compatibility["Minimap"][#Mod.Compatibility["Minimap"]+1] = function()
     MinimapAPI:AddPickup(
         "Feeding Kit", "Feeding Kit",
         EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TAROTCARD, FeedingBowl.FEEDING_KIT_ID,

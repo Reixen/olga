@@ -43,7 +43,7 @@ for varName, pickup in pairs(Fetch.PickupID) do
     local name = Isaac.GetItemConfig():GetCard(pickup).Name
     pickupNames[varName] = name
 end
-if EID then
+Mod.Compatibility["EID"][#Mod.Compatibility["EID"]+1] = function()
     for varName, pickupID in pairs(Fetch.PickupID) do
         EID:addIcon("Card"..pickupID, pickupNames[varName], 0, 9, 9, 6, 6, Mod.EIDSprite)
         EID:addCard(pickupID,
@@ -52,7 +52,8 @@ if EID then
         )
     end
 end
-Mod.EncyCompat[#Mod.EncyCompat+1] = function()
+
+Mod.Compatibility["Ency"][#Mod.Compatibility["Ency"]+1] = function()
     for varName, pickupID in pairs(Fetch.PickupID) do
         local encyWiki = {
             { -- Effect
@@ -83,7 +84,8 @@ Mod.EncyCompat[#Mod.EncyCompat+1] = function()
         })
     end
 end
-if MinimapAPI then
+
+Mod.Compatibility["Minimap"][#Mod.Compatibility["Minimap"]+1] = function()
     for varName, pickupID in pairs(Fetch.PickupID) do
         MinimapAPI:AddPickup(
             pickupNames[varName], pickupNames[varName],
