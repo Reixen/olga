@@ -1,7 +1,7 @@
 <entities anm2root="gfx/" version="5">
 
     <entity name="Olga" baseHP = "-1"
-		id="3" variant="333" anm2path="familiar_olga_body.anm2" friction="1" 
+		id="3" anm2path="familiar_olga_body.anm2" friction="1" 
 		numGridCollisionPoints="6" collisionMass="7" collisionRadius="6" 
 		shadowSize="15">
 	</entity>
