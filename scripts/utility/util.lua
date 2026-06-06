@@ -164,7 +164,6 @@ function Util:UpdateHandColor(player, sprite, ptrHash)
                 and playerColor ~= SkinColor.SKIN_RED then
                     strToAppend = "_" .. GetSkinColorName(playerColor)
                 end
-                print("/hand_" .. pTypeString ..strToAppend .. ".png")
                 sprite:ReplaceSpritesheet(0, "gfx/petting_hands/".. modTable.FileString .."/hand_" .. pTypeString .. strToAppend .. ".png")
                 goto finish
             end
