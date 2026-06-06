@@ -112,6 +112,7 @@ end
 ---@field canPet boolean? -- Used for preventing the player from petting the dog in certain scenarios
 ---@field hasOwner boolean?
 ---@field targetPlayer EntityPlayer? -- Used for the whistle and fetching
+---@field beingPet boolean? -- Petting indicator
 
 --#endregion
 --#region Olga Body Animation Functions

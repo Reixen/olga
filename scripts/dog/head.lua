@@ -100,11 +100,13 @@ DogHead.ANIM_FUNC = {
 
         DogHead:TryFindingFood(olga, data) -- Line 335
 
-        if not player:HasCollectible(Util.HAPPY_COLLECTIBLE)
+        -- TODO: Probably add a restriction for high priority costumes to prevent flickers
+        if not data.beingPet
         and not player:IsCollectibleCostumeVisible(Util.HAPPY_COLLECTIBLE, "head")
-        and not (Poglite and Poglite.WePoggin) then -- Prevent it from spamming when pogging
+        and not (Poglite and Poglite.WePoggin) then
             local itemCfg = Isaac.GetItemConfig():GetCollectible(Util.HAPPY_COLLECTIBLE)
             player:AddCostume(itemCfg, false)
+            data.beingPet = true
         end
 
         if not sprite:IsEventTriggered("TransitionHook")
@@ -113,6 +115,7 @@ DogHead.ANIM_FUNC = {
             return
         end
 
+        data.beingPet = false
         Util:EndPettingAnimation(sprite, olga.Player, animName)
         data.specialPettingCD = olga.FrameCount + DogHead.ATTENTION_COOLDOWN
     end,

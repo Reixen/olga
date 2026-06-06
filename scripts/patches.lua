@@ -20,7 +20,8 @@ function Patches:LoadPatches()
                 "JUDAS2",
                 "JUDAS",
                 "JUDAS4",
-                "JUDAS5"
+                "JUDAS5",
+                "BETHANY"
             }, FileString = "epiphany"
         },
         {PlayerTypeTable = FiendFolio and FiendFolio.PLAYER, PlayerTypes = {

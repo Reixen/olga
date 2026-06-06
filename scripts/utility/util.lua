@@ -108,6 +108,22 @@ Mod:AddCallback(ModCallbacks.MC_POST_PLAYER_REVIVE, Util.OnReviveOrClicker)
 
 --#endregion
 --#region Helper Functions
+---@param playerColor SkinColor
+---@param sprite Sprite?
+local function GetSkinColorName(playerColor, sprite)
+    local colorStr
+    for string, value in pairs(SkinColor) do
+        colorStr = string:sub(Util.SPRITESHEET_SUBSTRING_IDX, -1)
+
+        if playerColor == value then
+            if sprite then
+                sprite:ReplaceSpritesheet(0, "gfx/petting_hands/hand_" .. colorStr .. ".png")
+            end
+            return colorStr
+        end
+    end
+end
+
 -- Update the petting hand color based on the player's skin
 ---@param player EntityPlayer
 ---@param sprite Sprite
@@ -124,13 +140,14 @@ function Util:UpdateHandColor(player, sprite, ptrHash)
         return
     end
 
-    for string, value in pairs(SkinColor) do
-        local colorStr = string:sub(Util.SPRITESHEET_SUBSTRING_IDX, -1)
-
-        if playerColor == value then
-            sprite:ReplaceSpritesheet(0, "gfx/petting_hands/hand_" .. colorStr .. ".png")
-            break
+    if playerType < PlayerType.NUM_PLAYER_TYPES then
+        GetSkinColorName(playerColor, sprite)
+        if playerType == PlayerType.PLAYER_THESOUL
+        or playerType == PlayerType.PLAYER_THESOUL_B then
+            local handLayer = sprite:GetLayer(0) -- Petting hand layer
+            handLayer:SetColor(player.Color)
         end
+        goto finish
     end
 
     for _, modTable in ipairs(Util.ModdedHands) do
@@ -139,9 +156,16 @@ function Util:UpdateHandColor(player, sprite, ptrHash)
         end
 
         for _, pTypeString in ipairs(modTable.PlayerTypes) do
-            if playerType == modTable.PlayerTypeTable[pTypeString]
-            or GIMP and modTable.PlayerTypeTable == GIMP.CHARACTER and playerType == modTable.PlayerTypeTable[pTypeString].ID then
-                sprite:ReplaceSpritesheet(0, "gfx/petting_hands/".. modTable.FileString .."/hand_" .. pTypeString .. ".png")
+            local moddedPtype = modTable.PlayerTypeTable[pTypeString]
+            if playerType == moddedPtype
+            or GIMP and modTable.PlayerTypeTable == GIMP.CHARACTER and playerType == moddedPtype.ID then
+                local strToAppend = ""
+                if Epiphany and playerType == modTable.PlayerTypeTable["BETHANY"]
+                and playerColor ~= SkinColor.SKIN_RED then
+                    strToAppend = "_" .. GetSkinColorName(playerColor)
+                end
+                print("/hand_" .. pTypeString ..strToAppend .. ".png")
+                sprite:ReplaceSpritesheet(0, "gfx/petting_hands/".. modTable.FileString .."/hand_" .. pTypeString .. strToAppend .. ".png")
                 goto finish
             end
         end
@@ -150,11 +174,6 @@ function Util:UpdateHandColor(player, sprite, ptrHash)
 
     ::finish::
     sprite:LoadGraphics()
-    if playerType == PlayerType.PLAYER_THESOUL
-    or playerType == PlayerType.PLAYER_THESOUL_B then
-        local handLayer = sprite:GetLayer(0) -- Petting hand layer
-        handLayer:SetColor(player.Color)
-    end
     handData.pColor = playerColor
     handData.pType = playerType
 end
