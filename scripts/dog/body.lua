@@ -1028,6 +1028,14 @@ function DogBody:IsOlgaEating(sprite)
     or sprite:IsPlaying(Util.HeadAnim.EAT_DINNER)
 end
 
+---@param player EntityPlayer
+local function p(player)
+    local cID = player.ControllerIndex
+    if player.FrameCount % 15 == 0 then
+        print("Left: " .. Input.GetActionValue(ButtonAction.ACTION_LEFT, cID) .. " | Up: " .. Input.GetActionValue(ButtonAction.ACTION_UP, cID) .. " | Right: " .. Input.GetActionValue(ButtonAction.ACTION_RIGHT, cID) ..  " | Down: " .. Input.GetActionValue(ButtonAction.ACTION_DOWN, cID))
+    end
+end
+Mod:AddCallback(ModCallbacks.MC_POST_PEFFECT_UPDATE, p, PlayerType.PLAYER_APOLLYON)
 ---@param olga EntityFamiliar
 function DogBody:DoPointFeedback(olga)
     if game:AchievementUnlocksDisallowed() then
